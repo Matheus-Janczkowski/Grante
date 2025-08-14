@@ -212,6 +212,7 @@ __marimo__/
 *.xdmf
 *.h5
 *.pvd
+*.pdf
 *.vtu
 *.svg
 *.zip

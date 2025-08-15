@@ -4,9 +4,7 @@ setup(
     name='Grante',
     version='0.1',
     packages=find_packages(),
-    install_requires=['numpy', 'scipy', 'unittest', 'traceback', 'time',
-    'inspect', 'subprocess', 'functools', 'matplotlib', 'abc', 'pathlib'
-    ],
+    install_requires=['numpy', 'scipy', 'matplotlib'],
     include_package_data=True,
     package_data={
         # Include additional files like images, text files, etc.

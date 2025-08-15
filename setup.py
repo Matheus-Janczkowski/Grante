@@ -4,7 +4,8 @@ setup(
     name='Grante',
     version='0.1',
     packages=find_packages(),
-    install_requires=['numpy', 'scipy'
+    install_requires=['numpy', 'scipy', 'unittest', 'traceback', 'time',
+    'inspect', 'subprocess', 'functools', 'matplotlib', 'abc', 'pathlib'
     ],
     include_package_data=True,
     package_data={

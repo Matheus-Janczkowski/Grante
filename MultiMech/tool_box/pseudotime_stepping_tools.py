@@ -6,8 +6,6 @@ import numpy as np
 
 import time
 
-import inspect
-
 import MultiMech.tool_box.mesh_handling_tools as mesh_tools
 
 import MultiMech.tool_box.post_processing_tools as post_processing_tools

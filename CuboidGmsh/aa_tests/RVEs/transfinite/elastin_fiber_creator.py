@@ -4,7 +4,7 @@ import numpy as np
 
 import gmsh
 
-import CuboidGmsh.source.tool_box.geometric_tools as geo_tools
+import CuboidGmsh.tool_box.geometric_tools as geo_tools
 
 # Defines a function to create the elastin fiber in gmsh
 

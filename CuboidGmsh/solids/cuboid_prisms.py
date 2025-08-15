@@ -2,9 +2,9 @@
 
 import numpy as np
 
-import CuboidGmsh.source.solids.cuboid_generator as cuboid
+import CuboidGmsh.solids.cuboid_generator as cuboid
 
-import CuboidGmsh.source.tool_box.geometric_tools as geo
+import CuboidGmsh.tool_box.geometric_tools as geo
 
 # Defines a function to create a rectangular prism with right corners
 

@@ -1,10 +1,10 @@
 import numpy as np
 
-import CuboidGmsh.source.tool_box.region_finder as region_finder
+import CuboidGmsh.tool_box.region_finder as region_finder
 
-import CuboidGmsh.tests.RVEs.transfinite.RVE_artery_transfinite as RVE_transfinite
+import CuboidGmsh.aa_tests.RVEs.transfinite.RVE_artery_transfinite as RVE_transfinite
 
-import CuboidGmsh.tests.RVEs.non_transfinite.RVE_artery as RVE_nonTransfinite
+import CuboidGmsh.aa_tests.RVEs.non_transfinite.RVE_artery as RVE_nonTransfinite
 
 # Defines a function to generate parameters for the periodic mesh
 

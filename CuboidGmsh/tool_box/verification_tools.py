@@ -1,6 +1,6 @@
 # Routine to store verification methods
 
-import CuboidGmsh.source.tool_box.geometric_tools as geo_tools
+import CuboidGmsh.tool_box.geometric_tools as geo_tools
 
 # Defines a function to verify whether a cuboid is proper, i.e. if there
 # are no overlaping or entangled facets. It uses the criterion that, 

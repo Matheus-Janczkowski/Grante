@@ -3,17 +3,17 @@
 
 from dolfin import *
 
-import source.tool_box.file_handling_tools as file_tools
+import MultiMech.tool_box.file_handling_tools as file_tools
 
-import source.tool_box.variational_tools as variational_tools
+import MultiMech.tool_box.variational_tools as variational_tools
 
-import source.tool_box.homogenization_tools as homogenization_tools
+import MultiMech.tool_box.homogenization_tools as homogenization_tools
 
-import source.tool_box.constitutive_tools as constitutive_tools
+import MultiMech.tool_box.constitutive_tools as constitutive_tools
 
-import source.tool_box.mesh_handling_tools as mesh_tools
+import MultiMech.tool_box.mesh_handling_tools as mesh_tools
 
-import source.tool_box.numerical_tools as numerical_tools
+import MultiMech.tool_box.numerical_tools as numerical_tools
 
 ########################################################################
 #                      Post-processing tools list                      #

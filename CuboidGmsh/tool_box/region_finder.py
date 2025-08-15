@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import CuboidGmsh.source.tool_box.geometric_tools as geo_tools
+import CuboidGmsh.tool_box.geometric_tools as geo_tools
 
 ########################################################################
 #                            Volumes finder                            #

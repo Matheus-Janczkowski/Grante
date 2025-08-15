@@ -2,11 +2,11 @@ import gmsh
 
 import numpy as np
 
-import CuboidGmsh.tests.RVEs.non_transfinite.elastin_fiber_creator as elastin
+import CuboidGmsh.aa_tests.RVEs.non_transfinite.elastin_fiber_creator as elastin
 
-import CuboidGmsh.source.tool_box.meshing_tools as tools
+import CuboidGmsh.tool_box.meshing_tools as tools
 
-import CuboidGmsh.source.tool_box.region_finder as region_finder
+import CuboidGmsh.tool_box.region_finder as region_finder
 
 def RVE_elastinMicrostructure(x_centroid, y_centroid, z_centroid, 
 RVE_lengthX, RVE_lengthY, RVE_lengthZ, parameters_method, 

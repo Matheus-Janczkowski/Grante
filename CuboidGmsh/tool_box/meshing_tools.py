@@ -8,9 +8,9 @@ import gmsh
 
 import meshio
 
-import CuboidGmsh.source.tool_box.region_finder as region_finder
+import CuboidGmsh.tool_box.region_finder as region_finder
 
-import CuboidGmsh.source.tool_box.mesh_data_retriever as mesh_data_retriever
+import CuboidGmsh.tool_box.mesh_data_retriever as mesh_data_retriever
 
 ########################################################################
 #                         Meshio - mesh writing                        #

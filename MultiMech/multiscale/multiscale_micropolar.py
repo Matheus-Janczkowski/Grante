@@ -2,17 +2,17 @@
 
 from dolfin import *
 
-import source.tool_box.mesh_handling_tools as mesh_tools
+import MultiMech.tool_box.mesh_handling_tools as mesh_tools
 
-import source.tool_box.variational_tools as variational_tools
+import MultiMech.tool_box.variational_tools as variational_tools
 
-import source.tool_box.functional_tools as functional_tools
+import MultiMech.tool_box.functional_tools as functional_tools
 
-import source.tool_box.pseudotime_stepping_tools as newton_raphson_tools
+import MultiMech.tool_box.pseudotime_stepping_tools as newton_raphson_tools
 
-import source.tool_box.programming_tools as programming_tools
+import MultiMech.tool_box.programming_tools as programming_tools
 
-import source.tool_box.multiscale_boundary_conditions_tools as multiscale_BCsTools
+import MultiMech.tool_box.multiscale_boundary_conditions_tools as multiscale_BCsTools
 
 # Defines a function to model a hyperelastic problem with a displacement
 # and a microrotation fields only in the microscale. It uses the macro

@@ -2,11 +2,11 @@
 
 import numpy as np
 
-import CuboidGmsh.source.solids.cuboid_generator as cuboid
+import CuboidGmsh.solids.cuboid_generator as cuboid
 
-import CuboidGmsh.source.tool_box.meshing_tools as tools
+import CuboidGmsh.tool_box.meshing_tools as tools
 
-import CuboidGmsh.source.tool_box.geometric_tools as geo
+import CuboidGmsh.tool_box.geometric_tools as geo
 
 # Defines a function to create a helicoid with circular cross section 
 # and circular trajectory. Both ends have facets with the facet's normal

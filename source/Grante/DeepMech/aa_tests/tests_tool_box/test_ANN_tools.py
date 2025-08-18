@@ -107,7 +107,10 @@ class TestANNTools(unittest.TestCase):
         self.layers_information = [{"sigmoid": 1000}, {"sigmoid":1000},
         {"linear": 1}]
 
-    # Defines a function to test the custom layer class
+        self.layers_information = [{"sigmoid": 2}, {"sigmoid":2},
+        {"linear": 1}]
+
+    # 1. Defines a function to test the custom layer class
     
     def test_customLayer(self):
 
@@ -134,7 +137,7 @@ class TestANNTools(unittest.TestCase):
 
         self.assertEqual(output_call.shape, output_direct.shape)
 
-    # Defines a function to test the multilayered model
+    # 2. Defines a function to test the multilayered model
 
     def test_multilayeredModel(self):
 
@@ -157,7 +160,7 @@ class TestANNTools(unittest.TestCase):
 
         self.assertEqual(output.shape[0], self.dummy_input.shape[0])
 
-    # Defines a function to test saving and laoding of a model
+    # 3. Defines a function to test saving and laoding of a model
 
     def test_savingAndLoading(self):
 
@@ -196,7 +199,8 @@ class TestANNTools(unittest.TestCase):
         np.testing.assert_allclose(output_original.numpy(), 
         output_loaded.numpy(), rtol=1e-5)
 
-    # Defines a function to test the trainability of such custom models
+    # 4. Defines a function to test the trainability of such custom mo-
+    # dels
 
     def test_trainability(self):
 
@@ -228,8 +232,8 @@ class TestANNTools(unittest.TestCase):
         print("Loss function on test set:", format(test_loss.numpy(), 
         '.5e'))
 
-    # Defines a function to test the trainability of the equivalent den-
-    # se model
+    # 5. Defines a function to test the trainability of the equivalent 
+    # dense model
 
     def test_trainabilityKeras(self):
 
@@ -274,6 +278,83 @@ class TestANNTools(unittest.TestCase):
 
         print("Loss function on test set:", format(test_loss.numpy(), 
         '.5e'))
+
+    # 6. Defines a function to test evaluation of the gradient of a model
+
+    def test_gradient_evaluation(self):
+
+        print("\n#####################################################"+
+        "###################\n#                       Tests gradient e"+
+        "valuation                      #\n###########################"+
+        "#############################################\n")
+
+        # Creates the custom model with custom layers
+
+        evaluate_parameters_gradient="sum of samples"
+
+        custom_model, gradient = ANN_tools.MultiLayerModel(2, 
+        self.layers_information, enforce_customLayers=True,
+        evaluate_parameters_gradient=evaluate_parameters_gradient)()#"sum of samples")()
+
+        print("Original input tensor:")
+
+        print(self.test_inputTensor)
+
+        print("\nFirst sample of the input tensor:")
+
+        print(tf.expand_dims(self.test_inputTensor[0],0))
+
+        test_gradient = []
+
+        for i in range(self.test_inputTensor.shape[0]):
+
+            test_gradient.append(gradient(tf.expand_dims(self.test_inputTensor[i],0)))
+
+        print("\nGradient converted to array:")
+
+        for i in range(self.test_inputTensor.shape[0]):
+
+            print("\nSample "+str(i+1)+":")
+
+            for var, g in zip(custom_model.trainable_variables, test_gradient[i]):
+                
+                print(f"{var.name} (shape {g.shape}):")
+                
+                print(g.numpy(), "\n")
+
+        test_gradient = gradient(self.test_inputTensor)
+
+        print("\n\nGradient of the model at the total set:")
+
+        for var, g in zip(custom_model.trainable_variables, test_gradient):
+                
+            print(f"{var.name} (shape {g.shape}):")
+            
+            print(g.numpy(), "\n")
+
+        evaluate_parameters_gradient=True
+
+        custom_model, gradient = ANN_tools.MultiLayerModel(2, 
+        self.layers_information, enforce_customLayers=True,
+        evaluate_parameters_gradient=evaluate_parameters_gradient)()#"sum of samples")()
+
+        print("Original input tensor:")
+
+        print(self.test_inputTensor)
+
+        test_gradient = gradient(self.test_inputTensor)
+
+        print("\nGradient converted to array:")
+
+        for i in range(len(test_gradient)):
+
+            print("\nSample "+str(i+1)+":")
+
+            for var, g in zip(custom_model.trainable_variables, test_gradient[i]):
+                
+                print(f"{var.name} (shape {g.shape}):")
+                
+                print(g.numpy(), "\n")
 
 # Runs all tests
 

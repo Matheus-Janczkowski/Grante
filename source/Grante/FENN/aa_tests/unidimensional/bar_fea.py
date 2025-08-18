@@ -6,9 +6,9 @@ from scipy import sparse
 
 from ....MultiMech.tool_box import plotting_tools
 
-from . import variational_tools#import FENN.aa_tests.unidimensional.variational_tools as variational_tools
+from . import variational_tools
 
-from . import hyperelastic_1D_energies as hyperelastic_energy_densities#import FENN.aa_tests.unidimensional.hyperelastic_1D_energies as hyperelastic_energy_densities
+from . import hyperelastic_1D_energies as hyperelastic_energy_densities
 
 # Defines a function to set the data for the FEA of a hyperelastic bar
 
@@ -209,4 +209,8 @@ def plot_configurations(nodes_coordinates, displacement_vector, title=
     "Deformed, $u\\left(X=L\\right)="+str(round(displacement_vector[-1], 
     ndigits=3))+"$"])
 
-FEA_bar()
+# Runs this code only if this file is explicitely run, not just imported
+
+if __name__=="__main__":
+
+    FEA_bar()

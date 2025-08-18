@@ -19,7 +19,7 @@ import numpy as np
 class MultiLayerModel:
 
     def __init__(self, input_dimension, layers_activationInfo, 
-    enforce_customLayers=False):
+    enforce_customLayers=False, evaluate_parameters_gradient=False):
         
         # Retrieves the parameters
 
@@ -35,6 +35,11 @@ class MultiLayerModel:
         # the layers have each a single type of activation functions
 
         self.enforce_customLayers = enforce_customLayers
+
+        # Sets a flag to tell if the gradient of the model with respect
+        # to its parameters is to be given as a function
+
+        self.evaluate_parameters_gradient = evaluate_parameters_gradient
 
     # Defines a function to verify the list of dictionaries and, then,
     # it creates the model accordingly
@@ -100,6 +105,14 @@ class MultiLayerModel:
         model = tf.keras.Model(inputs=input_layer, outputs=
         output_eachLayer)
 
+        # If the gradient is to be evaluated too
+
+        if self.evaluate_parameters_gradient:
+        
+            return model, self.model_gradient(model)
+        
+        # If not, returns the model only
+
         return model
     
     # Defines a method to construct a standard Keras model using the 
@@ -137,9 +150,80 @@ class MultiLayerModel:
             model_parameters.append(tf.keras.layers.Dense(layer[keys[0]
             ], activation=keys[0]))
 
-        # Retuns the model
+        # Retuns the model and the gradient with respect to the parame-
+        # ters if necessary
+
+        if self.evaluate_parameters_gradient:
+
+            keras_model = tf.keras.Sequential(model_parameters)
         
-        return tf.keras.Sequential(model_parameters)
+            return keras_model, self.model_gradient(keras_model)
+
+        else:
+        
+            return tf.keras.Sequential(model_parameters)
+    
+    # Defines a method to evaluate the derivative of the model with res-
+    # pect to the parameters (weights and biases)
+
+    def model_gradient(self, model):
+
+        # Defines a function to compute the sum of the gradient of each
+        # input sample w.r.t. the parameters (TensorFlow default option)
+
+        if self.evaluate_parameters_gradient=="sum of samples":
+
+            @tf.function
+            def gradient_evaluator(x):
+
+                with tf.GradientTape() as tape:
+
+                    model_response = model(x)
+
+                gradient = tape.gradient(model_response, 
+                model.trainable_variables)
+
+                return gradient
+            
+            return gradient_evaluator
+        
+        # Defines a function to compute the gradient w.r.t. the parame-
+        # ters and evaluate it at each input sample separately
+
+        elif self.evaluate_parameters_gradient=="individual samples" or (
+        self.evaluate_parameters_gradient==True):
+            
+            @tf.function
+            def gradient_evaluator(x):
+
+                gradient_samples = []
+
+                for sample_counter in range(x.shape[0]):
+
+                    # Gets the sample and differentiates
+
+                    x_sample = tf.expand_dims(x[sample_counter], 0)
+
+                    with tf.GradientTape() as tape:
+
+                        model_response_sample = model(x_sample)
+
+                    gradient = tape.gradient(model_response_sample, 
+                    model.trainable_variables)
+
+                    # Appends the gradient to the list
+
+                    gradient_samples.append(gradient)
+
+                return gradient_samples
+            
+            return gradient_evaluator
+        
+        else:
+
+            raise NameError("The flag 'evaluate_parameters_gradient' i"+
+            "n 'MultiLayerModel' can be either 'sum of samples', 'indi"+
+            "vidual samples', or True")
 
 # Defines a class to construct a layer with different activation 
 # functions. Receives a dictionary of activation functions, the activa-

@@ -5,7 +5,7 @@ with open("source/README.md", 'r') as f:
     long_description = f.read()
 
 setup(
-    name='grante',
+    name='Grante',
     version='0.1',
     package_dir={"": "source"},
     packages=find_packages(where="source"),

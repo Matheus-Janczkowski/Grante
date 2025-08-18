@@ -67,11 +67,11 @@ def FEA_bar():
     # Sets the tractions directly as lists of node and corresponding 
     # traction
 
-    tractions = [[len(nodes_coordinates)-1, -2E6]]
+    tractions = [[len(nodes_coordinates)-1, 2E6]]
 
     # Sets the number of load steps
 
-    load_steps = 4
+    load_steps = 1
 
     # Sets the maximum number Newton-Raphson iterations
 

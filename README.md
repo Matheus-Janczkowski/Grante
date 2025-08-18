@@ -1,6 +1,8 @@
 # Grante
 Repository to store the Grante's Wonderland.
 
+Booklet link: https://www.overleaf.com/read/wbxhncmtnmkm#0eb73b
+
 Installation:
 Download the repository, unzip the file, put it in a suitable place for you.
 Activate a python virtual environment, go into the directory where the files

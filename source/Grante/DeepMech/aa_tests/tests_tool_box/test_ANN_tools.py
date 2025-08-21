@@ -464,6 +464,9 @@ class TestANNTools(unittest.TestCase):
 
         output_dimension = 100
 
+        activation_list = [{"sigmoid": 100}, {"linear": output_dimension
+        }]
+
         n_samples = 1000
 
         x_min = -1.0
@@ -486,9 +489,9 @@ class TestANNTools(unittest.TestCase):
 
         evaluate_parameters_gradient=False
 
-        ANN_class = ANN_tools.MultiLayerModel(input_dimension, [{"sigm"+
-        "oid": 100}, {"linear": output_dimension}], enforce_customLayers=
-        True, evaluate_parameters_gradient=evaluate_parameters_gradient,
+        ANN_class = ANN_tools.MultiLayerModel(input_dimension, 
+        activation_list, enforce_customLayers=True, 
+        evaluate_parameters_gradient=evaluate_parameters_gradient,
         verbose=True)
 
         custom_model = ANN_class()
@@ -558,6 +561,8 @@ class TestANNTools(unittest.TestCase):
 
         # Gets the value
 
+        result = objective_function()
+
         t_initial = time.time()
 
         result = objective_function()
@@ -566,23 +571,6 @@ class TestANNTools(unittest.TestCase):
 
         print("Elapsed time: "+str(elapsed_time)+". Loss function and "+
         "gradient:")
-
-        print(result)
-
-        theta0, shapes = parameters_tools.model_parameters_to_flat_tensor_and_shapes(
-        custom_model)
-
-        L, g = parameters_tools.loss_and_grad(theta0, custom_model, input_test_data, coefficient_matrix, shapes)
-
-        t_initial = time.time()
-
-        L, g = parameters_tools.loss_and_grad(theta0, custom_model, input_test_data, coefficient_matrix, shapes)
-
-        elapsed_time = time.time()-t_initial
-        print("Elapsed time: "+str(elapsed_time)+". Using call with pa"+
-        "rameters")
-
-        print(np.linalg.norm(result-g))
 
         print(np.linalg.norm(result-result2))
 
@@ -602,7 +590,36 @@ class TestANNTools(unittest.TestCase):
 
         print("Elapsed time: "+str(elapsed_time)+". Using automatic ca"+
         "ll with parameters. The difference to the gradient without au"+
-        "tomatic function assembly: "+str(np.linalg.norm(result3-g)))
+        "tomatic function assembly: "+str(np.linalg.norm(result3-result)
+        ))
+
+        # Tests now with Keras layers
+
+        ANN_class = ANN_tools.MultiLayerModel(input_dimension, 
+        activation_list, enforce_customLayers=False, 
+        evaluate_parameters_gradient=evaluate_parameters_gradient,
+        verbose=True)
+
+        custom_model = ANN_class()
+
+        # Sets the same function but enabling the model parameters as 
+        # argument from a tensorflow 1D tensor
+
+        objective_function_with_parameters, model_paramsKeras = loss_tools.build_loss_varying_model_parameters(
+        custom_model, loss, input_test_data)
+
+        result4 = objective_function_with_parameters(model_params)
+
+        t_initial = time.time()
+
+        result4 = objective_function_with_parameters(model_params)
+
+        elapsed_time = time.time()-t_initial
+
+        print("Elapsed time: "+str(elapsed_time)+". Using automatic ca"+
+        "ll with parameters and Keras layers. The difference of the gr"+
+        "adient between using Keras and custom layer is "+str(
+        np.linalg.norm(result3-result4)))
 
 # Runs all tests
 

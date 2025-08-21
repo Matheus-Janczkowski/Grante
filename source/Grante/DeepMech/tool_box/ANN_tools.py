@@ -6,6 +6,8 @@ import numpy as np
 
 from ..tool_box import differentiation_tools as diff_tools
 
+from ..tool_box import parameters_tools
+
 ########################################################################
 #                       ANN construction classes                       #
 ########################################################################
@@ -139,7 +141,9 @@ class MultiLayerModel:
 
         if self.flat_trainable_parameters:
 
-            return model, flatten_variables(model)
+            return (model, 
+            parameters_tools.model_parameters_to_flat_tensor_and_shapes(
+            model))
         
         # If not, returns the model only
 
@@ -150,6 +154,12 @@ class MultiLayerModel:
 
     def multilayer_modelKeras(self):
 
+        # Adds the method to call the Dense keras layer giving the para-
+        # meters as a 1D tensor
+
+        tf.keras.layers.Dense.call_with_parameters = (
+        parameters_tools.keras_dense_call_with_parameters)
+
         # Initializes the Keras model. Constructs a list of layers
 
         model_parameters = []
@@ -158,9 +168,11 @@ class MultiLayerModel:
 
         keys = list(self.layers_info[0].keys())
 
-        model_parameters[0] = tf.keras.layers.Dense(
-        self.layers_info[0][keys[0]], activation=keys[0], 
-        input_dim=self.input_dimension)
+        model_parameters.append(tf.keras.Input(shape=(
+        self.input_dimension,)))
+
+        model_parameters.append(tf.keras.layers.Dense(self.layers_info[0
+        ][keys[0]], activation=keys[0]))
 
         # Iterates through the layers, but skips the first layer, as it
         # has already been populated

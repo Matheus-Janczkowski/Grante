@@ -159,22 +159,29 @@ model_parameters, parameters_shapes):
 
         elif layer.__class__.__name__!="InputLayer":
 
-            raise TypeError("A layer is not an instance of 'MixedActiv"+
-            "ationLayer' nor of 'InputLayer'")
+            raise TypeError("Layer '"+str(layer.__class__.__name__)+"'"+
+            " is not an instance of 'MixedActivationLayer' nor of 'Inp"+
+            "utLayer'")
         
     # Returns the input variables as the output of the NN model, because
     # it has been passed through the NN model
         
     return input_variables
 
-def linear_loss(theta, model, x, coeffs, shapes):
-    y = model_output_given_trainable_parameters(x, model, theta, shapes)
-    return tf.reduce_sum(coeffs * y)
+########################################################################
+#           Call with parameters method for non-custom layers          #
+########################################################################
 
-@tf.function
-def loss_and_grad(theta, model, x, coeffs, shapes):
-    with tf.GradientTape() as tape:
-        tape.watch(theta)
-        L = linear_loss(theta, model, x, coeffs, shapes)
-    g = tape.gradient(L, theta)
-    return L, g
+# Defines a function to work as the method call_with_parameters in a Ke-
+# ras Dense layer
+
+def keras_dense_call_with_parameters(self, inputs, parameters):
+
+    # Gets the weights and biases
+
+    weights, biases = parameters
+
+    # Multiplies the weights by the inputs, adds the biases and applies
+    # the activation function
+
+    return self.activation(tf.matmul(inputs, weights)+biases)

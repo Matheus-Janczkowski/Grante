@@ -4,7 +4,13 @@ import unittest
 
 import numpy as np
 
+import time
+
 from ...tool_box import optimization_tools
+
+from ....DeepMech.tool_box import ANN_tools, loss_tools
+
+from ....DeepMech.tool_box import differentiation_tools as diff_tools
 
 # Defines a function to test the ANN optimization wrappers
 
@@ -72,6 +78,52 @@ class TestOptimizationWrappers(unittest.TestCase):
 
         self.assertEqual(np.testing.assert_allclose(true_minimum, 
         optimization_class.design_variables), None)
+
+    # Defines a function to test if a tensorflow NN model can be succes-
+    # sfully trained using scipy
+
+    def test_train_NN_model(self):
+
+        print("\n#####################################################"+
+        "###################\n#                             NN trainin"+
+        "g                              #\n###########################"+
+        "#############################################\n")
+
+        ANN_class = ANN_tools.MultiLayerModel(
+        self.input_dimension_gradient_tests, 
+        self.activation_list_gradient_tests, enforce_customLayers=True, 
+        evaluate_parameters_gradient=evaluate_parameters_gradient,
+        verbose=True)
+
+        custom_model = ANN_class()
+
+        # Gets the coefficient matrix
+
+        coefficient_matrix = tf.random.normal((
+        self.n_samples_gradient_tests, 
+        self.output_dimension_gradient_tests))
+        
+        # Sets the loss function
+
+        loss = lambda model_response: loss_tools.linear_loss(model_response, 
+        coefficient_matrix)
+
+        # Sets the same function but enabling the model parameters as 
+        # argument from a tensorflow 1D tensor
+
+        objective_function_with_parameters, model_params = loss_tools.build_loss_varying_model_parameters(
+        custom_model, loss, input_test_data)
+
+        result = objective_function_with_parameters(model_params)
+
+        t_initial = time.time()
+
+        result = objective_function_with_parameters(model_params)
+
+        elapsed_time = time.time()-t_initial
+
+        print("Elapsed time: "+str(elapsed_time)+". Using automatic ca"+
+        "ll with parameters")
 
 # Runs all tests
 

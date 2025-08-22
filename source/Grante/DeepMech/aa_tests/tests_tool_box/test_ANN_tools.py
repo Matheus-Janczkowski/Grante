@@ -20,6 +20,8 @@ from ...tool_box import parameters_tools
 
 from ...tool_box import loss_tools
 
+from ...tool_box import loss_assembler_classes as loss_assemblers
+
 from ....MultiMech.tool_box import file_handling_tools
 
 # Defines a function to test the ANN tools methods
@@ -118,6 +120,17 @@ class TestANNTools(unittest.TestCase):
 
         self.layers_information = [{"sigmoid": 100}, {"sigmoid":100},
         {"linear": 1}]
+
+        # Defines the test data for the gradient tests
+
+        self.input_dimension_gradient_tests = 9
+
+        self.output_dimension_gradient_tests = 100
+
+        self.activation_list_gradient_tests = [{"sigmoid": 100}, {"lin"+
+        "ear": self.output_dimension_gradient_tests}]
+
+        self.n_samples_gradient_tests = 1000
 
     # 1. Defines a function to test the custom layer class
     
@@ -460,25 +473,16 @@ class TestANNTools(unittest.TestCase):
         
         # Creates the new test data
 
-        input_dimension = 9
-
-        output_dimension = 100
-
-        activation_list = [{"sigmoid": 100}, {"linear": output_dimension
-        }]
-
-        n_samples = 1000
-
         x_min = -1.0
 
         x_max = 1.0
 
         data_matrix = []
 
-        for i in range(n_samples):
+        for i in range(self.n_samples_gradient_tests):
 
             data_matrix.append([ANN_tools.random_inRange(x_min, x_max
-            ) for j in range(input_dimension)])
+            ) for j in range(self.input_dimension_gradient_tests)])
 
         # Converts the data to tensors
 
@@ -489,8 +493,9 @@ class TestANNTools(unittest.TestCase):
 
         evaluate_parameters_gradient=False
 
-        ANN_class = ANN_tools.MultiLayerModel(input_dimension, 
-        activation_list, enforce_customLayers=True, 
+        ANN_class = ANN_tools.MultiLayerModel(
+        self.input_dimension_gradient_tests, 
+        self.activation_list_gradient_tests, enforce_customLayers=True, 
         evaluate_parameters_gradient=evaluate_parameters_gradient,
         verbose=True)
 
@@ -498,22 +503,27 @@ class TestANNTools(unittest.TestCase):
 
         # Gets the coefficient matrix
 
-        coefficient_matrix = tf.random.normal((n_samples, 
-        output_dimension))
+        coefficient_matrix = tf.random.normal((
+        self.n_samples_gradient_tests, 
+        self.output_dimension_gradient_tests))
 
         # Sets the loss function
 
         loss = lambda model_response: loss_tools.linear_loss(model_response, 
         coefficient_matrix)
 
+        loss = loss_assemblers.LinearLossAssembler(coefficient_matrix)
+
         # Sets a function to capture the value and the gradient of the
         # loss 
+
+        gradient_class = diff_tools.ScalarGradientWrtTrainableParams(
+        loss, input_test_data)
 
         def objective_function(custom_model=custom_model, loss=loss,
         input_test_data=input_test_data):
 
-            gradient = diff_tools.scalar_gradient_wrt_trainable_params(
-            loss, custom_model, input_test_data)
+            gradient = gradient_class(custom_model)
 
             # Converts to numpy
 
@@ -522,7 +532,7 @@ class TestANNTools(unittest.TestCase):
         # Sets the same function but enabling the model parameters as 
         # argument from a numpy array
 
-        objective_function_with_parameters, model_params = loss_tools.build_loss_varying_model_parameters(
+        objective_function_with_parameters, model_params = loss_tools.build_loss_gradient_varying_model_parameters(
         custom_model, loss, input_test_data, trainable_variables_type=
         "numpy")
 
@@ -577,7 +587,7 @@ class TestANNTools(unittest.TestCase):
         # Sets the same function but enabling the model parameters as 
         # argument from a tensorflow 1D tensor
 
-        objective_function_with_parameters, model_params = loss_tools.build_loss_varying_model_parameters(
+        objective_function_with_parameters, model_params = loss_tools.build_loss_gradient_varying_model_parameters(
         custom_model, loss, input_test_data)
 
         result3 = objective_function_with_parameters(model_params)
@@ -595,8 +605,9 @@ class TestANNTools(unittest.TestCase):
 
         # Tests now with Keras layers
 
-        ANN_class = ANN_tools.MultiLayerModel(input_dimension, 
-        activation_list, enforce_customLayers=False, 
+        ANN_class = ANN_tools.MultiLayerModel(
+        self.input_dimension_gradient_tests, 
+        self.activation_list_gradient_tests, enforce_customLayers=False, 
         evaluate_parameters_gradient=evaluate_parameters_gradient,
         verbose=True)
 
@@ -605,7 +616,7 @@ class TestANNTools(unittest.TestCase):
         # Sets the same function but enabling the model parameters as 
         # argument from a tensorflow 1D tensor
 
-        objective_function_with_parameters, model_paramsKeras = loss_tools.build_loss_varying_model_parameters(
+        objective_function_with_parameters, model_paramsKeras = loss_tools.build_loss_gradient_varying_model_parameters(
         custom_model, loss, input_test_data)
 
         result4 = objective_function_with_parameters(model_params)

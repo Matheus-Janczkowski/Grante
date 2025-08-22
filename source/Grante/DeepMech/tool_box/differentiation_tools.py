@@ -10,56 +10,103 @@ from ..tool_box import parameters_tools
 #                          NN model gradient                           #
 ########################################################################
 
-# Defines a function to evaluate the gradient of a scalar function with 
+# Defines a class to evaluate the gradient of a scalar function with 
 # respect to the model trainable parameters
 
-@tf.function
-def scalar_gradient_wrt_trainable_params(scalar_function, model, 
-input_tensor):
+class ScalarGradientWrtTrainableParams:
+    
+    def __init__(self, scalar_function, input_tensor, model_true_values=
+        None):
 
-    # Creates the tape
+        self.scalar_function = scalar_function
 
-    with tf.GradientTape() as tape:
+        self.input_tensor = input_tensor
 
-        # Evaluates the model output
+        # Creates a dummy true value of output, because the Keras' loss 
+        # functions requires y_true and y_pred as arguments
 
-        y = model(input_tensor)
+        if model_true_values is None:
 
-        # Evaluates the scalar function
+            self.model_true_values = tf.constant([0.0], dtype=
+            input_tensor.dtype)
 
-        phi = scalar_function(y)
+        else:
 
-    # Gets the gradient
+            self.model_true_values = model_true_values
 
-    return tape.gradient(phi, model.trainable_variables)
+    # Defines a function to actually evaluate the derivative
 
-# Defines a function to evaluate the gradient of a scalar function with 
+    @tf.function
+    def __call__(self, model):
+
+        # Creates the tape
+
+        with tf.GradientTape() as tape:
+
+            # Evaluates the model output
+
+            y = model(self.input_tensor)
+
+            # Evaluates the scalar function
+
+            phi = self.scalar_function(self.model_true_values, y)
+
+        # Gets the gradient
+
+        return tape.gradient(phi, model.trainable_variables)
+
+# Defines a class to evaluate the gradient of a scalar function with 
 # respect to the model trainable parameters, when the parameters are gi-
 # ven as a 1D tensor
 
-@tf.function
-def scalar_gradient_wrt_trainable_params_given_parameters(
-scalar_function, model, input_tensor, trainable_parameters, 
-shapes_trainable_parameters):
+class ScalarGradientWrtTrainableParamsGivenParameters:
+    
+    def __init__(self, scalar_function, model, input_tensor, 
+    shapes_trainable_parameters, model_true_values=None):
+        
+        self.scalar_function = scalar_function
 
-    # Creates the tape
+        self.model = model 
 
-    with tf.GradientTape() as tape:
+        self.input_tensor = input_tensor
 
-        tape.watch(trainable_parameters)
+        self.shapes_trainable_parameters = shapes_trainable_parameters
 
-        # Gets the response of the model and multiplies by the coeffici-
-        # ent matrix, then, sums everything together
+        # Creates a dummy true value of output, because the Keras' loss 
+        # functions requires y_true and y_pred as arguments
 
-        y = parameters_tools.model_output_given_trainable_parameters(
-        input_tensor, model, trainable_parameters, 
-        shapes_trainable_parameters)
+        if model_true_values is None:
 
-        phi = scalar_function(y)
+            self.model_true_values = tf.constant([0.0], dtype=
+            input_tensor.dtype)
 
-    # Gets the gradient
+        else:
 
-    return tape.gradient(phi, trainable_parameters)
+            self.model_true_values = model_true_values
+
+    # Defines a function to actually evaluate the derivative
+
+    @tf.function
+    def __call__(self, trainable_parameters):
+
+        # Creates the tape
+
+        with tf.GradientTape() as tape:
+
+            tape.watch(trainable_parameters)
+
+            # Gets the response of the model and multiplies by the coeffici-
+            # ent matrix, then, sums everything together
+
+            y = parameters_tools.model_output_given_trainable_parameters(
+            self.input_tensor, self.model, trainable_parameters, 
+            self.shapes_trainable_parameters)
+
+            phi = self.scalar_function(self.model_true_values, y)
+
+        # Gets the gradient
+
+        return tape.gradient(phi, trainable_parameters)
 
 ########################################################################
 #                       NN model jacobian matrix                       #

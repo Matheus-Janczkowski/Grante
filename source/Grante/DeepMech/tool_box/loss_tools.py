@@ -73,18 +73,13 @@ input_tensor, trainable_variables_type="tensorflow"):
         model_parameters, parameters_shapes = parameters_tools.model_parameters_to_flat_tensor_and_shapes(
         model)
 
-        # Gets the class instance to evaluate the gradient
+        # Gets the class instance to evaluate the gradient and returns 
+        # it alongside the 1D tensor of model parameters
 
         gradient_class = diff_tools.ScalarGradientWrtTrainableParamsGivenParameters(
         loss, model, input_tensor, parameters_shapes)
-    
-        def parameterizable_loss(model_parameters_tensorflow):
-
-            # Returns it
-
-            return gradient_class(model_parameters_tensorflow)
         
-        return parameterizable_loss, model_parameters
+        return gradient_class, model_parameters
     
     else:
 

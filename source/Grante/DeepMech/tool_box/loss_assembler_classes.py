@@ -5,6 +5,8 @@ import tensorflow as tf
 
 from ..tool_box import loss_tools
 
+from ..tool_box import numerical_tools
+
 ########################################################################
 #                             Linear loss                              #
 ########################################################################
@@ -136,10 +138,11 @@ class LinearLossAssembler(tf.keras.losses.Loss):
 @tf.keras.utils.register_keras_serializable(package="custom_losses")
 class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
 
-    def __init__(self, A_matrix, b_vector, trainable_A_matrix=False,
-    trainable_b_vector=False, dtype=tf.float32, name="quadratic_loss_o"+
-    "ver_linear_residual", reduction=tf.keras.losses.Reduction.SUM, 
-    check_tensors=False, block_multiplication=False):
+    def __init__(self, A_matrix, b_vector, conditioning_matrix,
+    trainable_A_matrix=False, trainable_b_vector=False, dtype=tf.float32, 
+    name="quadratic_loss_over_linear_residual", reduction=
+    tf.keras.losses.Reduction.SUM, check_tensors=False, 
+    block_multiplication=False):
 
         super().__init__(name=name, reduction=reduction)
 
@@ -171,138 +174,175 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
 
         self.block_multiplication = block_multiplication
 
+        # Gets the number of output neurons
+
+        self.n_outputs = b_vector.shape[0]
+
+        # Gets the number of samples
+
+        self.n_samples = b_vector.shape[1]
+
+        if not isinstance(A_matrix, list):
+
+            raise TypeError("The coefficient matrix is not a list in '"+
+            "QuadraticLossOverLinearResidualAssembler' even though the"+
+            " block multiplication flag is on")
+
+        # Verifies if the the coefficient matrix has the same number of
+        # samples
+
+        if len(A_matrix)!=self.n_samples:
+
+            raise IndexError("The coefficient matrix has size "+str(len(
+            A_matrix))+", which is different than the number of sample"+
+            "s retrieved from the coefficient vector, "+str(
+            self.n_samples)+". Thus, the quadratic loss function for a"+
+            "linear residual cannot be performed")
+
         # If block multiplication is selected
 
         if self.block_multiplication:
 
-            # Gets the number of output neurons
+            # Builds the block diagonal matrix
 
-            self.n_outputs = b_vector.shape[0]
+            self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+            A_matrix, block_multiplication=self.block_multiplication)
 
-            # Gets the number of samples
+            # Creates a long vector out of the b vector, each sample af-
+            # ter the previous one
 
-            self.n_samples = b_vector.shape[1]
+            self.b_vector = tf.reshape(b_vector, (self.n_samples*
+            self.n_outputs, 1))
 
-            # Verifies if the the coefficient matrix has the same number
-            # of samples
+            # Creates a block diagonal matrix for the conditioning matrix
 
-            if len(A_matrix)!=self.n_samples:
+            self.conditioning_matrix = tf.linalg.LinearOperatorBlockDiag([
+            conditioning_matrix]*self.n_samples)
 
-                raise IndexError("The coefficient matrix has size "+str(
-                len(A_matrix))+", which is different than the number o"+
-                "f samples retrieved from the coefficient vector, "+str(
-                self.n_samples)+". Thus, the quadratic loss function f"+
-                "or a linear residual cannot be performed")
+        # If batch multiplication is selected
 
-            # Builds the block diagonal matrix. Thus, initializes a list
-            # of indices and of the values
+        else:
 
-            all_indices = []
+            # Builds the sparse tensor as tensor with 3 indices, where 
+            # the first one tells the batch
 
-            all_values = []
+            self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+            A_matrix, block_multiplication=self.block_multiplication)
 
-            tf.sparse.SparseTensor()
+            # Creates a variable for the b vector
 
-            for i, Ai in enumerate(A_matrix):
+            self.b_vector = tf.transpose(tf.Variable(b_vector, dtype=
+            self.tensorflow_type))
 
-                indices = Ai.indices + tf.constant([[i*self.n_outputs, i*self.n_outputs]], dtype=tf.int64) - tf.constant([[0,0]])
+            # Creates a sparse tensor for the conditioning matrix
 
-                all_indices.append(indices)
-
-                all_values.append(Ai.values)
-
-            all_indices = tf.concat(all_indices, axis=0)
-
-            all_values = tf.concat(all_values, axis=0)
-
-            A_block = tf.sparse.SparseTensor(indices=all_indices, values=
-            all_values, dense_shape=[self.n_samples*self.n_outputs, self.n_samples*self.n_outputs])
-
-            # Compute R
-
-            y_flat = tf.reshape(y, (self.n_samples*self.n_outputs, 1))  # (Nm, 1)
-            b_flat = tf.reshape(b, (self.n_samples*self.n_outputs, 1))
-            R = tf.sparse.sparse_dense_matmul(A_block, y_flat) - b_flat  # (Nm,1)
-            R = tf.reshape(R, (self.n_samples*self.n_outputs,))  # flat vector
-
-            # Compute D-block
-            D_block = tf.linalg.LinearOperatorBlockDiag([D]*self.n_samples)  # (Nm,Nm) dense
-
-            return 0.5 * tf.tensordot(R, D_block.matvec(R), axes=1)
+            self.conditioning_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+            conditioning_matrix, block_multiplication=False)
 
     # Redefines the call method
 
     def call(self, expected_response, model_response):
 
-        # Multiplies the coefficient matrix by the model output, and 
-        # subtracts by the coefficient vector to get the residual
+        # If block multiplication is selected
 
-        R = (self.A_matrix*model_response)-self.b_vector
+        if self.block_multiplication:
 
-        # Evaluates the quadratic loss function and returns it
+            # Reshapes the model response into a long vector of samples
+
+            flat_model_response = tf.reshape(model_response, (
+            self.n_samples*self.n_outputs, 1))
+
+            # Evaluates the residual vector and reshapes it
+
+            R = tf.reshape(tf.sparse.sparse_dense_matmul(self.A_matrix, 
+            flat_model_response)-self.b_vector, (self.n_samples*
+            self.n_outputs,))
+
+            # Evaluates the quadratic loss function and returns it
+            
+            return 0.5*tf.tensordot(R, self.conditioning_matrix.matvec(R
+            ), axes=1)
         
-        return loss_tools.linear_loss(model_response, 
-        self.coefficient_matrix)
+        # Tackles batch multiplication
+        
+        else:
+
+            # Reshapes the model response into a tensor (n_samples, 
+            # n_outputs, 1)
+
+            reshaped_model_response = tf.transpose(model_response)[:,:,
+            tf.newaxis]
+
+            # Evaluates the residue and stores it as a (n_samples, 
+            # n_outputs) tensor. Then, eshapes the residual vectors into 
+            # a single long vector, and computes the loss
+
+            R = tf.reshape(tf.squeeze(tf.sparse.sparse_dense_matmul(
+            self.A_matrix, reshaped_model_response), axis=-1)-
+            self.b_vector, (-1,))
+
+            # Evaluates the quadratic loss function and returns it
+
+            return 0.5*tf.tensordot(R, tf.sparse.sparse_dense_matmul(
+            self.conditioning_matrix, R), axes=1)
     
     # Defines a method to update the coefficient matrix
 
-    def update_arguments(self, coefficient_matrix):
+    def update_arguments(self, A_matrix, b_vector):
 
-        """if self.check_tensors:
+        # Gets the number of output neurons
 
-            self.check_arguments_consistency(None)"""
+        self.n_outputs = b_vector.shape[0]
 
-        # Updates the coefficient matrix as a TensorFlow constant
+        # Gets the number of samples
 
-        self.coefficient_matrix.assign(coefficient_matrix)
-        
-        """self.coefficient_matrix = tf.Variable(coefficient_matrix, dtype=
-        self.tensorflow_type, trainable=self.trainable_coefficient_matrix)"""
+        self.n_samples = b_vector.shape[1]
 
-    # Defines a method for checking arguments consistency
+        if not isinstance(A_matrix, list):
 
-    def check_arguments_consistency(self, model_response):
+            raise TypeError("The coefficient matrix is not a list in '"+
+            "QuadraticLossOverLinearResidualAssembler' even though the"+
+            " block multiplication flag is on")
 
-        if model_response is None:
+        # Verifies if the the coefficient matrix has the same number of
+        # samples
 
-            # Checks the number of rows and columns of the coefficient
-            # matrix
+        if len(A_matrix)!=self.n_samples:
 
-            tf.debugging.assert_equal(tf.shape(self.coefficient_matrix)[
-            0], self.n_rows_coefficient_matrix, message="The number of"+
-            " samples being evaluated by the model is different than t"+
-            "he number of rows of the coefficient matrix")
+            raise IndexError("The coefficient matrix has size "+str(len(
+            A_matrix))+", which is different than the number of sample"+
+            "s retrieved from the coefficient vector, "+str(
+            self.n_samples)+". Thus, the quadratic loss function for a"+
+            "linear residual cannot be performed")
 
-            tf.debugging.assert_equal(tf.shape(self.coefficient_matrix)[
-            1], self.n_columns_coefficient_matrix, message="The number"+
-            " of output neurons of the model is different than the num"+
-            "ber of columns of the coefficient matrix")
+        # If block multiplication is selected
+
+        if self.block_multiplication:
+
+            # Builds the block diagonal matrix
+
+            self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+            A_matrix, block_multiplication=self.block_multiplication)
+
+            # Creates a long vector out of the b vector, each sample af-
+            # ter the previous one
+
+            self.b_vector = tf.reshape(b_vector, (self.n_samples*
+            self.n_outputs, 1))
+
+        # If batch multiplication is selected
 
         else:
 
-            # Uses the debuggin interface of tensorflow to ease computa-
-            # tional cost and optimize the use of graph mode. Checks the
-            # number of samples
+            # Builds the sparse tensor as tensor with 3 indices, where 
+            # the first one tells the batch
 
-            tf.debugging.assert_equal(tf.shape(self.coefficient_matrix)[
-            0], tf.shape(model_response)[0], message="The number of sa"+
-            "mples being evaluated by the model is different than the "+
-            "number of rows of the coefficient matrix")
+            self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+            A_matrix, block_multiplication=self.block_multiplication)
 
-            # Checks the number of output neurons
+            # Creates a variable for the b vector
 
-            tf.debugging.assert_equal(tf.shape(self.coefficient_matrix)[
-            1], tf.shape(model_response)[-1], message="The number of o"+
-            "utput neurons of the model is different than the number o"+
-            "f columns of the coefficient matrix")
-
-            # Updates the number of rows and columns of the coefficient
-            # matrix
-
-            self.n_rows_coefficient_matrix = tf.shape(model_response)[0]
-
-            self.n_columns_coefficient_matrix = tf.shape(model_response
-            )[-1]
+            self.b_vector.assign(tf.transpose(b_vector))
 
     # Redefines configurations for model saving
 
@@ -311,7 +351,7 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
         config = super().get_config()
 
         config.update({"coefficient_matrix": 
-        self.coefficient_matrix.numpy().tolist(), "dtype":
-        self.coefficient_matrix.dtype.name})
+        self.A_matrix.numpy().tolist(), "dtype":
+        self.A_matrix.dtype.name})
 
         return config

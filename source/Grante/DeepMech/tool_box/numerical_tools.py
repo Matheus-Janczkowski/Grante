@@ -9,22 +9,187 @@ import tensorflow as tf
 ########################################################################
 
 # Defines a function to convert a scipy sparse matrix to a TensorFlow 
-# sparse tensor
+# sparse tensor. The provided sparse matrix can be a matrix constructed
+# using scipy formats, or it can be a list of those formats. If a list
+# is provided, then a big block-diagonal tensor will be created
 
-def scipy_sparse_to_tensor_sparse(sparse_matrix, number_type="float32"):
+def scipy_sparse_to_tensor_sparse(sparse_matrix, number_type="float32",
+reorder_indices=True, block_multiplication=True):
 
-    # Gets the COOrdinate sparse format
+    # Verifies if the required type for the data is available
 
-    sparse_matrix = sparse_matrix.tocoo(copy=False)
+    number_types = ["float32", "float64", "int32", "int64"]
 
-    # Gets the indices of the non-zero positions, into a nx2 list, where
-    # n is the number of non-zero positions
+    dtype = None
 
-    non_zero_indices = np.vstack((sparse_matrix.row, sparse_matrix.col)
-    ).T
+    if number_type in number_types:
 
-    # Returns the TensorFlow sparse tensor in a specific number type
+        # Gets the type from numpy
 
-    return tf.SparseTensor(indices=non_zero_indices, values=
-    sparse_matrix.data.astype(getattr(np, number_type)), dense_shape=
-    sparse_matrix.shape)
+        dtype = getattr(np, number_type)
+
+    else:
+
+        raise TypeError("The 'number_type' argument in scipy_to_tensor"+
+        "_sparse function is not one of the following options: "+str(
+        number_types))
+
+    # Tests if a block-diagonal tensor is to be created
+
+    if isinstance(sparse_matrix, list) and block_multiplication:
+
+        # Initializes the lists for the indices and for the values of the
+        # non-zero positions of the sparse matrices inside the list 
+
+        non_zero_indices = []
+
+        non_zero_values = []
+
+        # Initializes the number of dimensions that have already been ex-
+        # plored
+
+        explored_rows = 0
+
+        explored_columns = 0
+
+        # Iterates through the sparse matrices inside the list
+
+        for sub_matrix in sparse_matrix:
+
+            # Enforces the COOrdinate sparse format
+
+            sub_matrix = sub_matrix.tocoo(copy=False)
+
+            # Gets the indices of the non-zero positions and sums the 
+            # number of dimensions of the previously tracked matrices
+
+            indices = (np.vstack((sub_matrix.row+explored_rows, 
+            sub_matrix.col+explored_columns)).T.astype(np.int64))
+            
+            # Gets the values of these positions
+
+            values = sub_matrix.data.astype(dtype)
+
+            # Adds to the indices and values arrays
+
+            non_zero_indices.append(indices)
+
+            non_zero_values.append(values)
+
+            # Updates the number of explored dimensions
+
+            explored_rows += sub_matrix.shape[0]
+
+            explored_columns += sub_matrix.shape[1]
+
+        # Returns the TensorFlow sparse tensor in a specific number type.
+        # If the tensor is to be reordered in lexigrographic indices, 
+        # which is useful for TensorFlow operations
+
+        if reorder_indices:
+
+            return tf.sparse.reorder(tf.SparseTensor(indices=np.concatenate(
+            non_zero_indices, axis=0), values=np.concatenate(non_zero_values, 
+            axis=0), dense_shape=(explored_rows, explored_columns)))
+        
+        else:
+
+            return tf.SparseTensor(indices=np.concatenate(
+            non_zero_indices, axis=0), values=np.concatenate(
+            non_zero_values, axis=0), dense_shape=(explored_rows, 
+            explored_columns))
+
+    # Tests if a tensor with a third index is to be created. The first 
+    # index is to get the sparse matrix of the corresponding batch
+
+    elif isinstance(sparse_matrix, list):
+
+        # Initializes the lists for the indices and for the values of the
+        # non-zero positions of the sparse matrices inside the list 
+
+        non_zero_indices = []
+
+        non_zero_values = []
+
+        # Gets the number of batches and he maximum number of rows and
+        # columns
+
+        n_batches = len(sparse_matrix)
+
+        max_rows = 0
+
+        max_columns = 0
+
+        # Iterates through the sparse matrices inside the list
+
+        for batch_index, sub_matrix in enumerate(sparse_matrix):
+
+            # Updates the number of maximum rows and columns
+
+            max_rows = max(max_rows, sub_matrix.shape[0])
+
+            max_columns = max(max_columns, sub_matrix.shape[1])
+
+            # Enforces the COOrdinate sparse format
+
+            sub_matrix = sub_matrix.tocoo(copy=False)
+
+            # Gets the indices of the non-zero positions and sums the 
+            # number of dimensions of the previously tracked matrices
+
+            indices = np.stack([np.full_like(sub_matrix.row, 
+            batch_index, dtype=np.int64), sub_matrix.row.astype(dtype=
+            np.int64), sub_matrix.col.astype(dtype=np.int64)], axis=1)
+            
+            # Gets the values of these positions
+
+            values = sub_matrix.data.astype(dtype)
+
+            # Adds to the indices and values arrays
+
+            non_zero_indices.append(indices)
+
+            non_zero_values.append(values)
+
+        # Returns the TensorFlow sparse tensor in a specific number type.
+        # If the tensor is to be reordered in lexigrographic indices, 
+        # which is useful for TensorFlow operations
+
+        if reorder_indices:
+
+            return tf.sparse.reorder(tf.SparseTensor(indices=np.concatenate(
+            non_zero_indices, axis=0), values=np.concatenate(non_zero_values, 
+            axis=0), dense_shape=(n_batches, max_rows, max_columns)))
+        
+        else:
+
+            return tf.SparseTensor(indices=np.concatenate(
+            non_zero_indices, axis=0), values=np.concatenate(
+            non_zero_values, axis=0), dense_shape=(n_batches, max_rows, 
+            max_columns))
+
+    else:
+
+        # Gets the COOrdinate sparse format
+
+        sparse_matrix = sparse_matrix.tocoo(copy=False)
+
+        # Gets the indices of the non-zero positions, into a nx2 list, 
+        # where n is the number of non-zero positions
+
+        non_zero_indices = np.vstack((sparse_matrix.row, 
+        sparse_matrix.col)).T.astype(np.int64)
+
+        # Returns the TensorFlow sparse tensor in a specific number type
+
+        if reorder_indices:
+
+            return tf.sparse.reorder(tf.SparseTensor(indices=
+            non_zero_indices, values=sparse_matrix.data.astype(dtype), 
+            dense_shape=sparse_matrix.shape))
+        
+        else:
+
+            return tf.SparseTensor(indices=non_zero_indices, values=
+            sparse_matrix.data.astype(dtype), dense_shape=
+            sparse_matrix.shape)

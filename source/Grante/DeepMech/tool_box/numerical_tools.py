@@ -14,7 +14,7 @@ import tensorflow as tf
 # is provided, then a big block-diagonal tensor will be created
 
 def scipy_sparse_to_tensor_sparse(sparse_matrix, number_type="float32",
-reorder_indices=True, block_multiplication=True):
+reorder_indices=True, block_multiplication=True, n_samples=None):
 
     # Verifies if the required type for the data is available
 
@@ -98,6 +98,61 @@ reorder_indices=True, block_multiplication=True):
             non_zero_indices, axis=0), values=np.concatenate(
             non_zero_values, axis=0), dense_shape=(explored_rows, 
             explored_columns))
+        
+    elif (not (n_samples is None)) and block_multiplication:
+        
+        # Gets the COOrdinate sparse format
+
+        sparse_matrix = sparse_matrix.tocoo(copy=False)
+
+        # Gets the indices of the non-zero positions, into a nx2 list, 
+        # where n is the number of non-zero positions
+
+        basic_indices = np.vstack((sparse_matrix.row, sparse_matrix.col)
+        ).T.astype(np.int64)
+            
+        # Gets the values of these positions
+
+        values = sparse_matrix.data.astype(dtype)
+
+        # Initializes the lists for the indices and for the values of the
+        # non-zero positions of the sparse matrices inside the list 
+
+        non_zero_indices = []
+
+        non_zero_values = []
+
+        # Gets the number of dimensions
+
+        n_dimensions = sparse_matrix.shape[0]
+
+        # Iterates through the sparse matrices inside the list
+
+        for i in range(n_samples):
+
+            # Adds to the indices and values arrays
+
+            non_zero_indices.append(basic_indices+(n_dimensions*i))
+
+            non_zero_values.append(values)
+
+        # Returns the TensorFlow sparse tensor in a specific number type.
+        # If the tensor is to be reordered in lexigrographic indices, 
+        # which is useful for TensorFlow operations
+
+        if reorder_indices:
+
+            return tf.sparse.reorder(tf.SparseTensor(indices=np.concatenate(
+            non_zero_indices, axis=0), values=np.concatenate(non_zero_values, 
+            axis=0), dense_shape=(n_dimensions*n_samples, n_dimensions
+            *n_samples)))
+        
+        else:
+
+            return tf.SparseTensor(indices=np.concatenate(
+            non_zero_indices, axis=0), values=np.concatenate(
+            non_zero_values, axis=0), dense_shape=(n_dimensions*
+            n_samples, n_dimensions*n_samples))
 
     # Tests if a tensor with a third index is to be created. The first 
     # index is to get the sparse matrix of the corresponding batch

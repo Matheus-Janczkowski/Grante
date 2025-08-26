@@ -144,7 +144,7 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
     "ty", trainable_A_matrix=False, trainable_b_vector=False, dtype=
     tf.float32, name="quadratic_loss_over_linear_residual", reduction=
     tf.keras.losses.Reduction.SUM, check_tensors=False, 
-    block_multiplication=False):
+    block_multiplication=True):
 
         super().__init__(name=name, reduction=reduction)
 
@@ -178,11 +178,11 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
 
         # Gets the number of output neurons
 
-        self.n_outputs = b_vector.shape[0]
+        self.n_outputs = b_vector.shape[1]
 
         # Gets the number of samples
 
-        self.n_samples = b_vector.shape[1]
+        self.n_samples = b_vector.shape[0]
 
         if not isinstance(A_matrix, list):
 
@@ -201,12 +201,12 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
             self.n_samples)+". Thus, the quadratic loss function for a"+
             "linear residual cannot be performed")
         
-        # If the conditioning matrix is equal to the identity
+        # If the conditioning matrix is the identity matrix
 
         if conditioning_matrix=="identity":
 
             conditioning_matrix = sp.sparse.identity(self.n_outputs, 
-            dtype=float, format='coo')
+            dtype=float, format="coo")
 
         # If block multiplication is selected
 
@@ -220,13 +220,15 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
             # Creates a long vector out of the b vector, each sample af-
             # ter the previous one
 
-            self.b_vector = tf.reshape(b_vector, (self.n_samples*
-            self.n_outputs, 1))
+            self.b_vector = tf.Variable(tf.cast(tf.reshape(b_vector, (
+            self.n_samples*self.n_outputs, 1)), self.tensorflow_type), 
+            dtype=self.tensorflow_type)
 
             # Creates a block diagonal matrix for the conditioning matrix
 
-            self.conditioning_matrix = tf.linalg.LinearOperatorBlockDiag([
-            conditioning_matrix]*self.n_samples)
+            self.conditioning_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+            conditioning_matrix, block_multiplication=True, n_samples=
+            self.n_samples)
 
         # If batch multiplication is selected
 
@@ -269,40 +271,40 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
 
             # Evaluates the quadratic loss function and returns it
             
-            return 0.5*tf.tensordot(R, self.conditioning_matrix.matvec(R
-            ), axes=1)
+            return 0.5*tf.tensordot(R, tf.reshape(
+            tf.sparse.sparse_dense_matmul(self.conditioning_matrix, 
+            tf.expand_dims(R, -1)), [-1]), axes=1)
         
         # Tackles batch multiplication
         
         else:
 
-            # Initializes a list of residual vectors, one for each sam-
-            # ple
+            # Initializes the value of the loss value
 
-            R_list = []
+            loss_value = tf.constant(0.0, dtype=self.tensorflow_type)
 
             # Iterates through the samples
 
             for i in range(self.n_samples):
 
-                # Gets the residual vector
+                # Evaluates the residual of the linear form and flattens
+                # it
 
-                R_sample = tf.sparse.sparse_dense_matmul(self.A_matrix[i
-                ], model_response[:,i:(i+1)])-self.b_vector[:,i:(i+1)]
+                R_sample = tf.reshape(tf.sparse.sparse_dense_matmul(
+                self.A_matrix[i], tf.expand_dims(model_response[i,:], 
+                axis=-1))-tf.expand_dims(self.b_vector[i, :], axis=-1), 
+                [-1])
 
-                # Flattens the residual vector and appends to the list
+                # Evaluates the residual functional and adds it to the
+                # loss
 
-                R_list.append(tf.reshape(R_sample, [-1]))
+                loss_value += tf.tensordot(R_sample, tf.reshape(
+                tf.sparse.sparse_dense_matmul(self.conditioning_matrix, 
+                tf.expand_dims(R_sample, -1)), [-1]), axes=1)
 
-            # Concatenates the residual list into a single vector
+            # Returns the loss multiplied by 0.5
 
-            R_list = tf.concat(R_list, axis=0)
-
-            # Evaluates the loss and returns it
-
-            return 0.5*tf.tensordot(R_list, 
-            tf.sparse.sparse_dense_matmul(self.conditioning_matrix, 
-            R_list), axes=1)
+            return 0.5*loss_value
     
     # Defines a method to update the coefficient matrix
 
@@ -310,11 +312,11 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
 
         # Gets the number of output neurons
 
-        self.n_outputs = b_vector.shape[0]
+        self.n_outputs = b_vector.shape[1]
 
         # Gets the number of samples
 
-        self.n_samples = b_vector.shape[1]
+        self.n_samples = b_vector.shape[0]
 
         if not isinstance(A_matrix, list):
 
@@ -333,34 +335,28 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
             self.n_samples)+". Thus, the quadratic loss function for a"+
             "linear residual cannot be performed")
 
+        # Builds the coefficient matrix
+
+        self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
+        A_matrix, block_multiplication=self.block_multiplication)
+
         # If block multiplication is selected
 
         if self.block_multiplication:
 
-            # Builds the block diagonal matrix
-
-            self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
-            A_matrix, block_multiplication=self.block_multiplication)
-
             # Creates a long vector out of the b vector, each sample af-
             # ter the previous one
 
-            self.b_vector = tf.reshape(b_vector, (self.n_samples*
-            self.n_outputs, 1))
+            self.b_vector.assign(tf.cast(tf.reshape(b_vector, (
+            self.n_samples*self.n_outputs, 1)), self.tensorflow_type))
 
         # If batch multiplication is selected
 
         else:
 
-            # Builds the sparse tensor as tensor with 3 indices, where 
-            # the first one tells the batch
-
-            self.A_matrix = numerical_tools.scipy_sparse_to_tensor_sparse(
-            A_matrix, block_multiplication=self.block_multiplication)
-
             # Creates a variable for the b vector
 
-            self.b_vector.assign(tf.transpose(b_vector))
+            self.b_vector.assign(b_vector)
 
     # Redefines configurations for model saving
 

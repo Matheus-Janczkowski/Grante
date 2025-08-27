@@ -9,6 +9,8 @@ from ..tool_box import loss_tools
 
 from ..tool_box import numerical_tools
 
+from ..tool_box import loss_tools
+
 ########################################################################
 #                             Linear loss                              #
 ########################################################################
@@ -144,7 +146,8 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
     "ty", trainable_A_matrix=False, trainable_b_vector=False, dtype=
     tf.float32, name="quadratic_loss_over_linear_residual", reduction=
     tf.keras.losses.Reduction.SUM, check_tensors=False, 
-    block_multiplication=True):
+    block_multiplication=True, custom_gradient_usage=False, model=None,
+    input_tensor=None):
 
         super().__init__(name=name, reduction=reduction)
 
@@ -157,24 +160,6 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
         self.tensorflow_type = dtype
 
         self.check_tensors = check_tensors
-
-        # There are two options for evaluating this loss function:
-        #
-        # 1. Block multiplication. Each one of the A matrices (one for
-        # each sample) is allocated in a large block-diagonal matrix. 
-        # The b vectors and the model outputs will also be stacked for 
-        # multiplication.
-        #
-        # 2. Loop multiplication. Each set of A, b, and model response 
-        # (one for each sample) is multiplied independently inside a for 
-        # loop.
-        #
-        # Option 1 is supposed to be faster than option 2, since it ta-
-        # kes advantage of the batch treatment native to TensorFlow. 
-        # However, it can lead to memory issues. Thus, option 2 is de-
-        # fault, as a conservative option
-
-        self.block_multiplication = block_multiplication
 
         # Gets the number of output neurons
 
@@ -207,6 +192,30 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
 
             conditioning_matrix = sp.sparse.identity(self.n_outputs, 
             dtype=float, format="coo")
+
+        # Some loss classes can have their own implementation of the 
+        # gradient w.r.t. the model trainable parameters, due to compu-
+        # tational cost concerns. This way, there is a flag to inform if
+        # this custom gradient is to be used or not
+
+        self.custom_gradient_usage = custom_gradient_usage
+
+        # There are two options for evaluating this loss function:
+        #
+        # 1. Block multiplication. Each one of the A matrices (one for
+        # each sample) is allocated in a large block-diagonal matrix. 
+        # The b vectors and the model outputs will also be stacked for 
+        # multiplication.
+        #
+        # 2. Loop multiplication. Each set of A, b, and model response 
+        # (one for each sample) is multiplied independently inside a for 
+        # loop.
+        #
+        # Option 1 is supposed to be faster than option 2, since it ta-
+        # kes advantage of the batch treatment native to TensorFlow. 
+        # However, it can lead to memory issues.
+
+        self.block_multiplication = block_multiplication
 
         # If block multiplication is selected
 
@@ -305,6 +314,89 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
             # Returns the loss multiplied by 0.5
 
             return 0.5*loss_value
+        
+    # Defines a function to build a custom implementation of the gradient
+    # w.r.t. the trainable parameters. This code leverages the computa-
+    # tional cost of the evaluation of a linear loss function
+
+    def custom_gradient(self, expected_response, model_response,
+    trainable_parameters):
+
+        # If block multiplication is selected
+
+        if self.block_multiplication:
+
+            # Reshapes the model response into a long vector of samples
+
+            flat_model_response = tf.reshape(model_response, (
+            self.n_samples*self.n_outputs, 1))
+
+            # Evaluates the residual
+
+            R = tf.sparse.sparse_dense_matmul(self.A_matrix, 
+            flat_model_response)-self.b_vector
+            
+            # Multiplies it by the conditional matrix
+
+            R = tf.sparse.sparse_dense_matmul(self.conditioning_matrix,
+            R)
+
+            # Multiplies it by the coefficient matrix transpose, then,
+            # reshapes it to the format (n_samples, n_outputs)
+
+            R = tf.reshape(tf.sparse.sparse_dense_matmul(tf.transpose(
+            self.A_matrix), R), (self.n_samples, self.n_outputs))
+
+            # Updates the coefficient matrix of the helper linear loss 
+            # inside the gradient function
+
+            self.helper_gradient.update_function(R)
+
+            # Returns the gradient
+
+            return self.helper_gradient(trainable_parameters)
+        
+        # Tackles batch multiplication
+        
+        else:
+
+            # Initializes a list of samples for the coefficient matrix
+            # of the linear helper
+
+            helper_coefficient_list = []
+
+            # Iterates through the samples
+
+            for i in range(self.n_samples):
+
+                # Evaluates the residual
+
+                R_sample = tf.sparse.sparse_dense_matmul(self.A_matrix[i
+                ], tf.expand_dims(model_response[i,:], axis=-1)
+                )-tf.expand_dims(self.b_vector[i, :], axis=-1)
+                
+                # Multiplies it by the conditional matrix
+
+                R_sample = tf.sparse.sparse_dense_matmul(
+                self.conditioning_matrix, R_sample)
+
+                # Multiplies it by the coefficient matrix transpose, 
+                # then, reshapes it to a vector and appends to the list 
+                # of samples
+
+                helper_coefficient_list.append(tf.reshape(
+                tf.sparse.sparse_dense_matmul(tf.transpose(
+                self.A_matrix[i]), R_sample), [-1]))
+
+            # Updates the coefficient matrix of the helper linear loss 
+            # inside the gradient function
+
+            self.helper_gradient.update_function(tf.stack(
+            helper_coefficient_list, axis=0))
+
+            # Returns the gradient
+
+            return self.helper_gradient(trainable_parameters)
     
     # Defines a method to update the coefficient matrix
 
@@ -357,6 +449,26 @@ class QuadraticLossOverLinearResidualAssembler(tf.keras.losses.Loss):
             # Creates a variable for the b vector
 
             self.b_vector.assign(b_vector)
+
+    # Defines a function to create the helper loss function
+
+    def prepare_custom_gradient(self, model, input_tensor):
+
+        # If the custom implementation is to be performed, makes a set 
+        # of precalculations
+
+        # Creates the coefficient matrix for the helper loss, which is a
+        # linear loss fucntion whose gradient w.r.t. the trainable para-
+        # meters is the same as the given quadratic loss. Then, instan-
+        # tiates the linear loss class
+
+        helper_loss = LinearLossAssembler(tf.random.normal((
+        self.n_samples, self.n_outputs)))
+
+        # Uses this loss to create a gradient helper
+
+        self.helper_gradient, _ = loss_tools.build_loss_gradient_varying_model_parameters(
+        model, helper_loss, input_tensor)
 
     # Redefines configurations for model saving
 

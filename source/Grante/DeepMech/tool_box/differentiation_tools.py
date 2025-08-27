@@ -62,7 +62,8 @@ class ScalarGradientWrtTrainableParams:
 class ScalarGradientWrtTrainableParamsGivenParameters:
     
     def __init__(self, scalar_function, model, input_tensor, 
-    shapes_trainable_parameters, model_true_values=None):
+    shapes_trainable_parameters, model_true_values=None, custom_gradient=
+    False):
         
         self.scalar_function = scalar_function
 
@@ -84,29 +85,59 @@ class ScalarGradientWrtTrainableParamsGivenParameters:
 
             self.model_true_values = model_true_values
 
+        # Saves a flag to tell to use the custom gradient defined within
+        # the loss function class or not
+
+        self.custom_gradient = custom_gradient
+
+        # If the custom gradient is to be used, prepare it sharing the 
+        # same model and input tensor
+
+        if self.custom_gradient:
+
+            self.scalar_function.prepare_custom_gradient(self.model,
+            self.input_tensor)
+
     # Defines a function to actually evaluate the derivative
 
     @tf.function
     def __call__(self, trainable_parameters):
 
-        # Creates the tape
+        # Uses the custom implementation of the gradient defined inside
+        # the class of the loss function
 
-        with tf.GradientTape() as tape:
+        if self.custom_gradient:
 
-            tape.watch(trainable_parameters)
-
-            # Gets the response of the model and multiplies by the coeffici-
-            # ent matrix, then, sums everything together
+            # Gets the response of the model
 
             y = parameters_tools.model_output_given_trainable_parameters(
             self.input_tensor, self.model, trainable_parameters, 
             self.shapes_trainable_parameters)
 
-            phi = self.scalar_function(self.model_true_values, y)
+            return self.scalar_function.custom_gradient(
+            self.model_true_values, y, trainable_parameters)
 
-        # Gets the gradient
+        # Otherwise, uses automatic differentiation
 
-        return tape.gradient(phi, trainable_parameters)
+        else:
+
+            # Creates the tape
+
+            with tf.GradientTape() as tape:
+
+                tape.watch(trainable_parameters)
+
+                # Gets the response of the model
+
+                y = parameters_tools.model_output_given_trainable_parameters(
+                self.input_tensor, self.model, trainable_parameters, 
+                self.shapes_trainable_parameters)
+
+                phi = self.scalar_function(self.model_true_values, y)
+
+            # Gets the gradient
+
+            return tape.gradient(phi, trainable_parameters)
     
     # Defines a function to update the scalar function if it is parame-
     # terizable by externally-given quantities

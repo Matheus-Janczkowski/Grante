@@ -31,6 +31,14 @@ def linear_loss(model_output, coefficient_matrix):
 def build_loss_gradient_varying_model_parameters(model, loss, 
 input_tensor, trainable_variables_type="tensorflow"):
     
+    """
+    Function to build the gradient of the loss function and the vector 
+    of trainable parameters of a neural network model. The evaluated 
+    gradient of the model is with respect to the trainabale parameters.
+    
+    The inputs are the model itself (Keras or custom layer), the loss 
+    class or function, the input tensor as a tensorflow tensor"""
+    
     # Defines a function to give the gradient of a scalar loss function
     # w.r.t. the trainable parameters of the model given as a numpy ar-
     # ray

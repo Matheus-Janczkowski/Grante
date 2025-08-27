@@ -34,12 +34,12 @@ class TestANNTools(unittest.TestCase):
 
         self.input_dimension_gradient_tests = 9
 
-        self.output_dimension_gradient_tests = 100
+        self.output_dimension_gradient_tests = 1000
 
         self.activation_list_gradient_tests = [{"sigmoid": 100}, {"lin"+
         "ear": self.output_dimension_gradient_tests}]
 
-        self.n_samples_gradient_tests = 1000 
+        self.n_samples_gradient_tests = 10000 
 
     # Defines a test the new loss function as the multiplication of a
     # coefficient matrix by the model output
@@ -141,6 +141,10 @@ class TestANNTools(unittest.TestCase):
         "###################\n#                     Tests quadratic lo"+
         "ss function                    #\n###########################"+
         "#############################################\n")
+
+        # Sets a flag to test batch multiplication or not
+
+        flag_batch_multiplication = False
         
         # Creates the new test data
 
@@ -206,53 +210,58 @@ class TestANNTools(unittest.TestCase):
         objective_function_with_parameters, model_params = loss_tools.build_loss_gradient_varying_model_parameters(
         custom_model, loss, input_test_data)
 
-        print("###### Batch multiplication ######")
+        if flag_batch_multiplication:
 
-        print("\nWarms up")
+            print("###### Batch multiplication ######")
 
-        t_initial = time.time()
+            print("\nWarms up")
 
-        result3 = objective_function_with_parameters(model_params)
+            t_initial = time.time()
 
-        elapsed_time = time.time()-t_initial
+            result3 = objective_function_with_parameters(model_params)
 
-        print("\nFinishes warming up after "+str(elapsed_time))
+            elapsed_time = time.time()-t_initial
 
-        t_initial = time.time()
+            print("\nFinishes warming up after "+str(elapsed_time))
 
-        result3 = objective_function_with_parameters(model_params)
+            t_initial = time.time()
 
-        elapsed_time = time.time()-t_initial
+            result3 = objective_function_with_parameters(model_params)
 
-        print("\nElapsed time: "+str(elapsed_time)+". Using automatic ca"+
-        "ll with parameters")
+            elapsed_time = time.time()-t_initial
 
-        A_list = [A*1.5 for i in range(self.n_samples_gradient_tests)]
+            print("\nElapsed time: "+str(elapsed_time)+". Using automa"+
+            "tic call with parameters")
 
-        b_list = b_list*2.5 
+            A_list = [A*1.5 for i in range(self.n_samples_gradient_tests
+            )]
 
-        print("\nChanges parameters")
+            b_list = b_list*2.5 
 
-        objective_function_with_parameters.update_function(A_list, b_list)
+            print("\nChanges parameters")
 
-        print("\nWarms up again")
+            objective_function_with_parameters.update_function(A_list, 
+            b_list)
 
-        t_initial = time.time()
+            print("\nWarms up again")
 
-        result3 = objective_function_with_parameters(model_params)
+            t_initial = time.time()
 
-        elapsed_time = time.time()-t_initial
+            result3 = objective_function_with_parameters(model_params)
 
-        print("\nFinishes warming up again after "+str(elapsed_time))
+            elapsed_time = time.time()-t_initial
 
-        t_initial = time.time()
+            print("\nFinishes warming up again after "+str(elapsed_time
+            ))
 
-        result3 = objective_function_with_parameters(model_params)
+            t_initial = time.time()
 
-        elapsed_time = time.time()-t_initial
+            result3 = objective_function_with_parameters(model_params)
 
-        print("\nElapsed time: "+str(elapsed_time)+". Using automatic ca"+
-        "ll with parameters")
+            elapsed_time = time.time()-t_initial
+
+            print("\nElapsed time: "+str(elapsed_time)+". Using automa"+
+            "tic call with parameters")
 
         print("\n\n###### Block multiplication ######")
 
@@ -307,8 +316,128 @@ class TestANNTools(unittest.TestCase):
 
         elapsed_time = time.time()-t_initial
 
+        print("\nElapsed time: "+str(elapsed_time)+". Using automatic "+
+        "call with parameters")
+
+        if flag_batch_multiplication:
+
+            print("\n\n###### Batch multiplication with helper loss ##"+
+            "####")
+
+            # Sets the loss function
+
+            loss = loss_assemblers.QuadraticLossOverLinearResidualAssembler(
+            A_list, b_list, block_multiplication=False, 
+            custom_gradient_usage=True)
+
+            objective_function_with_parameters, model_params = loss_tools.build_loss_gradient_varying_model_parameters(
+            custom_model, loss, input_test_data)
+
+            print("\nWarms up")
+
+            t_initial = time.time()
+
+            result3 = objective_function_with_parameters(model_params)
+
+            elapsed_time = time.time()-t_initial
+
+            print("\nFinishes warming up after "+str(elapsed_time))
+
+            t_initial = time.time()
+
+            result3 = objective_function_with_parameters(model_params)
+
+            elapsed_time = time.time()-t_initial
+
+            print("\nElapsed time: "+str(elapsed_time)+". Using automa"+
+            "tic call with parameters")
+
+            A_list = [A*1.5 for i in range(self.n_samples_gradient_tests
+            )]
+
+            b_list = b_list*2.5 
+
+            print("\nChanges parameters")
+
+            objective_function_with_parameters.update_function(A_list, 
+            b_list)
+
+            print("\nWarms up again")
+
+            t_initial = time.time()
+
+            result3 = objective_function_with_parameters(model_params)
+
+            elapsed_time = time.time()-t_initial
+
+            print("\nFinishes warming up again after "+str(elapsed_time
+            ))
+
+            t_initial = time.time()
+
+            result3 = objective_function_with_parameters(model_params)
+
+            elapsed_time = time.time()-t_initial
+
+            print("\nElapsed time: "+str(elapsed_time)+". Using automa"+
+            "tic call with parameters")
+
+        print("\n\n###### Block multiplication with helper loss ######")
+
+        A_list = [A for i in range(self.n_samples_gradient_tests)]
+
+        loss_block = loss_assemblers.QuadraticLossOverLinearResidualAssembler(
+        A_list, b_list, block_multiplication=True, custom_gradient_usage=
+        True)
+
+        objective_function_with_parameters, model_params = loss_tools.build_loss_gradient_varying_model_parameters(
+        custom_model, loss_block, input_test_data)
+
+        print("\nWarms up")
+
+        t_initial = time.time()
+
+        result3 = objective_function_with_parameters(model_params)
+
+        elapsed_time = time.time()-t_initial
+
+        print("\nFinishes warming up after "+str(elapsed_time))
+
+        t_initial = time.time()
+
+        result3 = objective_function_with_parameters(model_params)
+
+        elapsed_time = time.time()-t_initial
+
         print("\nElapsed time: "+str(elapsed_time)+". Using automatic ca"+
         "ll with parameters")
+
+        A_list = [A*1.5 for i in range(self.n_samples_gradient_tests)]
+
+        b_list = b_list*2.5 
+
+        print("\nChanges parameters")
+
+        objective_function_with_parameters.update_function(A_list, b_list)
+
+        print("\nWarms up again")
+
+        t_initial = time.time()
+
+        result3 = objective_function_with_parameters(model_params)
+
+        elapsed_time = time.time()-t_initial
+
+        print("\nFinishes warming up again after "+str(elapsed_time))
+
+        t_initial = time.time()
+
+        result3 = objective_function_with_parameters(model_params)
+
+        elapsed_time = time.time()-t_initial
+
+        print("\nElapsed time: "+str(elapsed_time)+". Using automatic "+
+        "call with parameters")
 
 # Runs all tests
 

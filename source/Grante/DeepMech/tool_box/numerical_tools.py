@@ -215,3 +215,32 @@ reorder_indices=True, block_multiplication=True, n_samples=None):
             return tf.SparseTensor(indices=non_zero_indices, values=
             sparse_matrix.data.astype(dtype), dense_shape=
             sparse_matrix.shape)
+        
+########################################################################
+#                        Regularizing functions                        #
+########################################################################
+
+# Defines a function to get a string with the name of the regularizing 
+# function to be used and return the live function. If a dictionary is
+# given, optional parameters may be taken
+
+def build_tensorflow_math_expressions(expression_name):
+
+    """Builds a mathematical expression with tensorflow operations to
+    facilitate differentiation. The argument is:
+    
+    expression_name: a string with one of the expressions are to be
+    built with their default parameters; otherwise, a dictionary with
+    key 'name' for the name of the function and other string keys for 
+    the respective parameters """
+
+    # Verifies if the expression name is just a string
+
+    if isinstance(expression_name, str):
+
+        # Turns it into a dictionary with the expression name as the va-
+        # lue for the key 'name'
+
+        expression_name = {"name": expression_name}
+
+    # 

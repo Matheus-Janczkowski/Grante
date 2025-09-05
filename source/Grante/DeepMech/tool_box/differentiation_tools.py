@@ -6,6 +6,8 @@ import numpy as np
 
 from ..tool_box import parameters_tools
 
+from ..tool_box import numerical_tools
+
 ########################################################################
 #                          NN model gradient                           #
 ########################################################################
@@ -160,7 +162,8 @@ class ScalarGradientWrtTrainableParamsGivenParameters:
 class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
     
     def __init__(self, scalar_function, model, input_tensor, 
-    shapes_trainable_parameters, model_true_values=None):
+    shapes_trainable_parameters, regularizing_function="absolute value",
+    model_true_values=None):
         
         self.scalar_function = scalar_function
 
@@ -169,6 +172,12 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
         self.input_tensor = input_tensor
 
         self.shapes_trainable_parameters = shapes_trainable_parameters
+
+        # Sets the function which is used to regularize the weights to 
+        # be non-negative
+
+        self.regularizing_function = numerical_tools.build_tensorflow_math_expressions(
+        regularizing_function)
 
         # Creates a dummy true value of output, because the Keras' loss 
         # functions requires y_true and y_pred as arguments

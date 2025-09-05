@@ -153,6 +153,105 @@ class ScalarGradientWrtTrainableParamsGivenParameters:
 
         self.scalar_function.update_arguments(*external_arguments)
 
+# Defines a class to evaluate the gradient of a scalar function with 
+# respect to the model trainable parameters, when the parameters are gi-
+# ven as a 1D tensor and the model is input-convex
+
+class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
+    
+    def __init__(self, scalar_function, model, input_tensor, 
+    shapes_trainable_parameters, model_true_values=None):
+        
+        self.scalar_function = scalar_function
+
+        self.model = model 
+
+        self.input_tensor = input_tensor
+
+        self.shapes_trainable_parameters = shapes_trainable_parameters
+
+        # Creates a dummy true value of output, because the Keras' loss 
+        # functions requires y_true and y_pred as arguments
+
+        if model_true_values is None:
+
+            self.model_true_values = tf.constant([0.0], dtype=
+            input_tensor.dtype)
+
+        else:
+
+            self.model_true_values = model_true_values
+
+        # Saves a flag to tell to use the custom gradient defined within
+        # the loss function class or not
+
+        if hasattr(self.scalar_function, "custom_gradient_usage"):
+
+            self.custom_gradient = self.scalar_function.custom_gradient_usage
+
+        else:
+
+            self.custom_gradient = False
+
+        # If the custom gradient is to be used, prepare it sharing the 
+        # same model and input tensor
+
+        if self.custom_gradient:
+
+            self.scalar_function.prepare_custom_gradient(self.model,
+            self.input_tensor)
+
+    # Defines a function to actually evaluate the derivative
+
+    @tf.function
+    def __call__(self, trainable_parameters):
+
+        # Uses the custom implementation of the gradient defined inside
+        # the class of the loss function
+
+        if self.custom_gradient:
+
+            # Gets the response of the model
+
+            y = parameters_tools.convex_model_output_given_trainable_parameters(
+            self.input_tensor, self.model, trainable_parameters, 
+            self.shapes_trainable_parameters, self.regularizing_function)
+
+            return self.scalar_function.custom_gradient(
+            self.model_true_values, y, trainable_parameters)
+
+        # Otherwise, uses automatic differentiation
+
+        else:
+
+            # Creates the tape
+
+            with tf.GradientTape() as tape:
+
+                tape.watch(trainable_parameters)
+
+                # Gets the response of the model
+
+                y = parameters_tools.convex_model_output_given_trainable_parameters(
+                self.input_tensor, self.model, trainable_parameters, 
+                self.shapes_trainable_parameters,
+                self.regularizing_function)
+
+                phi = self.scalar_function(self.model_true_values, y)
+
+            # Gets the gradient
+
+            return tape.gradient(phi, trainable_parameters)
+    
+    # Defines a function to update the scalar function if it is parame-
+    # terizable by externally-given quantities
+
+    def update_function(self, *external_arguments):
+
+        # Calls the method to update the scalar function
+
+        self.scalar_function.update_arguments(*external_arguments)
+
 ########################################################################
 #                       NN model jacobian matrix                       #
 ########################################################################

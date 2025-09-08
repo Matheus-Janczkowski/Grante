@@ -261,7 +261,9 @@ def build_tensorflow_math_expressions(expression_name):
         # pression
 
         expression_name = dictionary_tools.verify_dictionary_keys(
-        expression_name, {"name": "", "eps": 1E-6}, fill_in_keys=True)
+        expression_name, {"name": "", "eps": 1E-6}, dictionary_location=
+        "at the builder of tensorflow math expressions", fill_in_keys=
+        True)
 
         # Returns the smooth absolute value
 

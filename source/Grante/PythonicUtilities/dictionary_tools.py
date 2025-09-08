@@ -5,7 +5,8 @@
 ########################################################################
 
 def verify_dictionary_keys(dictionary: dict, master_keys: (list | dict), 
-dictionary_location: str, must_have_all_keys=False, fill_in_keys=False):
+dictionary_location="at unknown location in the code", 
+must_have_all_keys=False, fill_in_keys=False):
     
     """ Defines a function to verify if a dictionary has keys that are
     not listed in a list of allowable keys, 'master_keys'. If the flag 

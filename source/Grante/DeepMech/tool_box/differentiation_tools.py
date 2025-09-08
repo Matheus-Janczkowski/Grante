@@ -145,6 +145,20 @@ class ScalarGradientWrtTrainableParamsGivenParameters:
             # Gets the gradient
 
             return tape.gradient(phi, trainable_parameters)
+        
+    # Defines a function to evaluate the loss function
+
+    def evaluate_scalar_function(self, trainable_parameters):
+
+        # Gets the response of the model
+
+        y = parameters_tools.model_output_given_trainable_parameters(
+        self.input_tensor, self.model, trainable_parameters, 
+        self.shapes_trainable_parameters)
+
+        # Gets the scalar function value and returns it
+
+        return self.scalar_function(self.model_true_values, y)
     
     # Defines a function to update the scalar function if it is parame-
     # terizable by externally-given quantities
@@ -222,9 +236,10 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
 
             # Gets the response of the model
 
-            y = parameters_tools.convex_model_output_given_trainable_parameters(
+            y = parameters_tools.model_output_given_trainable_parameters(
             self.input_tensor, self.model, trainable_parameters, 
-            self.shapes_trainable_parameters, self.regularizing_function)
+            self.shapes_trainable_parameters, regularizing_function=
+            self.regularizing_function)
 
             return self.scalar_function.custom_gradient(
             self.model_true_values, y, trainable_parameters)
@@ -241,9 +256,9 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
 
                 # Gets the response of the model
 
-                y = parameters_tools.convex_model_output_given_trainable_parameters(
+                y = parameters_tools.model_output_given_trainable_parameters(
                 self.input_tensor, self.model, trainable_parameters, 
-                self.shapes_trainable_parameters,
+                self.shapes_trainable_parameters, regularizing_function=
                 self.regularizing_function)
 
                 phi = self.scalar_function(self.model_true_values, y)
@@ -251,6 +266,21 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
             # Gets the gradient
 
             return tape.gradient(phi, trainable_parameters)
+        
+    # Defines a function to evaluate the loss function
+
+    def evaluate_scalar_function(self, trainable_parameters):
+
+        # Gets the response of the model
+
+        y = parameters_tools.model_output_given_trainable_parameters(
+        self.input_tensor, self.model, trainable_parameters, 
+        self.shapes_trainable_parameters, regularizing_function=
+        self.regularizing_function)
+
+        # Gets the scalar function value and returns it
+
+        return self.scalar_function(self.model_true_values, y)
     
     # Defines a function to update the scalar function if it is parame-
     # terizable by externally-given quantities

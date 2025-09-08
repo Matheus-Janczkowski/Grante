@@ -29,7 +29,9 @@ def linear_loss(model_output, coefficient_matrix):
 # the model trainable parameters
 
 def build_loss_gradient_varying_model_parameters(model, loss, 
-input_tensor, trainable_variables_type="tensorflow"):
+input_tensor, trainable_variables_type="tensorflow", model_true_values=
+None, convex_input_model=False, regularizing_function="smooth absolute"+
+" value"):
     
     """
     Function to build the gradient of the loss function and the vector 
@@ -71,6 +73,28 @@ input_tensor, trainable_variables_type="tensorflow"):
     
     # Defines a function to give the gradient of a scalar loss function
     # w.r.t. the trainable parameters of the model given as a tensorflow
+    # array when the model is convex input by construction
+    
+    elif convex_input_model:
+
+        # Gets the 1D tensor of model trainable parameters and their 
+        # tensors' shapes
+
+        model_parameters, parameters_shapes = parameters_tools.model_parameters_to_flat_tensor_and_shapes(
+        model)
+
+        # Gets the class instance to evaluate the gradient and returns 
+        # it alongside the 1D tensor of model parameters
+
+        gradient_class = diff_tools.ScalarGradientWrtTrainableParamsGivenParametersConvexModel(
+        loss, model, input_tensor, parameters_shapes, 
+        regularizing_function=regularizing_function, model_true_values=
+        model_true_values)
+        
+        return gradient_class, model_parameters
+    
+    # Defines a function to give the gradient of a scalar loss function
+    # w.r.t. the trainable parameters of the model given as a tensorflow
     # array
     
     elif trainable_variables_type=="tensorflow":
@@ -85,7 +109,8 @@ input_tensor, trainable_variables_type="tensorflow"):
         # it alongside the 1D tensor of model parameters
 
         gradient_class = diff_tools.ScalarGradientWrtTrainableParamsGivenParameters(
-        loss, model, input_tensor, parameters_shapes)
+        loss, model, input_tensor, parameters_shapes, model_true_values=
+        model_true_values)
         
         return gradient_class, model_parameters
     

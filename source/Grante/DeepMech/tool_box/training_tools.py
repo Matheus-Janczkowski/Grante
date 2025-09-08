@@ -4,6 +4,10 @@ import tensorflow as tf
 
 import time
 
+from scipy.optimize import minimize
+
+from ..tool_box import loss_tools
+
 # Defines a class to optimize the model's parameters
 
 class ModelTraining:
@@ -67,6 +71,139 @@ class ModelTraining:
         self.model.trainable_variables))
 
         return loss, tf.linalg.global_norm(gradients)
+    
+    # Defines a method for the optimization loop. But names it call so
+    # that it is called as soon as the class is created
+
+    def __call__(self):
+
+        # Starts counting time
+
+        start_time = time.time()
+
+        initial_loss = self.loss_function().numpy()
+
+        # Iterates through the optimization loop
+
+        max_digits = len(str(self.n_iterations))
+
+        for i in range(self.n_iterations):
+
+            loss_value, gradient_norm = self.train_step()
+
+            if gradient_norm.numpy()<=self.gradient_tolerance:
+
+                print("The gradient's norm has reached the value of "+
+                str(gradient_norm.numpy())+", which is less than the t"+
+                "hreshold of "+str(self.gradient_tolerance)+". Thus, s"+
+                "tops the optimization procedure at iteration "+str(i)+
+                "\n")
+
+                break
+        
+            # Prints the loss every 10 iterations
+
+            if self.verbose:
+            
+                if i%self.verbose_deltaIterations==0:
+
+                    print("Iteration "+integer_toString(i, max_digits)+
+                    ": loss="+format(loss_value.numpy(), '.5e')+", gra"+
+                    "dient norm: "+format(gradient_norm.numpy(), '.5e'))
+
+        # Evaluates the elapsed time
+
+        elapsed_time = time.time()-start_time
+
+        if self.verbose:
+
+            # Gets the final loss function
+
+            final_loss = self.loss_function().numpy()
+
+            print("\n#################################################"+
+            "#######################\n#                        Trainin"+
+            "g process's log                        #\n###############"+
+            "#########################################################"+
+            "\n")
+
+            print("Initial loss.: "+format(initial_loss, '.5e'))
+
+            print("Final loss...: "+format(final_loss, '.5e'))
+
+            print("Training time: "+str(elapsed_time)+" seconds.\n")
+
+        # Returns the trained model
+
+        return self.model, elapsed_time
+
+# Defines a class to optimize the model's parameters using scipy optimi-
+# zers and custom loss functions
+
+class ModelCustomTraining:
+
+    def __init__(self, model, training_inputArray, training_trueArray,
+    loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=1E-3, 
+    float_type=tf.float32, verbose_deltaIterations=100, 
+    convex_input_model=False, verbose=False):
+        
+        # Retrieves the model and the optimization parameters
+
+        self.model = model
+
+        self.optimizer = optimizer
+
+        self.n_iterations = n_iterations
+
+        self.gradient_tolerance = gradient_tolerance
+
+        self.verbose_deltaIterations = verbose_deltaIterations
+
+        self.verbose = verbose
+
+        # Transforms the data to TensorFlow tensors
+
+        self.training_input = tf.constant(training_inputArray, dtype=
+        float_type)
+
+        self.training_trueValues = tf.constant(training_trueArray, dtype
+        =float_type)
+
+        # Construct a class to give the loss function, its gradient, and
+        # the instructions for parameters (weights and biases) flattening
+        # and reconstruction
+
+        self.loss_class, self.model_parameters = loss_tools.build_loss_gradient_varying_model_parameters(
+        self.model, loss_metric, self.training_input, 
+        model_true_values=self.training_trueValues, convex_input_model=
+        convex_input_model)
+
+    # Defines a method to evaluate the loss function
+
+    def loss_function(self):
+
+        # Gets the loss value and returns it
+
+        return self.loss_class.evaluate_scalar_function(
+        self.model_parameters)
+    
+    # Defines a method for training, it assembles the optimization pro-
+    # blem and runs it
+
+    def set_training(self):
+
+        # Sets the minimization problem using the minimize class from 
+        # scipy
+
+        minimization_problem = minimize(
+        self.loss_class.evaluate_scalar_function, self.model_parameters,
+        method=self.optimizer, jac=self.loss_class, tol=
+        self.gradient_tolerance, options={"maxiterint": self.n_iterations
+        })
+
+        # Returns the parameters result
+
+        return minimization_problem.x
     
     # Defines a method for the optimization loop. But names it call so
     # that it is called as soon as the class is created

@@ -261,15 +261,15 @@ def build_tensorflow_math_expressions(expression_name):
         # pression
 
         expression_name = dictionary_tools.verify_dictionary_keys(
-        expression_name, {"name": "", "eps": 1E-6}, dictionary_location=
-        "at the builder of tensorflow math expressions", fill_in_keys=
-        True)
+        expression_name, {"name": "", "eps": tf.constant(1E-6)}, 
+        dictionary_location="at the builder of tensorflow math express"+
+        "ions", fill_in_keys=True)
 
         # Returns the smooth absolute value
 
         eps = expression_name["eps"]
 
-        eps_squared = eps*eps
+        eps_squared = tf.square(eps)
 
         return lambda x: tf.sqrt(tf.square(x)+eps_squared)-eps
 

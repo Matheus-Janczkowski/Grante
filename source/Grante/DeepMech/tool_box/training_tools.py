@@ -2,6 +2,8 @@
 
 import tensorflow as tf
 
+import numpy as np
+
 import time
 
 from scipy.optimize import minimize
@@ -147,6 +149,12 @@ class ModelCustomTraining:
     float_type=tf.float32, verbose_deltaIterations=100, 
     convex_input_model=False, verbose=False):
         
+        """
+        Class for training a model whose trainable parameters (weights
+        and biases are) used as a flatten vector to be trained using a
+        scipy framework. Tensorflow is used to evaluate derivatives and
+        the loss function only"""
+        
         # Retrieves the model and the optimization parameters
 
         self.model = model
@@ -190,7 +198,7 @@ class ModelCustomTraining:
     # Defines a method for training, it assembles the optimization pro-
     # blem and runs it
 
-    def set_training(self):
+    def set_training(self, n_max_iterations):
 
         # Sets the minimization problem using the minimize class from 
         # scipy
@@ -198,12 +206,11 @@ class ModelCustomTraining:
         minimization_problem = minimize(
         self.loss_class.evaluate_scalar_function, self.model_parameters,
         method=self.optimizer, jac=self.loss_class, tol=
-        self.gradient_tolerance, options={"maxiterint": self.n_iterations
-        })
+        self.gradient_tolerance, options={"maxiter": n_max_iterations})
 
-        # Returns the parameters result
+        # Updates the model parameters
 
-        return minimization_problem.x
+        self.model_parameters = minimization_problem.x
     
     # Defines a method for the optimization loop. But names it call so
     # that it is called as soon as the class is created
@@ -214,35 +221,59 @@ class ModelCustomTraining:
 
         start_time = time.time()
 
-        initial_loss = self.loss_function().numpy()
+        initial_loss = self.loss_class.evaluate_scalar_function(
+        self.model_parameters).numpy()
 
         # Iterates through the optimization loop
 
         max_digits = len(str(self.n_iterations))
 
-        for i in range(self.n_iterations):
+        # Verifies if the verbose flag is True
 
-            loss_value, gradient_norm = self.train_step()
+        if self.verbose:
 
-            if gradient_norm.numpy()<=self.gradient_tolerance:
+            # Gets the number of iterations for each step, where at the
+            # end the convergence information will be printed
 
-                print("The gradient's norm has reached the value of "+
-                str(gradient_norm.numpy())+", which is less than the t"+
-                "hreshold of "+str(self.gradient_tolerance)+". Thus, s"+
-                "tops the optimization procedure at iteration "+str(i)+
-                "\n")
+            optimization_iteration_groups = int(np.ceil(
+            self.n_iterations/self.verbose_deltaIterations))
 
-                break
-        
-            # Prints the loss every 10 iterations
+            for i in range(optimization_iteration_groups):
 
-            if self.verbose:
-            
-                if i%self.verbose_deltaIterations==0:
+                print("\n\nStarts the "+str(i)+" groups of optimizatio"+
+                "n iterations\n")
 
-                    print("Iteration "+integer_toString(i, max_digits)+
-                    ": loss="+format(loss_value.numpy(), '.5e')+", gra"+
-                    "dient norm: "+format(gradient_norm.numpy(), '.5e'))
+                # Calls the optimization procedure
+
+                self.set_training(self.verbose_deltaIterations)
+
+                # Gets the loss function value and the gradient
+
+                loss_value = self.loss_class.evaluate_scalar_function(
+                self.model_parameters)
+
+                gradient_value = tf.norm(self.loss_class(
+                self.model_parameters)).numpy()
+
+                if gradient_value<=self.gradient_tolerance:
+
+                    print("The gradient's norm has reached the value o"+
+                    "f "+str(gradient_value)+", which is less than the"+
+                    " threshold of "+str(self.gradient_tolerance)+". T"+
+                    "hus, stops the optimization procedure at iteratio"+
+                    "n group "+str(i)+"\n")
+
+                    break
+
+                print("Iteration group "+integer_toString(i, max_digits)
+                +": loss="+format(loss_value.numpy(), '.5e')+", gradie"+
+                "nt norm: "+format(gradient_value, '.5e'))
+
+        # Otherwise, just call the training function
+
+        else:
+
+            self.set_training(self.n_iterations)
 
         # Evaluates the elapsed time
 
@@ -252,7 +283,8 @@ class ModelCustomTraining:
 
             # Gets the final loss function
 
-            final_loss = self.loss_function().numpy()
+            final_loss = self.loss_class.evaluate_scalar_function(
+            self.model_parameters).numpy()
 
             print("\n#################################################"+
             "#######################\n#                        Trainin"+
@@ -266,9 +298,9 @@ class ModelCustomTraining:
 
             print("Training time: "+str(elapsed_time)+" seconds.\n")
 
-        # Returns the trained model
+        # Returns the trained model parameters
 
-        return self.model, elapsed_time
+        return self.model_parameters
 
 ########################################################################
 #                               Utilities                              #

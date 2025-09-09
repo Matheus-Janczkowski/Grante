@@ -8,9 +8,7 @@ import tensorflow as tf
 
 from ...tool_box import ANN_tools
 
-from ...tool_box import loss_tools
-
-from ...tool_box import loss_assembler_classes as loss_assemblers
+from ...tool_box import training_tools
 
 # Defines a function to test the ANN tools methods
 
@@ -24,7 +22,7 @@ class TestANNTools(unittest.TestCase):
 
         self.output_dimension_gradient_tests = 1
 
-        self.activation_list_gradient_tests = [{"relu": 1000}, {"lin"+
+        self.activation_list_gradient_tests = [{"elux": 100}, {"lin"+
         "ear": self.output_dimension_gradient_tests}]
 
         self.n_samples_gradient_tests = 100
@@ -94,10 +92,11 @@ class TestANNTools(unittest.TestCase):
 
         # Sets the optimizer
 
-        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.01, 
-        momentum=0.9, nesterov=True)
+        self.optimizer = "CG"
 
-        self.verbose_deltaIterations = 1000
+        self.maximum_iterations = 500
+
+        self.verbose_deltaIterations = 500
 
     # Defines a function to test the fully convex-input neural networks
 
@@ -117,32 +116,23 @@ class TestANNTools(unittest.TestCase):
 
         custom_model = ANN_class()
 
-        # Sets the same function but enabling the model parameters as 
-        # argument from a tensorflow 1D tensor
+        # Sets the optimization class for training
 
-        objective_function_with_parameters, model_params = loss_tools.build_loss_gradient_varying_model_parameters(
-        custom_model, self.loss_metric, self.training_data, 
-        model_true_values=self.training_trueTensor, convex_input_model=
-        True)
+        training_class = training_tools.ModelCustomTraining(custom_model,
+        self.training_inputTensor, self.training_trueTensor, 
+        self.loss_metric, convex_input_model=True, verbose=True,
+        n_iterations=self.maximum_iterations, verbose_deltaIterations=
+        self.verbose_deltaIterations)
 
         print("\nWarms up")
 
         t_initial = time.time()
 
-        result = objective_function_with_parameters(model_params)
+        result = training_class()
 
         elapsed_time = time.time()-t_initial
 
         print("\nFinishes warming up after "+str(elapsed_time))
-
-        t_initial = time.time()
-
-        objective_function_with_parameters(model_params)
-
-        elapsed_time = time.time()-t_initial
-
-        print("\nElapsed time: "+str(elapsed_time)+". Using automatic ca"+
-        "ll with parameters")
 
 # Runs all tests
 

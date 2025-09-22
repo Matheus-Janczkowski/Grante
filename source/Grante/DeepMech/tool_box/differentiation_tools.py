@@ -177,7 +177,7 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
     
     def __init__(self, scalar_function, model, input_tensor, 
     shapes_trainable_parameters, regularizing_function="smooth absolut"+
-    "e value", model_true_values=None):
+    "e value", model_true_values=None, parameters_type=tf.float32):
         
         self.scalar_function = scalar_function
 
@@ -191,7 +191,7 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
         # be non-negative
 
         self.regularizing_function = numerical_tools.build_tensorflow_math_expressions(
-        regularizing_function)
+        regularizing_function, dtype=parameters_type)
 
         # Creates a dummy true value of output, because the Keras' loss 
         # functions requires y_true and y_pred as arguments
@@ -223,6 +223,15 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
 
             self.scalar_function.prepare_custom_gradient(self.model,
             self.input_tensor)
+
+        # Verifies if the type of the parameters is different to the ty-
+        # pe of the input tensor
+
+        if self.input_tensor.dtype!=parameters_type:
+
+            raise TypeError("The type of the input tensor, "+str(
+            self.input_tensor.dtype)+", is different to the type of th"+
+            "e trainable parameters, "+str(parameters_type))
 
     # Defines a function to actually evaluate the derivative
 

@@ -226,7 +226,8 @@ reorder_indices=True, block_multiplication=True, n_samples=None):
 # function to be used and return the live function. If a dictionary is
 # given, optional parameters may be taken
 
-def build_tensorflow_math_expressions(expression_name):
+def build_tensorflow_math_expressions(expression_name, dtype=tf.float32
+):
 
     """Builds a mathematical expression with tensorflow operations to
     facilitate differentiation. The argument is:
@@ -261,15 +262,25 @@ def build_tensorflow_math_expressions(expression_name):
         # pression
 
         expression_name = dictionary_tools.verify_dictionary_keys(
-        expression_name, {"name": "", "eps": tf.constant(1E-6)}, 
-        dictionary_location="at the builder of tensorflow math express"+
-        "ions", fill_in_keys=True)
+        expression_name, {"name": "", "eps": tf.constant(1E-6, dtype=
+        dtype)}, dictionary_location="at the builder of tensorflow mat"+
+        "h expressions", fill_in_keys=True)
 
         # Returns the smooth absolute value
 
         eps = expression_name["eps"]
 
         eps_squared = tf.square(eps)
+
+        #def smooth_abs(x, eps=eps, eps_squared=eps_squared):
+
+            #print(x.shape, eps.shape, eps_squared.shape)
+
+            #print(x.dtype, eps.dtype, eps_squared.dtype)
+
+            #return tf.sqrt(tf.square(x)+eps_squared)-eps
+
+        #return smooth_abs
 
         return lambda x: tf.sqrt(tf.square(x)+eps_squared)-eps
 

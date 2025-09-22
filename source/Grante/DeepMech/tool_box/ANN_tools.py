@@ -24,7 +24,8 @@ class MultiLayerModel:
 
     def __init__(self, input_dimension, layers_activationInfo, 
     enforce_customLayers=False, evaluate_parameters_gradient=False,
-    flat_trainable_parameters=False, verbose=False):
+    flat_trainable_parameters=False, verbose=False, parameters_dtype=
+    "float32"):
         
         # Retrieves the parameters
 
@@ -58,10 +59,18 @@ class MultiLayerModel:
 
             self.output_dimension += n_neurons
 
+        # Sets the type of the parameters
+
+        self.parameters_dtype = parameters_dtype
+
     # Defines a function to verify the list of dictionaries and, then,
     # it creates the model accordingly
 
     def __call__(self):
+
+        # Sets global precision for all layers' parameters
+
+        tf.keras.mixed_precision.set_global_policy(self.parameters_dtype)
 
         # Initializes a flag to create a custom model or not
 

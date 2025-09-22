@@ -22,10 +22,10 @@ class TestANNTools(unittest.TestCase):
 
         self.output_dimension_gradient_tests = 1
 
-        self.activation_list_gradient_tests = [{"elux": 100}, {"lin"+
+        self.activation_list_gradient_tests = [{"elu": 100}, {"lin"+
         "ear": self.output_dimension_gradient_tests}]
 
-        self.n_samples_gradient_tests = 100
+        self.n_samples_gradient_tests = 1000
 
         # Defines a function to get the true values
 
@@ -74,17 +74,19 @@ class TestANNTools(unittest.TestCase):
 
         # Converts thet data to tensors
 
+        self.dtype = tf.float64
+
         self.training_inputTensor = tf.constant(self.training_data, 
-        dtype=tf.float32)
+        dtype=self.dtype)
 
         self.test_inputTensor = tf.constant(self.test_data, dtype=
-        tf.float32)
+        self.dtype)
 
         self.training_trueTensor = tf.constant(self.training_trueValues, 
-        dtype=tf.float32)
+        dtype=self.dtype)
 
         self.test_trueTensor = tf.constant(self.test_trueValues, dtype=
-        tf.float32)
+        self.dtype)
 
         # Defines the loss function metric
 
@@ -112,7 +114,8 @@ class TestANNTools(unittest.TestCase):
         ANN_class = ANN_tools.MultiLayerModel(
         self.input_dimension_gradient_tests, 
         self.activation_list_gradient_tests, enforce_customLayers=True, 
-        evaluate_parameters_gradient=False, verbose=True)
+        evaluate_parameters_gradient=False, verbose=True, parameters_dtype=
+        "float64")
 
         custom_model = ANN_class()
 
@@ -122,7 +125,7 @@ class TestANNTools(unittest.TestCase):
         self.training_inputTensor, self.training_trueTensor, 
         self.loss_metric, convex_input_model=True, verbose=True,
         n_iterations=self.maximum_iterations, verbose_deltaIterations=
-        self.verbose_deltaIterations)
+        self.verbose_deltaIterations, float_type=self.dtype)
 
         print("\nWarms up")
 

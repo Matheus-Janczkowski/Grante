@@ -145,7 +145,7 @@ regularization_function):
         if tensor_name=="bias":
 
             tensors.append(tf.reshape(flat_parameters[parameter_index:(
-            parameter_index+size)], shape[0 ]))
+            parameter_index+size)], shape[0]))
 
         else:
 

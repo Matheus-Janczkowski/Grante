@@ -89,7 +89,7 @@ None, convex_input_model=False, regularizing_function="smooth absolute"+
         gradient_class = diff_tools.ScalarGradientWrtTrainableParamsGivenParametersConvexModel(
         loss, model, input_tensor, parameters_shapes, 
         regularizing_function=regularizing_function, model_true_values=
-        model_true_values)
+        model_true_values, parameters_type=model_parameters.dtype)
         
         return gradient_class, model_parameters
     

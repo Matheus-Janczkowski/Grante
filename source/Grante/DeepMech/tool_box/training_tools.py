@@ -171,8 +171,24 @@ class ModelCustomTraining:
 
         # Transforms the data to TensorFlow tensors
 
+        if hasattr(training_inputArray, "dtype"):
+
+            if training_inputArray.dtype!=float_type:
+
+                raise TypeError("The type of the training input array,"+
+                " "+str(training_inputArray.dtype)+", is different to "+
+                "the float type required, "+str(float_type))
+
         self.training_input = tf.constant(training_inputArray, dtype=
         float_type)
+
+        if hasattr(training_trueArray, "dtype"):
+
+            if training_trueArray.dtype!=float_type:
+
+                raise TypeError("The type of the training input array,"+
+                " "+str(training_trueArray.dtype)+", is different to t"+
+                "he float type required, "+str(float_type))
 
         self.training_trueValues = tf.constant(training_trueArray, dtype
         =float_type)

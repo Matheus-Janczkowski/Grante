@@ -190,8 +190,14 @@ class ScalarGradientWrtTrainableParamsGivenParametersConvexModel:
         # Sets the function which is used to regularize the weights to 
         # be non-negative
 
-        self.regularizing_function = numerical_tools.build_tensorflow_math_expressions(
-        regularizing_function, dtype=parameters_type)
+        if isinstance(regularizing_function, str):
+
+            self.regularizing_function = numerical_tools.build_tensorflow_math_expressions(
+            regularizing_function, dtype=parameters_type)
+
+        else:
+
+            self.regularizing_function = regularizing_function
 
         # Creates a dummy true value of output, because the Keras' loss 
         # functions requires y_true and y_pred as arguments

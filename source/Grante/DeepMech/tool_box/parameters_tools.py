@@ -22,7 +22,8 @@ def model_parameters_to_numpy(model, as_numpy=True):
 # Defines a function to update the trainable parameters of a NN model 
 # given a list of them
 
-def update_model_parameters(model, new_parameters):
+def update_model_parameters(model, new_parameters, regularizing_function=
+None):
 
     # Converts the parameters to tensorflow constant
 
@@ -44,7 +45,13 @@ def update_model_parameters(model, new_parameters):
 
         # Assigns the values
 
-        layer.assign(parameters_slice)
+        if regularizing_function is None:
+
+            layer.assign(parameters_slice)
+
+        else:
+
+            layer.assign(regularizing_function(parameters_slice))
 
         # Updates the offset 
 

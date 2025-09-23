@@ -10,6 +10,8 @@ from scipy.optimize import minimize
 
 from ..tool_box import loss_tools
 
+from ..tool_box import parameters_tools
+
 # Defines a class to optimize the model's parameters
 
 class ModelTraining:
@@ -145,9 +147,10 @@ class ModelTraining:
 class ModelCustomTraining:
 
     def __init__(self, model, training_inputArray, training_trueArray,
-    loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=1E-3, 
-    float_type=tf.float32, verbose_deltaIterations=100, 
-    convex_input_model=False, verbose=False):
+    loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=
+    1E-3, float_type=tf.float32, verbose_deltaIterations=100, 
+    convex_input_model=False, verbose=False, regularizing_function="sm"+
+    "ooth absolute value"):
         
         """
         Class for training a model whose trainable parameters (weights
@@ -193,6 +196,11 @@ class ModelCustomTraining:
         self.training_trueValues = tf.constant(training_trueArray, dtype
         =float_type)
 
+        # Gets a variable to inform if the model is convex to its input
+        # and saves the regularizing function for the model parameters
+
+        self.convex_input_model = convex_input_model
+
         # Construct a class to give the loss function, its gradient, and
         # the instructions for parameters (weights and biases) flattening
         # and reconstruction
@@ -200,7 +208,8 @@ class ModelCustomTraining:
         self.loss_class, self.model_parameters = loss_tools.build_loss_gradient_varying_model_parameters(
         self.model, loss_metric, self.training_input, 
         model_true_values=self.training_trueValues, convex_input_model=
-        convex_input_model)
+        self.convex_input_model, regularizing_function=
+        regularizing_function)
 
     # Defines a method to evaluate the loss function
 
@@ -314,9 +323,26 @@ class ModelCustomTraining:
 
             print("Training time: "+str(elapsed_time)+" seconds.\n")
 
-        # Returns the trained model parameters
+        # Gets the trained parameters and reassigns them to the model
 
-        return self.model_parameters
+        if self.convex_input_model:
+
+            # Regularizes the model parameters
+
+            self.model = parameters_tools.update_model_parameters(
+            self.model, self.model_parameters, regularizing_function=
+            self.loss_class.regularizing_function)
+
+            return self.model
+        
+        else:
+            
+            # Does not regularize the model parameters
+
+            self.model = parameters_tools.update_model_parameters(
+            self.model, self.model_parameters)
+
+            return self.model
 
 ########################################################################
 #                               Utilities                              #

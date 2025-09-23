@@ -22,7 +22,7 @@ class TestANNTools(unittest.TestCase):
 
         self.output_dimension_gradient_tests = 1
 
-        self.activation_list_gradient_tests = [{"elu": 100}, {"lin"+
+        self.activation_list_gradient_tests = [{"leaky_relu": 100}, {"leaky_relu": 10}, {"lin"+
         "ear": self.output_dimension_gradient_tests}]
 
         self.n_samples_gradient_tests = 1000
@@ -96,9 +96,9 @@ class TestANNTools(unittest.TestCase):
 
         self.optimizer = "CG"
 
-        self.maximum_iterations = 500
+        self.maximum_iterations = 5000
 
-        self.verbose_deltaIterations = 500
+        self.verbose_deltaIterations = 1000
 
     # Defines a function to test the fully convex-input neural networks
 
@@ -127,15 +127,13 @@ class TestANNTools(unittest.TestCase):
         n_iterations=self.maximum_iterations, verbose_deltaIterations=
         self.verbose_deltaIterations, float_type=self.dtype)
 
-        print("\nWarms up")
-
         t_initial = time.time()
 
-        result = training_class()
+        training_class()
 
         elapsed_time = time.time()-t_initial
 
-        print("\nFinishes warming up after "+str(elapsed_time))
+        print("\nTrains at "+str(elapsed_time)+" seconds")
 
 # Runs all tests
 

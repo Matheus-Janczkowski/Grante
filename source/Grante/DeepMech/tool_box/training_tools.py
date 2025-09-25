@@ -22,7 +22,8 @@ class ModelTraining:
     loss_metric=tf.keras.losses.MeanAbsoluteError(), optimizer=
     tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9, nesterov=
     True), n_iterations=1000, gradient_tolerance=1E-3, 
-    float_type=tf.float32, verbose_deltaIterations=100, verbose=False):
+    float_type=tf.float32, verbose_deltaIterations=100, verbose=False,
+    save_model_file="trained_model.keras"):
         
         # Retrieves the model and the optimization parameters
 
@@ -39,6 +40,8 @@ class ModelTraining:
         self.verbose_deltaIterations = verbose_deltaIterations
 
         self.verbose = verbose
+
+        self.save_model_file = save_model_file
 
         # Transforms the data to TensorFlow tensors
 
@@ -139,7 +142,9 @@ class ModelTraining:
 
             print("Training time: "+str(elapsed_time)+" seconds.\n")
 
-        # Returns the trained model
+        # Saves the model automatically and returns it as well
+
+        self.model.save(self.save_model_file)
 
         return self.model, elapsed_time
 
@@ -152,7 +157,7 @@ class ModelCustomTraining:
     loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=
     1E-3, float_type=None, verbose_deltaIterations=100, 
     convex_input_model=False, verbose=False, regularizing_function="sm"+
-    "ooth absolute value"):
+    "ooth absolute value", save_model_file="trained_model.keras"):
         
         """
         Class for training a model whose trainable parameters (weights
@@ -175,6 +180,8 @@ class ModelCustomTraining:
         self.verbose = verbose
 
         self.loss_metric = loss_metric
+
+        self.save_model_file = save_model_file
 
         # Gets the float type of the model trainable parameters
 
@@ -264,22 +271,6 @@ class ModelCustomTraining:
         # Gets the loss
 
         loss_value = self.loss_metric(true_data, y_model)
-
-        """y_model2 = parameters_tools.model_output_given_trainable_parameters(
-        unseen_data, self.model, self.model_parameters, 
-        self.loss_class.shapes_trainable_parameters, 
-        regularizing_function=None)
-
-        y_model3 = parameters_tools.model_output_given_trainable_parameters(
-        unseen_data, self.model, self.model_parameters, 
-        self.loss_class.shapes_trainable_parameters, 
-        regularizing_function=self.loss_class.regularizing_function)
-
-        loss_value2 = self.loss_metric(true_data, y_model2)
-
-        loss_value3 = self.loss_metric(true_data, y_model3)
-
-        print(loss_value.numpy(), loss_value2.numpy(), loss_value3.numpy())"""
 
         if output_as_numpy:
 
@@ -398,6 +389,10 @@ class ModelCustomTraining:
             self.model, self.model_parameters, regularizing_function=
             self.loss_class.regularizing_function)
 
+            # Saves the model automatically and returns it as well
+
+            self.model.save(self.save_model_file)
+
             return self.model
         
         else:
@@ -406,6 +401,10 @@ class ModelCustomTraining:
 
             self.model = parameters_tools.update_model_parameters(
             self.model, self.model_parameters)
+
+            # Saves the model automatically and returns it as well
+
+            self.model.save(self.save_model_file)
 
             return self.model
 

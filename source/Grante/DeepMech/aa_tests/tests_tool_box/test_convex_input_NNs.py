@@ -4,6 +4,8 @@ import unittest
 
 import time
 
+import os
+
 import tensorflow as tf
 
 from ...tool_box import ANN_tools
@@ -102,6 +104,11 @@ class TestANNTools(unittest.TestCase):
 
         self.verbose_deltaIterations = 1000
 
+        # Sets where to save the model
+
+        self.save_model_file = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "saved_model.keras")
+
     # Defines a function to test the fully convex-input neural networks
 
     def test_fully_convex_input_nn(self):
@@ -127,7 +134,8 @@ class TestANNTools(unittest.TestCase):
         self.training_inputTensor, self.training_trueTensor, 
         self.loss_metric, convex_input_model=True, verbose=True,
         n_iterations=self.maximum_iterations, verbose_deltaIterations=
-        self.verbose_deltaIterations)
+        self.verbose_deltaIterations, save_model_file=
+        self.save_model_file)
 
         t_initial = time.time()
 

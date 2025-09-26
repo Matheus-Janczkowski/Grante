@@ -10,13 +10,15 @@ from ....PythonicUtilities import plotting_tools
 
 from ....PythonicUtilities import file_handling_tools as file_tools
 
+from ....PythonicUtilities import path_tools
+
 # Defines a function to plot the homogenized stress tensors
 
 def plot_stress():
 
     # Gets the current path
 
-    base_path = file_tools.get_parent_path_of_file(file=__file__)
+    base_path = path_tools.get_parent_path_of_file(file=__file__)
 
     # Defines the paths to the stress tensor files
 

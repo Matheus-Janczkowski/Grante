@@ -10,6 +10,8 @@ from ....constitutive_models.hyperelasticity import micropolar_hyperelasticity a
 
 from ....physics import hyperelastic_micropolar_continuum as variational_framework
 
+from .....PythonicUtilities import path_tools
+
 from .....PythonicUtilities import file_handling_tools as file_tools
 
 from .....CuboidGmsh.aa_tests.micropolar_meshes import beam_micropolar_case_1 as beam_gmsh
@@ -20,7 +22,7 @@ def case1_varyingMicropolarNumber(flag_newMesh=False):
 
     # Sets the mesh file directory path
 
-    mesh_file_directory = os.path.join(file_tools.get_parent_path_of_file(
+    mesh_file_directory = os.path.join(path_tools.get_parent_path_of_file(
     file=__file__, path_bits_to_be_excluded=3),"test_meshes")
 
     # Defines the load factor
@@ -160,7 +162,7 @@ def case1_varyingMicropolarNumber(flag_newMesh=False):
 
     # Saves the parameters set
 
-    base_path = os.path.join(file_tools.get_parent_path_of_file(file=
+    base_path = os.path.join(path_tools.get_parent_path_of_file(file=
     __file__), "results")
 
     file_tools.list_toTxt(file_tools.named_list(parameters_sets), "par"+

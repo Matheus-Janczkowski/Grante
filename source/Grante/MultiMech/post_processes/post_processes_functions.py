@@ -13,7 +13,7 @@ from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import numerical_tools
 
-from ...PythonicUtilities import file_handling_tools as file_tools
+from ...PythonicUtilities import path_tools
 
 ########################################################################
 #                      Post-processing tools list                      #
@@ -39,12 +39,12 @@ def initialize_fieldSaving(data, direct_codeData, submesh_flag):
 
     # Takes out the termination of the file name
 
-    file_name = file_tools.take_outFileNameTermination(
+    file_name = path_tools.take_outFileNameTermination(
     file_name)
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
     
     # Assembles the output. This post-process does not have a variable
     # that can be shared with a submesh
@@ -199,7 +199,7 @@ def initialize_cauchyStressSaving(data, direct_codeData, submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Initializes the file
 
@@ -300,7 +300,7 @@ submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Initializes the file
 
@@ -402,7 +402,7 @@ submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Initializes the file
 
@@ -506,7 +506,7 @@ submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Initializes the file
 
@@ -612,7 +612,7 @@ def initialize_tractionSaving(data, direct_codeData, submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Initializes the file
 
@@ -721,7 +721,7 @@ def initialize_pressureAtPointSaving(data, direct_codeData, submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Verifies if an extension has been added to the file name
 
@@ -880,7 +880,7 @@ def initialize_fieldHomogenization(data, direct_codeData, submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Assembles the output. This post-process does not have a variable
     # that can be shared with a submesh
@@ -1072,7 +1072,7 @@ submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Assembles the output. This post-process does not have a variable
     # that can be shared with a submesh
@@ -1220,7 +1220,7 @@ submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Assembles the output. This post-process does not have a variable
     # that can be shared with a submesh
@@ -1375,7 +1375,7 @@ def initialize_cauchyHomogenization(data, direct_codeData, submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Assembles the output. This post-process does not have a variable
     # that can be shared with a submesh
@@ -1579,7 +1579,7 @@ submesh_flag):
 
     # Gets the name of the file with the path to it
 
-    file_name = file_tools.verify_path(parent_path, file_name)
+    file_name = path_tools.verify_path(parent_path, file_name)
 
     # Verifies if an extension has been added to the file name
 

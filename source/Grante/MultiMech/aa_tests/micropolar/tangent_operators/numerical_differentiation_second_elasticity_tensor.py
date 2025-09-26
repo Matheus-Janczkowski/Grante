@@ -20,6 +20,8 @@ from ....multiscale import multiscale_hyperelasticity as cauchy_variationalFrame
 
 from .....PythonicUtilities import file_handling_tools as file_tools
 
+from .....PythonicUtilities import path_tools
+
 from .....CuboidGmsh.aa_tests.micropolar_meshes import beam_micropolar_case_1 as beam_gmsh
 
 # Defines a function to try multiple parameters
@@ -28,7 +30,7 @@ def evaluate_tangentOperators(flag_newMesh=False):
 
     # Sets the mesh file directory path
 
-    mesh_file_directory = os.path.join(file_tools.get_parent_path_of_file(
+    mesh_file_directory = os.path.join(path_tools.get_parent_path_of_file(
     file=__file__, path_bits_to_be_excluded=3),"test_meshes")
 
     # Sets the problem to be solved (BVP_solution for micropolar or 

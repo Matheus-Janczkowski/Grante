@@ -12,7 +12,7 @@ from ....multiscale import multiscale_hyperelasticity as variational_framework
 
 from .....CuboidGmsh.aa_tests.micropolar_meshes import beam_micropolar_case_1 as beam_gmsh
 
-from .....PythonicUtilities import file_handling_tools as file_tools
+from .....PythonicUtilities import path_tools
 
 from ....aa_tests import test_meshes_paths
 
@@ -26,7 +26,7 @@ displacement_multiscaleBC = "MinimallyConstrainedFirstOrderBC"#"LinearFirstOrder
 
 fluctuation_field = False
 
-base_path = str(file_tools.get_parent_path_of_file())#os.getcwd()+"//tests//multiscale//hyperelasticity//results"
+base_path = str(path_tools.get_parent_path_of_file())#os.getcwd()+"//tests//multiscale//hyperelasticity//results"
 
 E_matrix = 1E6 
 
@@ -234,9 +234,9 @@ solver_parameters = dict()
 
 solver_parameters["linear_solver"] = "mumps"#"mumps"
 
-solver_parameters["newton_relative_tolerance"] = 1e-8#1e-8
+solver_parameters["newton_relative_tolerance"] = 1e-5#1e-8
 
-solver_parameters["newton_absolute_tolerance"] = 1e-5#1e-8
+solver_parameters["newton_absolute_tolerance"] = 1e-3#1e-8
 
 solver_parameters["newton_maximum_iterations"] = 30
 

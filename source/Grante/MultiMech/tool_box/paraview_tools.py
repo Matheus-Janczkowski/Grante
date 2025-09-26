@@ -3,7 +3,7 @@
 
 from paraview.simple import *
 
-from ...PythonicUtilities import file_handling_tools as file_tools
+from ...PythonicUtilities import path_tools
 
 from ...PythonicUtilities import programming_tools
 
@@ -41,12 +41,12 @@ output_imageFileName="plot.png"):
 
     if input_path:
 
-        input_fileName = file_tools.verify_path(input_path, 
+        input_fileName = path_tools.verify_path(input_path, 
         input_fileName)
 
     if output_path:
 
-        output_imageFileName = file_tools.verify_path(output_path,
+        output_imageFileName = path_tools.verify_path(output_path,
         output_imageFileName)
 
     # If the output path is None, but the input path is given, makes the
@@ -56,7 +56,7 @@ output_imageFileName="plot.png"):
 
         output_path = input_path
 
-        output_imageFileName = file_tools.verify_path(output_path,
+        output_imageFileName = path_tools.verify_path(output_path,
         output_imageFileName)
     
     # Loads the simulation output data

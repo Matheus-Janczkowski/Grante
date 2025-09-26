@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 
 from dolfin import *
 
-from ...tool_box import plotting_tools
+from ....PythonicUtilities import plotting_tools
 
-from ...tool_box import file_handling_tools as file_tools
+from ....PythonicUtilities import file_handling_tools as file_tools
 
 # Defines a function to plot the homogenized stress tensors
 

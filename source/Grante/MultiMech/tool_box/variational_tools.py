@@ -8,11 +8,11 @@ import copy
 
 from ..tool_box import tensor_tools
 
-from ..tool_box import programming_tools
-
 from ..tool_box import surface_loading_tools
 
 from ..tool_box import body_forces_loading_tools as body_loading_tools
+
+from ...PythonicUtilities import programming_tools
 
 ########################################################################
 #                            Internal work                             #

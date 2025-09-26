@@ -6,7 +6,7 @@ from ....constitutive_models.hyperelasticity import micropolar_hyperelasticity a
 
 from ....multiscale import multiscale_micropolar as variational_framework
 
-from ....tool_box import file_handling_tools as file_tools
+from .....PythonicUtilities import file_handling_tools as file_tools
 
 from .....CuboidGmsh.aa_tests.micropolar_meshes import beam_micropolar_case_1 as beam_gmsh
 

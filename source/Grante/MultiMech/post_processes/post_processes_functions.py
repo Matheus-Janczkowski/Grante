@@ -3,8 +3,6 @@
 
 from dolfin import *
 
-from ..tool_box import file_handling_tools as file_tools
-
 from ..tool_box import variational_tools
 
 from ..tool_box import homogenization_tools
@@ -14,6 +12,8 @@ from ..tool_box import constitutive_tools
 from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import numerical_tools
+
+from ...PythonicUtilities import file_handling_tools as file_tools
 
 ########################################################################
 #                      Post-processing tools list                      #

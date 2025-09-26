@@ -12,6 +12,10 @@ from ....multiscale import multiscale_hyperelasticity as variational_framework
 
 from .....CuboidGmsh.aa_tests.micropolar_meshes import beam_micropolar_case_1 as beam_gmsh
 
+from .....PythonicUtilities import file_handling_tools as file_tools
+
+from ....aa_tests import test_meshes_paths
+
 ########################################################################
 ########################################################################
 ##                      User defined parameters                       ##
@@ -22,7 +26,7 @@ displacement_multiscaleBC = "MinimallyConstrainedFirstOrderBC"#"LinearFirstOrder
 
 fluctuation_field = False
 
-base_path = os.getcwd()+"//tests//multiscale//hyperelasticity//results"
+base_path = str(file_tools.get_parent_path_of_file())#os.getcwd()+"//tests//multiscale//hyperelasticity//results"
 
 E_matrix = 1E6 
 
@@ -50,7 +54,7 @@ RVE_localizationY = 1
 
 RVE_localizationZ = 3
 
-flag_newMesh = True
+flag_newMesh = False
 
 ########################################################################
 #                          Simulation results                          #
@@ -58,9 +62,9 @@ flag_newMesh = True
 
 # Defines the path to the results directory 
 
-results_pathGraphics = base_path+"//graphics//"
+results_pathGraphics = base_path+"//results//graphics//"
 
-results_pathText = base_path+"//text//"
+results_pathText = base_path+"//results//text//"
 
 if fluctuation_field:
 
@@ -107,11 +111,11 @@ else:
 
 post_processes = []
 
-fields_names = ["displacement"]
+fields_names = ["Displacement"]
 
 if displacement_multiscaleBC=="MinimallyConstrainedFirstOrderBC":
 
-    fields_names.extend(["displacement_lagrange_multiplier", "disp"+
+    fields_names.extend(["Displacement_lagrange_multiplier", "Disp"+
     "lacement_gradient_lagrange_multiplier"]) 
 
 # Iterates through the fields (displacement and the Lagrange multipliers)
@@ -183,10 +187,10 @@ material_propertiesFiber["nu"] = nu_fiber
 
 constitutive_model = dict()
 
-constitutive_model["Matrix"] = constitutive_models.Neo_Hookean(
+constitutive_model["RVE matrix"] = constitutive_models.Neo_Hookean(
 material_propertiesMatrix)
 
-constitutive_model["Fiber"] = constitutive_models.Neo_Hookean(
+constitutive_model["RVE fiber"] = constitutive_models.Neo_Hookean(
 material_propertiesFiber)
 
 ####################################################################
@@ -197,16 +201,20 @@ material_propertiesFiber)
 # file termination, e.g. .msh or .xdmf; both options will be saved 
 # automatically
 
-file_directory = os.getcwd()+"//tests//test_meshes"
+#file_directory = os.getcwd()+"//tests//test_meshes"
 
-mesh_fileName = "micropolar_beam_with_fibers_microscale"
+mesh_fileName = test_meshes_paths.get_mesh_path("micropolar_beam_w"+
+"ith_fibers_microscale")
+
+print(mesh_fileName)
 
 if flag_newMesh:
 
     beam_gmsh.case_1(RVE_width, RVE_length, fiber_radius, n_RVEsX, 
     n_RVEsY, n_RVEsZ, RVE_localizationX, RVE_localizationY, 
-    RVE_localizationZ, mesh_fileName=mesh_fileName, file_directory=
-    file_directory)
+    RVE_localizationZ, mesh_fileName=mesh_fileName)#mesh_fileName)
+    """, file_directory=
+    file_directory)"""
 
 ####################################################################
 #                          Function space                          #
@@ -238,10 +246,10 @@ solver_parameters["newton_maximum_iterations"] = 30
 
 # Defines the paths to the macro quantities files
 
-macro_displacementName = (results_pathText+"//homogenized_displace"+
+macro_displacementName = (results_pathText+"homogenized_displace"+
 "ment")
 
-macro_gradDisplacementName= (results_pathText+"//homogenized_displ"+
+macro_gradDisplacementName= (results_pathText+"homogenized_displ"+
 "acement_gradient") 
 
 ####################################################################
@@ -258,6 +266,6 @@ verbose = True
 
 variational_framework.hyperelastic_microscale(displacement_multiscaleBC, 
 macro_displacementName, macro_gradDisplacementName, constitutive_model, 
-post_processes, file_directory+"//"+mesh_fileName, solver_parameters,
+post_processes, mesh_fileName, solver_parameters,
 polynomial_degree=polynomial_degree, verbose=verbose, fluctuation_field=
 fluctuation_field)

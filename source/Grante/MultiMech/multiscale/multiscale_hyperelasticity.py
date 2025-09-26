@@ -8,7 +8,7 @@ from ..tool_box import variational_tools
 
 from ..tool_box import pseudotime_stepping_tools as newton_raphson_tools
 
-from ..tool_box import programming_tools
+from ...PythonicUtilities import programming_tools
 
 from ..tool_box import functional_tools
 

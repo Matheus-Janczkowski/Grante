@@ -7,9 +7,9 @@ from ..multiscale.multiscale_boundary_conditions import multiscale_expressions
 
 from ..multiscale.multiscale_boundary_conditions import multiscale_classes
 
-from ..tool_box import programming_tools
-
 from ..tool_box import functional_tools
+
+from ...PythonicUtilities import programming_tools
 
 # Defines a function to select and apply the multiscale boundary condi-
 # tions. The boundary conditions are given by dictionaries of dictiona-

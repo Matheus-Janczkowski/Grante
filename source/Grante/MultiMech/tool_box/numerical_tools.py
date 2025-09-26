@@ -7,7 +7,7 @@ import ufl_legacy as ufl
 
 import numpy as np
 
-from ..tool_box import programming_tools
+from ...PythonicUtilities import programming_tools
 
 ########################################################################
 #                     Parametric loading functions                     #

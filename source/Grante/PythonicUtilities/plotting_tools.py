@@ -8,9 +8,9 @@ import matplotlib.colors as plt_colors
 
 import matplotlib.ticker as ticker
 
-from ..tool_box import file_handling_tools as file_tools
+from ..PythonicUtilities import file_handling_tools as file_tools
 
-from ..tool_box import programming_tools
+from ..PythonicUtilities import programming_tools
 
 ########################################################################
 #                          Bidimensional plots                         #

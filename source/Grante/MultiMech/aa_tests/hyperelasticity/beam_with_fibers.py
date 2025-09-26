@@ -4,11 +4,11 @@ import os
 
 #import periodic_structure as mesher
 
-from ...tool_box import file_handling_tools
+from ....PythonicUtilities import file_handling_tools
 
-from ...constitutive_models.hyperelasticity import isotropic_hyperelasticity as constitutive_models#source.constitutive_models.hyperelasticity.isotropic_hyperelasticity as constitutive_models
+from ...constitutive_models.hyperelasticity import isotropic_hyperelasticity as constitutive_models
 
-from ...physics import hyperelastic_cauchy_continuum as variational_framework#source.physics.hyperelastic_cauchy_continuum as variational_framework
+from ...physics import hyperelastic_cauchy_continuum as variational_framework
 
 from ...aa_tests import test_meshes_paths
 

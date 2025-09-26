@@ -10,11 +10,11 @@ from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import post_processing_tools
 
-from ..tool_box import programming_tools
-
 from ..post_processes import post_processes_classes as post_classes
 
 from ..tool_box import functional_tools
+
+from ...PythonicUtilities import programming_tools
 
 ########################################################################
 #                        Newton-Raphson schemes                        #

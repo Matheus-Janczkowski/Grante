@@ -12,15 +12,15 @@ import numpy as np
 
 from ..tool_box import tensor_tools
 
-from ..tool_box import programming_tools
-
 from ..tool_box import functional_tools
 
 from ..tool_box import variational_tools
 
-from ..tool_box import file_handling_tools as file_tools
+from ...PythonicUtilities import file_handling_tools as file_tools
 
-from ..tool_box import plotting_tools
+from ...PythonicUtilities import plotting_tools
+
+from ...PythonicUtilities import programming_tools
 
 # Defines the indices for Einstein summation notation
 

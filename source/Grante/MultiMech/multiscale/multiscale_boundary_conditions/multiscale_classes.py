@@ -8,11 +8,11 @@ import numpy as np
 
 from ...tool_box import functional_tools
 
-from ...tool_box import programming_tools
-
 from ...tool_box import boundary_conditions_tools as BC_tools
 
 from ...multiscale.multiscale_boundary_conditions import multiscale_expressions
+
+from ....PythonicUtilities import programming_tools
 
 ########################################################################
 #                Boundary conditions's classes templates               #

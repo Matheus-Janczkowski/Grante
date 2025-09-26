@@ -3,9 +3,9 @@
 
 from paraview.simple import *
 
-from ..tool_box import file_handling_tools as file_tools
+from ...PythonicUtilities import file_handling_tools as file_tools
 
-from ..tool_box import programming_tools
+from ...PythonicUtilities import programming_tools
 
 ########################################################################
 #                           Frozen snapshots                           #

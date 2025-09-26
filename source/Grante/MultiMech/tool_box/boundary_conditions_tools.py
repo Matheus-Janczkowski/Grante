@@ -2,11 +2,11 @@
 
 from dolfin import *
 
-from ..tool_box import programming_tools
-
 from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import numerical_tools
+
+from ...PythonicUtilities import programming_tools
 
 ########################################################################
 #              Heterogeneous Dirichlet boundary conditions             #

@@ -2,9 +2,9 @@
 
 import os
 
-import source.constitutive_models.hyperelasticity.isotropic_hyperelasticity as constitutive_models
+from ...constitutive_models.hyperelasticity import isotropic_hyperelasticity as constitutive_models
 
-import source.physics.hyperelastic_cauchy_continuum as variational_framework
+from ...physics import hyperelastic_cauchy_continuum as variational_framework
 
 ########################################################################
 ########################################################################

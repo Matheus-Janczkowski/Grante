@@ -6,9 +6,9 @@ import numpy as np
 
 import matplotlib.colors as plt_colors
 
-from ....tool_box import file_handling_tools as file_tools
+from .....PythonicUtilities import file_handling_tools as file_tools
 
-from ....tool_box import plotting_tools
+from .....PythonicUtilities import plotting_tools 
 
 # Defines a function to run the process
 

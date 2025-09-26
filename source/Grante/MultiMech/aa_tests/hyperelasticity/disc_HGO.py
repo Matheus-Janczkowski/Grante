@@ -10,11 +10,11 @@ from mshr import *
 
 #import periodic_structure as mesher
 
-import source.constitutive_models.hyperelasticity.anisotropic_hyperelasticity as anisotropic_constitutiveModels
+from ...constitutive_models.hyperelasticity import anisotropic_hyperelasticity as anisotropic_constitutiveModels
 
-import source.constitutive_models.hyperelasticity.isotropic_hyperelasticity as isotropic_constitutiveModels
+from ...constitutive_models.hyperelasticity import isotropic_hyperelasticity as isotropic_constitutiveModels
 
-import source.physics.hyperelastic_cauchy_continuum as variational_framework
+from ...physics import hyperelastic_cauchy_continuum as variational_framework
 
 ########################################################################
 ########################################################################

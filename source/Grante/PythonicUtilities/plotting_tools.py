@@ -2,13 +2,19 @@
 
 import numpy as np
 
+from copy import deepcopy
+
 import matplotlib.pyplot as plt
 
 import matplotlib.colors as plt_colors
 
 import matplotlib.ticker as ticker
 
+from matplotlib import markers
+
 from ..PythonicUtilities import file_handling_tools as file_tools
+
+from ..PythonicUtilities import path_tools
 
 from ..PythonicUtilities import programming_tools
 
@@ -21,14 +27,14 @@ from ..PythonicUtilities import programming_tools
 def plane_plot(file_name=None, data=None, x_data=None, y_data=None, 
 label=None, x_label=None, y_label=None, title=None, flag_grid=True, 
 highlight_points=False, color=None, flag_scientificNotation=False,
-element_style='-', element_size=1.5,  legend_position='upper left', 
+element_style=None, element_size=1.5,  legend_position='upper left', 
 plot_type="line", color_map=False, flag_noTicks=False, aspect_ratio='a'+
 'uto', x_grid=None, y_grid=None, color_bar=False, color_barMaximum=None, 
 color_barMinimum=None, color_barTicks=None, color_barTitle=None, 
 color_barIntegerTicks=False, color_barNumberOfTicks=5, 
 color_barIncludeMinMaxTicks=False, x_ticksLabels=None, y_ticksLabels=
 None, ticks_fontsize=12, label_fontsize=14, legend_fontsize=12,
-highlight_pointsColors='black', parent_path=None):
+highlight_pointsColors='black', parent_path=None, error_bar=None):
     
     """
     You can provide an array of data, where the first column will be in
@@ -56,7 +62,8 @@ highlight_pointsColors='black', parent_path=None):
     numbered using scientific notation; False (default) otherwise
 
     element_style                         - string with the type of line 
-    or marker, the default value is '-' (line)
+    or marker, the default value is '-' (line) for line plots and 'x' for
+    scatter plots
 
     element_size                          - float with the width of the 
     line or the area of the marker. 1.5 as default
@@ -99,9 +106,36 @@ highlight_pointsColors='black', parent_path=None):
     color_barIncludeMinMaxTicks           - True if the maximum and min
     imum values of the color bar are to be put in. False (default) o
     therwise
+
+    error_bar                             - list with the confidence
+    interval if error bars with shaded areas are to be plotted. None 
+    (default) if no error bars are to be plotted
     """
 
     print("Starts plotting")
+
+    # Verifies the type of the plot
+
+    if plot_type=="line":
+
+        # If no element style has been provided sets line as default
+
+        if element_style is None:
+
+            element_style = "-"
+
+    elif plot_type=="scatter":
+
+        # If no element style has been provided sets X amrker as default
+
+        if element_style is None:
+
+            element_style = "x"
+
+    else:
+
+        raise NameError("The 'plot_type' can be either 'line' or 'scat"+
+        "ter'")
 
     # Initializes a flag to inform if mutliple curves are supplied
 
@@ -317,6 +351,12 @@ highlight_pointsColors='black', parent_path=None):
 
     figure, subplots_tuple = plt.subplots()
 
+    # Gets the keys of valid line styles and of valid marker styles
+
+    valid_line_styles = plt.Line2D.lineStyles.keys()
+
+    valid_marker_styles = markers.MarkerStyle.markers.keys()
+
     # Verifies the nature of the line styles and of the color vector
 
     if multiple_curves:
@@ -327,6 +367,30 @@ highlight_pointsColors='black', parent_path=None):
 
             element_style = [element_style for i in range(
             multiple_curves)]
+
+            # Verifies if each element is a valid style
+
+            if plot_type=="line":
+
+                for style in element_style:
+
+                    if not (style in valid_line_styles):
+                        
+                        raise AttributeError("The element style '"+str(
+                        style)+"' is not a valid one for plotting line"+
+                        "s. Check the valid styles for lines: "+str(
+                        valid_line_styles)[10:-1])
+                    
+            elif plot_type=="scatter":
+
+                for style in element_style:
+
+                    if not (style in valid_marker_styles):
+                        
+                        raise AttributeError("The element style '"+str(
+                        style)+"' is not a valid one for scatter plott"+
+                        "ings. Check the valid styles for markers: "+str(
+                        valid_marker_styles)[10:-1])
 
         elif not isinstance(element_style, list):
 
@@ -471,6 +535,26 @@ highlight_pointsColors='black', parent_path=None):
 
                 element_style = element_style[0]
 
+        # Verifies if the element style if valid
+
+        if plot_type=="line":
+
+            if not (element_style in valid_line_styles):
+                
+                raise AttributeError("The element style '"+str(
+                element_style)+"' is not a valid one for plotting line"+
+                "s. Check the valid styles for lines: "+str(
+                valid_line_styles)[10:-1])
+                
+        elif plot_type=="scatter":
+
+            if not (element_style in valid_marker_styles):
+                
+                raise AttributeError("The element style '"+str(
+                element_style)+"' is not a valid one for scatter plott"+
+                "ings. Check the valid styles for markers: "+str(
+                valid_marker_styles)[10:-1])
+
         # Verifies the line thicknesses
         
         if isinstance(element_size, list):
@@ -517,7 +601,199 @@ highlight_pointsColors='black', parent_path=None):
 
     plotted_entities = None
 
-    # Plots it
+    # Plots the error bars first if they are needed
+
+    if error_bar is not None:
+
+        # If multiple curves a required
+
+        if multiple_curves:
+
+            # Verifies if error bar is a list
+
+            if not isinstance(error_bar, list):
+
+                raise TypeError("'error_bar' must be a list. Each valu"+
+                "e of this list must contain a list with the correspon"+
+                "ding confidence intervals of the corresponding curve")
+            
+            # Verifies if it has the same length as the vector of y data
+
+            elif len(error_bar)!=len(y_data):
+
+                raise IndexError("'error_bar' list has "+str(len(
+                error_bar))+" elements, whereas 'y_data' has "+str(len(
+                y_data))+" curves. They must have the same")
+
+            # Plots the error regions or bars
+
+            if plot_type=="line":
+
+                # Iterates through the curves
+
+                for i in range(multiple_curves):
+
+                    # Verifies if there is the same number of points in
+                    # the confidence interval list as in the curve
+
+                    if len(y_data[i])!=len(error_bar[i]):
+
+                        raise IndexError("The data has "+str(len(y_data[
+                        i]))+" elements in the "+str(i+1)+"-th curve, "+
+                        "whereas the error bar has "+str(len(error_bar[i
+                        ]))+" values of confidence interval")
+
+                    # Creates the error limits
+
+                    error_superior_limit = []
+
+                    error_inferior_limit = []
+
+                    for j in range(len(y_data[i])):
+
+                        # Verifies if the error bar is a number
+
+                        confidence_interval = error_bar[i][j]
+
+                        if not (isinstance(confidence_interval, int) or 
+                        isinstance(confidence_interval, float)):
+                            
+                            raise TypeError("The "+str(j)+"-th element"+
+                            " of the "+str(i+1)+" curve of the 'error_"+
+                            "bar' is not an integer nor a float. It's "+
+                            "not possible to plot the error bar otherw"+
+                            "ise")
+                        
+                        # Evaluates the superior and inferior limits
+
+                        error_superior_limit.append(y_data[i][j]+
+                        error_bar[i][j])
+
+                        error_inferior_limit.append(y_data[i][j]-
+                        error_bar[i][j])
+
+                    # Uses 30% opacity to highlight the line itself lat-
+                    # ter
+
+                    plotted_entities = subplots_tuple.fill_between(
+                    x_data[i], error_inferior_limit, 
+                    error_superior_limit, linestyle=element_style, 
+                    linewidth=element_size, color=color[i], alpha=0.3)
+
+            elif plot_type=="scatter":
+
+                # Iterates through the curves
+
+                for i in range(multiple_curves):
+
+                    # Verifies if the error bar has only numbers as ele-
+                    # ments
+
+                    for j in range(len(error_bar[i])):
+
+                        if not (isinstance(error_bar[i][j], int) or isinstance(
+                        error_bar[i][j], float)):
+                            
+                            raise TypeError("The "+str(j)+"-th element"+
+                            " of the 'error_bar' of the "+str(i)+" cur"+
+                            "ve is not an integer nor a float. It's no"+
+                            "t possible to plot the error bar otherwis"+
+                            "e")
+
+                    plotted_entities = subplots_tuple.errorbar(x_data[i
+                    ], y_data[i], yerr=error_bar[i], color=color[i], fmt=
+                    'o', alpha=0.3)
+
+            else:
+
+                raise ValueError("There are two types of plot: 'line' "+
+                "for data points that are orderly joined by lines, and"+
+                " 'scatter' for points that are plotted scatter fashio"+
+                "n")
+
+        # Otherwise, if just one curve is required
+
+        else:
+
+            # Verifies if error bar is a list
+
+            if not isinstance(error_bar, list):
+
+                raise TypeError("'error_bar' must be a list, even for "+
+                "plotting a single curve with error regions. Each valu"+
+                "e of this list must be corresponding confidence inter"+
+                "val")
+            
+            # Verifies if it has the same length as the vector of y data
+
+            elif len(error_bar)!=len(y_data):
+
+                raise IndexError("'error_bar' list has "+str(len(
+                error_bar))+" elements, whereas 'y_data' has "+str(len(
+                y_data))+". They must have the same")
+
+            # Plots the error regions or bars
+
+            if plot_type=="line":
+
+                # Creates the error limits
+
+                error_superior_limit = []
+
+                error_inferior_limit = []
+
+                for i in range(len(y_data)):
+
+                    # Verifies if the error bar is a number
+
+                    confidence_interval = error_bar[i]
+
+                    if not (isinstance(confidence_interval, int) or 
+                    isinstance(confidence_interval, float)):
+                        
+                        raise TypeError("The "+str(i)+"-th element of "+
+                        "the 'error_bar' is not an integer nor a float"+
+                        ". It's not possible to plot the error bar oth"+
+                        "erwise")
+                    
+                    # Evaluates the superior and inferior limits
+
+                    error_superior_limit.append(y_data[i]+error_bar[i])
+
+                    error_inferior_limit.append(y_data[i]-error_bar[i])
+
+                # Uses 30% opacity to highlight the line itself later
+
+                plotted_entities = subplots_tuple.fill_between(x_data, 
+                error_inferior_limit, error_superior_limit, linestyle=
+                element_style, linewidth=element_size, color=color,
+                alpha=0.3)
+
+            elif plot_type=="scatter":
+
+                # Verifies if the error bar has only numbers as elements
+
+                for i in range(len(error_bar)):
+
+                    if not (isinstance(error_bar[i], int) or isinstance(
+                    error_bar[i], float)):
+                        
+                        raise TypeError("The "+str(i)+"-th element of "+
+                        "the 'error_bar' is not an integer nor a float"+
+                        ". It's not possible to plot the error bar oth"+
+                        "erwise")
+
+                plotted_entities = subplots_tuple.errorbar(x_data, 
+                y_data, yerr=error_bar, color=color, fmt='o', alpha=0.3)
+
+            else:
+
+                raise ValueError("There are two types of plot: 'line' "+
+                "for data points that are orderly joined by lines, and"+
+                " 'scatter' for points that are plotted scatter fashio"+
+                "n")
+
+    # Plots the lines
 
     if label is None:
 
@@ -1033,7 +1309,7 @@ highlight_pointsColors='black', parent_path=None):
 
         # Verifies the file name
 
-        file_name, termination = file_tools.take_outFileNameTermination(
+        file_name, termination = path_tools.take_outFileNameTermination(
         file_name, get_termination=True)
 
         # Verifies if the termination is empty
@@ -1044,9 +1320,17 @@ highlight_pointsColors='black', parent_path=None):
 
             termination = "pdf"
 
+        # If the parent path is None, gets the path where this function 
+        # was called
+
+        if parent_path is None:
+
+            parent_path = path_tools.get_parent_path_of_file(
+            function_calls_to_retrocede=2)
+
         # Adds the termination again
 
-        file_name = file_tools.verify_path(parent_path, file_name+"."+
+        file_name = path_tools.verify_path(parent_path, file_name+"."+
         termination)
 
         try:

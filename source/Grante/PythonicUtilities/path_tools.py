@@ -128,7 +128,8 @@ def take_outFileNameTermination(file_name, get_termination=False):
     
 # Defines a function to get the path to a file
 
-def get_parent_path_of_file(file="__file__", path_bits_to_be_excluded=1):
+def get_parent_path_of_file(file="__file__", path_bits_to_be_excluded=1,
+function_calls_to_retrocede=1):
 
     if file=="__file__":
 
@@ -137,7 +138,7 @@ def get_parent_path_of_file(file="__file__", path_bits_to_be_excluded=1):
 
         # Gets the previous frame, where the function has been called
 
-        last_frame = inspect.stack()[1]
+        last_frame = inspect.stack()[function_calls_to_retrocede]
 
         # Gets the module where it's been called
 
@@ -167,4 +168,4 @@ def get_parent_path_of_file(file="__file__", path_bits_to_be_excluded=1):
     # Joins them again without the last bit, which is the name of the 
     # file itself
 
-    return Path(*current_path[0:-path_bits_to_be_excluded])
+    return str(Path(*current_path[0:-path_bits_to_be_excluded]))

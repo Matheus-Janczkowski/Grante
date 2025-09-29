@@ -106,8 +106,10 @@ class TestANNTools(unittest.TestCase):
 
         # Sets where to save the model
 
-        self.save_model_file = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "saved_model.keras")
+        """self.save_model_file = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "saved_model.keras")"""
+
+        self.save_model_file = "saved_model.keras"
 
     # Defines a function to test the fully convex-input neural networks
 

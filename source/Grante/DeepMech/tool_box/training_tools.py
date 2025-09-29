@@ -14,6 +14,8 @@ from ..tool_box import loss_tools
 
 from ..tool_box import parameters_tools
 
+from ...PythonicUtilities import path_tools
+
 # Defines a class to optimize the model's parameters
 
 class ModelTraining:
@@ -23,7 +25,8 @@ class ModelTraining:
     tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9, nesterov=
     True), n_iterations=1000, gradient_tolerance=1E-3, 
     float_type=tf.float32, verbose_deltaIterations=100, verbose=False,
-    save_model_file="trained_model.keras"):
+    save_model_file="trained_model.keras", parent_path="get current pa"+
+    "th"):
         
         # Retrieves the model and the optimization parameters
 
@@ -41,7 +44,22 @@ class ModelTraining:
 
         self.verbose = verbose
 
-        self.save_model_file = save_model_file
+        # Saves the parent path where to save the model
+
+        if parent_path=="get current path":
+
+            # Gets as default the path where this class was instantia-
+            # ted
+
+            parent_path = path_tools.get_parent_path_of_file(
+            function_calls_to_retrocede=2)
+
+        # Unites the parent path to the model file name, but takes out
+        # the termination and forces it to be .keras
+
+        self.save_model_file = path_tools.verify_path(parent_path, 
+        path_tools.take_outFileNameTermination(save_model_file)+".kera"+
+        "s")
 
         # Transforms the data to TensorFlow tensors
 
@@ -157,7 +175,8 @@ class ModelCustomTraining:
     loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=
     1E-3, float_type=None, verbose_deltaIterations=100, 
     convex_input_model=False, verbose=False, regularizing_function="sm"+
-    "ooth absolute value", save_model_file="trained_model.keras"):
+    "ooth absolute value", save_model_file="trained_model.keras", 
+    parent_path="get current path"):
         
         """
         Class for training a model whose trainable parameters (weights
@@ -181,7 +200,24 @@ class ModelCustomTraining:
 
         self.loss_metric = loss_metric
 
-        self.save_model_file = save_model_file
+        # Saves the parent path where to save the model
+
+        if parent_path=="get current path":
+
+            # Gets as default the path where this class was instantia-
+            # ted
+
+            parent_path = path_tools.get_parent_path_of_file(
+            function_calls_to_retrocede=2)
+
+        # Unites the parent path to the model file name, but takes out
+        # the termination and forces it to be .keras
+
+        self.save_model_file = path_tools.verify_path(parent_path, 
+        path_tools.take_outFileNameTermination(save_model_file)+".kera"+
+        "s")
+
+        print("Saves the model at:\n"+str(self.save_model_file))
 
         # Gets the float type of the model trainable parameters
 

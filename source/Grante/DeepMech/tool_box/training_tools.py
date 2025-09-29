@@ -279,6 +279,33 @@ class ModelCustomTraining:
         self.convex_input_model, regularizing_function=
         regularizing_function)
 
+        # Gets the number of output neurons
+        
+        self.n_outputs = self.model.trainable_variables[-1].shape[0]
+
+    # Defines a method to evaluate the hessian of each output neuron of
+    # the model
+
+    def get_hessian_outputs_model(self):
+
+        # Initializes a list of hessian matrices
+
+        hessian_matrices = []
+
+        # Iterates through the output neurons
+
+        for i in range(self.n_outputs):
+
+            # Differentiates twice
+
+            with tf.GradientTape() as tape1:
+
+                # Gets the model output
+
+                y_output = self.model(self.training_input)[:,i]
+
+            gradient = tape1.gradient(y_output, self.model.trainable_variables)
+
     # Defines a method to evaluate the loss function
 
     def loss_function(self):

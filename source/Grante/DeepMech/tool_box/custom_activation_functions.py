@@ -53,6 +53,22 @@ class CustomActivationFunctions:
 
             self.dtype = dtype
 
+    # Defines a method to serialize this class inside Keras
+
+    def get_config(self):
+
+        # Returns only JSON-serializable values (dicts, lists, numbers, 
+        # strings)
+
+        return {"dtype": self.dtype.name}
+
+    @classmethod
+    def from_config(cls, config):
+
+        # Gets dtype back into a tensorflow
+
+        return cls(dtype=tf.as_dtype(config["dtype"]))
+
     ####################################################################
     #             Define special activation functions below            #
     ####################################################################

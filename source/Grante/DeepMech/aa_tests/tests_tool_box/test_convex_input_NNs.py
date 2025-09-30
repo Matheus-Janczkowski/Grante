@@ -25,7 +25,7 @@ class TestANNTools(unittest.TestCase):
         self.output_dimension_gradient_tests = 1
 
         self.activation_list_gradient_tests = [{"quadratic": {"number "+
-        "of neurons": 100, "a2": 2.0}}, {"linear": 
+        "of neurons": 100, "a2": 1.0}}, {"linear": 
         self.output_dimension_gradient_tests}]
 
         self.n_samples_gradient_tests = 1000
@@ -106,9 +106,6 @@ class TestANNTools(unittest.TestCase):
 
         # Sets where to save the model
 
-        """self.save_model_file = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "saved_model.keras")"""
-
         self.save_model_file = "saved_model.keras"
 
     # Defines a function to test the fully convex-input neural networks
@@ -154,6 +151,20 @@ class TestANNTools(unittest.TestCase):
         "ining data is "+str(training_class.loss_unseen_data(
         self.training_trueTensor, self.training_inputTensor, 
         output_as_numpy=True)))
+
+        # Checks the hessian matrices
+
+        hessian_matrices = training_class.get_hessian_outputs_model(
+        eigenvalues=True)
+
+        print("\nThere follow the hessian matrices")
+
+        print(hessian_matrices)
+
+        # Tests Monte Carlo training
+
+        training_class.monte_carlo_training(n_realizations=3, 
+        best_models_rank_size=3)
 
 # Runs all tests
 

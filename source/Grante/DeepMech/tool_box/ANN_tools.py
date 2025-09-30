@@ -271,6 +271,10 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
         super().__init__(**kwargs)
 
+        # Saves the custom activations_class
+
+        self.custom_activations_class = custom_activations_class
+
         # Adds the dictionary of live-wired activation functions. But 
         # checks if if is given as argument
 
@@ -278,7 +282,7 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
             self.live_activationFunctions, *_ = verify_activationDict(
             activation_functionDict, layer, {}, True,
-            custom_activations_class)
+            self.custom_activations_class)
 
         else:
 
@@ -372,7 +376,9 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # Updates the instructions dictionary
 
         config.update({"activation_functionDict": self.functions_dict,
-        "layer": self.layer})
+        "layer": self.layer, "custom_activations_config": 
+        self.custom_activations_class.get_config(), "custom_activation"+
+        "s_class": None})
 
         return config
     
@@ -384,7 +390,73 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
     def from_config(cls, config):
 
+        # Rebuilds the class of CustomActivationFunctions from its own
+        # config
+
+        custom_activations = CustomActivationFunctions.from_config(
+        config.pop("custom_activations_config"))
+
+        # Allocates it into the config dictionary
+
+        config["custom_activations_class"] = custom_activations
+
         return cls(**config)
+
+########################################################################
+#                       Parameters initialization                      #
+########################################################################
+
+# Defines a function to reinitialize a model parameters using its own i-
+# initializers
+
+def reinitialize_model_parameters(model):
+
+    # Iterates through the layers of parameters
+
+    for layer in model.layers:
+
+        # Treats the standard keras layer case
+
+        if isinstance(layer, tf.keras.layers.Dense):
+
+            # Reinitializes the weights
+
+            init = layer.kernel_initializer
+
+            layer.kernel.assign(init(shape=layer.kernel.shape, dtype=
+            layer.kernel.dtype))
+            
+            # Reinitializes the biases
+
+            init = layer.bias_initializer
+
+            layer.bias.assign(init(shape=layer.bias.shape, dtype=
+            layer.bias.dtype))
+
+        # Treats the case of mixed activation layer
+
+        elif hasattr(layer, "dense"):
+
+            # Reinitializes the weights
+
+            layer.dense.kernel.assign(layer.dense.kernel_initializer(
+            shape=layer.dense.kernel.shape, dtype=
+            layer.dense.kernel.dtype))
+            
+            # Reinitializes the biases
+
+            layer.dense.bias.assign(layer.dense.bias_initializer(
+            shape=layer.dense.bias.shape, dtype=layer.dense.bias.dtype))
+
+        # Some layers don't have parameters to be reinitialized. Raises
+        # an error only if this layer is not one of such layer types
+
+        elif not (isinstance(layer, tf.keras.layers.InputLayer)):
+
+            raise TypeError("The parameters of the model cannot be rei"+
+            "nitialized because it can either handle a standard keras "+
+            "layer or the MixedActivationLayer. The current layer is: "+
+            str(layer))
 
 ########################################################################
 #                               Utilities                              #

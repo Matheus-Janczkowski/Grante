@@ -10,6 +10,32 @@ import inspect
 #                              Path tools                              #
 ########################################################################
 
+# Defines a function to verify if a file exists
+
+def verify_file_existence(file_path, saving_function=None):
+
+    if not os.path.exists(file_path):
+
+        # If a saving function has been provided uses it to save it
+
+        if saving_function is None:
+
+            raise FileNotFoundError("The file at '"+str(file_path)+"' "+
+            "was not found")
+        
+        else:
+
+            try:
+
+                saving_function(file_path)
+
+            except Exception as error_message:
+
+                raise TypeError("It is not possible to save the file '"+
+                str(file_path)+"' using function '"+str(
+                saving_function.__name__)+"' due to the following exce"+
+                "ption:\n"+str(error_message))
+
 # Defines a function to verify if a path exists or not. If not, create
 # it
 
@@ -77,6 +103,119 @@ def verify_path(parent_path, file_name):
     # Joins everything together
 
     return parent_path+"//"+file_name
+    
+# Defines a function to get the path to a file
+
+def get_parent_path_of_file(file="__file__", path_bits_to_be_excluded=1,
+function_calls_to_retrocede=1):
+
+    if file=="__file__":
+
+        # Tries to automatically retrieve where this function has been
+        # called
+
+        # Gets the previous frame, where the function has been called
+
+        last_frame = inspect.stack()[function_calls_to_retrocede]
+
+        # Gets the module where it's been called
+
+        module = inspect.getmodule(last_frame[0])
+
+        # Verifies if this module is valid and gets the __file__ attri-
+        # bute
+
+        if (module is not None) and hasattr(module, "__file__"):
+
+            file = module.__file__ 
+
+        else:
+
+            raise NameError("To get the parent path of a file, you sho"+
+            "uld type file=file, where file is an imported file; or yo"+
+            "u should type file=__file__ to get the parent path to the"+
+            " current file. Otherwise, it will try to get the path of "+
+            "the file where this function, 'get_parent_path_of_file', "+
+            "has been called last. Unfortunately, to no avail this tim"+
+            "e")
+    
+    # Gets a list of the bits of the whole path
+    
+    current_path = Path(os.path.abspath(file)).parts
+
+    # Joins them again without the last bit, which is the name of the 
+    # file itself
+
+    return str(Path(*current_path[0:-path_bits_to_be_excluded]))
+
+########################################################################
+#                         File name alteration                         #
+########################################################################
+
+# Defines a function to delete a file
+
+def delete_file(file_name, parent_path=None, ignore_non_existing_file=
+False):
+
+    # If the parent path is not None, joins it
+
+    if parent_path is not None:
+
+        file_name = parent_path+"//"+file_name
+
+    # Verifies if the file exists
+
+    if not ignore_non_existing_file:
+
+        verify_file_existence(file_name)
+
+        # Removes it
+
+        os.remove(file_name)
+
+# Defines a function to rename a file
+
+def rename_file(old_file_name, new_file_name, parent_path=None,
+saving_function=None):
+
+    # If the parent path is not None, joins it
+
+    if parent_path is not None:
+
+        old_file_name = parent_path+"//"+old_file_name
+
+    # Gets the termination of both files
+
+    old_path, termination_old = take_outFileNameTermination(
+    old_file_name, get_termination=True)
+
+    new_file_name, termination_new = take_outFileNameTermination(
+    new_file_name, get_termination=True)
+
+    # Verifies if this file exists, and saves it if it does not exist
+    # yet
+
+    verify_file_existence(old_path+"."+termination_old, saving_function=
+    saving_function)
+
+    # Verifies if both terminations are the same
+
+    if termination_old!=termination_new:
+
+        raise NameError("It's not possible to change the name of the f"+
+        "ile at '"+str(old_path)+"' to '"+str(new_file_name)+"' for th"+
+        "e termination of the file is '"+str(termination_old)+"', and "+
+        "the termination of the new name is '"+str(termination_new)+"'")
+
+    # Transforms into Path and adds the new name
+
+    old_path = Path(old_path+"."+termination_old)
+
+    new_path = old_path.with_name(new_file_name+"."+termination_new)
+
+    # Renames it and returns as string
+
+    return str(old_path.rename(new_path))
 
 # Defines a function to take out the termination file name of a string
 
@@ -125,47 +264,3 @@ def take_outFileNameTermination(file_name, get_termination=False):
     else:
 
         return clean_fileName
-    
-# Defines a function to get the path to a file
-
-def get_parent_path_of_file(file="__file__", path_bits_to_be_excluded=1,
-function_calls_to_retrocede=1):
-
-    if file=="__file__":
-
-        # Tries to automatically retrieve where this function has been
-        # called
-
-        # Gets the previous frame, where the function has been called
-
-        last_frame = inspect.stack()[function_calls_to_retrocede]
-
-        # Gets the module where it's been called
-
-        module = inspect.getmodule(last_frame[0])
-
-        # Verifies if this module is valid and gets the __file__ attri-
-        # bute
-
-        if (module is not None) and hasattr(module, "__file__"):
-
-            file = module.__file__ 
-
-        else:
-
-            raise NameError("To get the parent path of a file, you sho"+
-            "uld type file=file, where file is an imported file; or yo"+
-            "u should type file=__file__ to get the parent path to the"+
-            " current file. Otherwise, it will try to get the path of "+
-            "the file where this function, 'get_parent_path_of_file', "+
-            "has been called last. Unfortunately, to no avail this tim"+
-            "e")
-    
-    # Gets a list of the bits of the whole path
-    
-    current_path = Path(os.path.abspath(file)).parts
-
-    # Joins them again without the last bit, which is the name of the 
-    # file itself
-
-    return str(Path(*current_path[0:-path_bits_to_be_excluded]))

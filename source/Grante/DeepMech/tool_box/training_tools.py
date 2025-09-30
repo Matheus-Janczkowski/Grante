@@ -4,6 +4,10 @@ import tensorflow as tf
 
 import numpy as np
 
+from tqdm import tqdm
+
+from collections import OrderedDict
+
 import time
 
 from copy import deepcopy
@@ -13,6 +17,8 @@ from scipy.optimize import minimize
 from ..tool_box import loss_tools
 
 from ..tool_box import parameters_tools
+
+from ..tool_box import ANN_tools
 
 from ...PythonicUtilities import path_tools
 
@@ -207,13 +213,13 @@ class ModelCustomTraining:
             # Gets as default the path where this class was instantia-
             # ted
 
-            parent_path = path_tools.get_parent_path_of_file(
+            self.parent_path = path_tools.get_parent_path_of_file(
             function_calls_to_retrocede=2)
 
         # Unites the parent path to the model file name, but takes out
         # the termination and forces it to be .keras
 
-        self.save_model_file = path_tools.verify_path(parent_path, 
+        self.save_model_file = path_tools.verify_path(self.parent_path, 
         path_tools.take_outFileNameTermination(save_model_file)+".kera"+
         "s")
 
@@ -286,11 +292,15 @@ class ModelCustomTraining:
     # Defines a method to evaluate the hessian of each output neuron of
     # the model
 
-    def get_hessian_outputs_model(self):
+    def get_hessian_outputs_model(self, eigenvalues=False):
 
         # Initializes a list of hessian matrices
 
         hessian_matrices = []
+
+        # Sets input as a variable
+
+        model_input = tf.Variable(self.training_input)
 
         # Iterates through the output neurons
 
@@ -298,13 +308,46 @@ class ModelCustomTraining:
 
             # Differentiates twice
 
-            with tf.GradientTape() as tape1:
+            with tf.GradientTape() as tape2:
 
-                # Gets the model output
+                with tf.GradientTape() as tape1:
 
-                y_output = self.model(self.training_input)[:,i]
+                    tape1.watch(model_input)
 
-            gradient = tape1.gradient(y_output, self.model.trainable_variables)
+                    tape2.watch(model_input)
+
+                    # Gets the model output
+
+                    y_output = self.model(model_input)[:,i]
+
+                gradient = tape1.gradient(y_output, model_input)
+
+            # Gets the hessian in the format (n_samples, n_input, n_sam-
+            # ples, n_input)
+
+            full_hessian = tape2.jacobian(gradient, model_input)
+
+            # Reordinates it into the format (n_samples, n_input, n_in-
+            # put)
+
+            per_sample_hessian = tf.stack([full_hessian[b,:,b,:] for (b
+            ) in range(full_hessian.shape[0])], axis=0)
+
+            # Appends the per sample hessian to the list and their ei-
+            # genvalues
+
+            if eigenvalues:
+
+                hessian_matrices.append([per_sample_hessian, 
+                tf.linalg.eigvalsh(per_sample_hessian)])
+
+            else:
+
+                hessian_matrices.append(per_sample_hessian)
+
+        # Returns the list of hessian matrices
+
+        return hessian_matrices
 
     # Defines a method to evaluate the loss function
 
@@ -470,6 +513,151 @@ class ModelCustomTraining:
             self.model.save(self.save_model_file)
 
             return self.model
+        
+    # Defines a function to perform a Monte Carlo training, i.e. train-
+    # ing multiple times and generating multiple models
+
+    def monte_carlo_training(self, n_realizations=50, parameters_min=
+    -10.0, parameters_max=10.0, best_models_rank_size=None):
+        
+        print("\n#####################################################"+
+        "###################\n#                   Initializes Monte Ca"+
+        "rlo training                   #\n###########################"+
+        "#############################################\n")
+        
+        # If no number of best models to be ranked, rank all of the rea-
+        # lizations
+
+        if best_models_rank_size is None:
+
+            best_models_rank_size = n_realizations
+
+        print("Number of realizations:                     "+str(
+        n_realizations))
+
+        print("Number of best models to be saved:          "+str(
+        best_models_rank_size))
+
+        print("Minimum value for the trainable parameters: "+str(
+        parameters_min))
+
+        print("Maximum value for the trainable parameters: "+str(
+        parameters_max)+"\n")
+
+        # Initializes a dictionary of models with their respective loss
+        # function value at training as value to the key
+        
+        models_ranking_dict = OrderedDict()
+
+        for i in range(best_models_rank_size):
+
+            models_ranking_dict[i] = np.inf 
+
+        # Iterates through the realizations
+
+        for i in tqdm(range(n_realizations), desc="Training realizatio"+
+        "ns"):
+
+            """# Randomly reinitializes the parameters
+
+            self.model_parameters = tf.random.uniform(shape=
+            self.model_parameters.shape, minval=parameters_min, maxval=
+            parameters_max, dtype=self.model_parameters.dtype)"""
+
+            # Reinitializes the model parameters using the same initia-
+            # lizers that were assigned when the model was first created
+
+            self.model = ANN_tools.reinitialize_model_parameters(
+            self.model)
+
+            # Initializes the saving of the model as training 
+
+            self.save_model_file = (self.parent_path+"//model_during_t"+
+            "raining.keras")
+
+            # Calls the training
+
+            self.__call__()
+
+            # Gets the loss function
+
+            training_loss = self.loss_unseen_data(
+            self.training_trueValues, self.training_input, 
+            output_as_numpy=True)
+
+            # Iterates through the best ranking models to check if the
+            # current one outperforms any of them
+
+            for model_number in models_ranking_dict.keys():
+
+                # Gets the model loss and compares it to the loss value
+                # of the current model
+
+                model_loss = models_ranking_dict[model_number]
+
+                if model_loss>training_loss:
+
+                    # Deletes the worst performing model, which is the
+                    # corresponding one to the last key
+
+                    path_tools.delete_file(str(list(
+                    models_ranking_dict.keys())[-1])+"_best_model.kera"+
+                    "s", parent_path=self.parent_path, 
+                    ignore_non_existing_file=True)
+
+                    # Move every other model below this one one step 
+                    # downwards
+
+                    for j in range(list(models_ranking_dict.keys())[-1], 
+                    model_number, -1):
+                        
+                        # Gets the value of the previous model and allo-
+                        # cates it to the next
+
+                        models_ranking_dict[j] = deepcopy(
+                        models_ranking_dict[j-1])
+
+                        # And renames the model file
+
+                        path_tools.rename_file(str(j)+"_best_model.k"+
+                        "eras", str(j+1)+"_best_model.keras", 
+                        parent_path=self.parent_path, saving_function=
+                        self.model.save)
+                    
+                    # Finally adds the current loss
+
+                    models_ranking_dict[model_number] = deepcopy(
+                    training_loss)
+
+                    # Saves this model
+
+                    path_tools.rename_file(self.save_model_file, str(
+                    model_number+1)+"_best_model.keras", 
+                    saving_function=self.model.save)
+
+                    # Breaks the loop
+
+                    break
+
+        # Loads the best model
+
+        print("\n#####################################################"+
+        "###################\n#                Final log of the Monte "+
+        "Carlo training                 #\n###########################"+
+        "#############################################\n")
+
+        print("The best fitting models follow below. The number of the"+
+        " model and its\ncorresponding loss function at the training s"+
+        "et of data\n")
+
+        for model_number, model_loss in models_ranking_dict.items():
+
+            print("model "+str(model_number+1)+": "+str(model_loss))
+
+        print("")
+
+        self.model = tf.keras.models.load_model(self.parent_path+"//1_"+
+        "best_model.keras")
 
 ########################################################################
 #                               Utilities                              #

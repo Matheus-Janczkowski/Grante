@@ -413,7 +413,11 @@ def reinitialize_model_parameters(model):
 
     # Iterates through the layers of parameters
 
-    for layer in model.layers:
+    for i in range(len(model.layers)):
+
+        # Gets the layer
+
+        layer = model.layers[i]
 
         # Treats the standard keras layer case
 
@@ -423,14 +427,14 @@ def reinitialize_model_parameters(model):
 
             init = layer.kernel_initializer
 
-            layer.kernel.assign(init(shape=layer.kernel.shape, dtype=
+            model.layers[i].kernel.assign(init(shape=layer.kernel.shape, dtype=
             layer.kernel.dtype))
             
             # Reinitializes the biases
 
             init = layer.bias_initializer
 
-            layer.bias.assign(init(shape=layer.bias.shape, dtype=
+            model.layers[i].bias.assign(init(shape=layer.bias.shape, dtype=
             layer.bias.dtype))
 
         # Treats the case of mixed activation layer
@@ -439,13 +443,13 @@ def reinitialize_model_parameters(model):
 
             # Reinitializes the weights
 
-            layer.dense.kernel.assign(layer.dense.kernel_initializer(
+            model.layers[i].dense.kernel.assign(layer.dense.kernel_initializer(
             shape=layer.dense.kernel.shape, dtype=
             layer.dense.kernel.dtype))
             
             # Reinitializes the biases
 
-            layer.dense.bias.assign(layer.dense.bias_initializer(
+            model.layers[i].dense.bias.assign(layer.dense.bias_initializer(
             shape=layer.dense.bias.shape, dtype=layer.dense.bias.dtype))
 
         # Some layers don't have parameters to be reinitialized. Raises
@@ -457,6 +461,8 @@ def reinitialize_model_parameters(model):
             "nitialized because it can either handle a standard keras "+
             "layer or the MixedActivationLayer. The current layer is: "+
             str(layer))
+        
+    return model
 
 ########################################################################
 #                               Utilities                              #

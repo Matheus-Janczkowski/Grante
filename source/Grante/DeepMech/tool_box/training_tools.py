@@ -18,8 +18,6 @@ from ..tool_box import loss_tools
 
 from ..tool_box import parameters_tools
 
-from ..tool_box import ANN_tools
-
 from ...PythonicUtilities import path_tools
 
 # Defines a class to optimize the model's parameters
@@ -517,8 +515,8 @@ class ModelCustomTraining:
     # Defines a function to perform a Monte Carlo training, i.e. train-
     # ing multiple times and generating multiple models
 
-    def monte_carlo_training(self, n_realizations=50, parameters_min=
-    -10.0, parameters_max=10.0, best_models_rank_size=None):
+    def monte_carlo_training(self, n_realizations=50, 
+    best_models_rank_size=None, show_reinitialization_distance=False):
         
         print("\n#####################################################"+
         "###################\n#                   Initializes Monte Ca"+
@@ -528,21 +526,29 @@ class ModelCustomTraining:
         # If no number of best models to be ranked, rank all of the rea-
         # lizations
 
+        realizations_notice = ""
+
         if best_models_rank_size is None:
 
             best_models_rank_size = n_realizations
+
+        elif best_models_rank_size>n_realizations:
+
+            realizations_notice = ("The number of realizations is smal"+
+            "ler than that of the number of models\nto be ranked and s"+
+            "aved. Thus, makes the number of realizations equal to\nth"+
+            "e number of models to be saved, "+str(
+            best_models_rank_size)+"\n")
+
+            print(realizations_notice)
+
+            n_realizations = best_models_rank_size
 
         print("Number of realizations:                     "+str(
         n_realizations))
 
         print("Number of best models to be saved:          "+str(
         best_models_rank_size))
-
-        print("Minimum value for the trainable parameters: "+str(
-        parameters_min))
-
-        print("Maximum value for the trainable parameters: "+str(
-        parameters_max)+"\n")
 
         # Initializes a dictionary of models with their respective loss
         # function value at training as value to the key
@@ -558,17 +564,29 @@ class ModelCustomTraining:
         for i in tqdm(range(n_realizations), desc="Training realizatio"+
         "ns"):
 
-            """# Randomly reinitializes the parameters
-
-            self.model_parameters = tf.random.uniform(shape=
-            self.model_parameters.shape, minval=parameters_min, maxval=
-            parameters_max, dtype=self.model_parameters.dtype)"""
-
             # Reinitializes the model parameters using the same initia-
             # lizers that were assigned when the model was first created
 
-            self.model = ANN_tools.reinitialize_model_parameters(
+            self.model = parameters_tools.reinitialize_model_parameters(
             self.model)
+
+            # If the value of the distance between the reinitialization
+            # of the parameters if to be show
+
+            if show_reinitialization_distance:
+
+                old_parameters = deepcopy(self.model_parameters)
+
+            # Updates the flat vector of model parameters
+
+            self.model_parameters = parameters_tools.model_parameters_to_flat_tensor_and_shapes(
+            self.model)[0]
+
+            if show_reinitialization_distance:
+
+                print("\nThe norm of the difference of the previous se"+
+                "t of parameters to the new set is: "+str(tf.norm(
+                old_parameters-self.model_parameters).numpy()))
 
             # Initializes the saving of the model as training 
 
@@ -645,6 +663,8 @@ class ModelCustomTraining:
         "###################\n#                Final log of the Monte "+
         "Carlo training                 #\n###########################"+
         "#############################################\n")
+
+        print(realizations_notice)
 
         print("The best fitting models follow below. The number of the"+
         " model and its\ncorresponding loss function at the training s"+

@@ -164,7 +164,7 @@ class TestANNTools(unittest.TestCase):
         # Tests Monte Carlo training
 
         training_class.monte_carlo_training(n_realizations=3, 
-        best_models_rank_size=3)
+        best_models_rank_size=30, show_reinitialization_distance=True)
 
 # Runs all tests
 

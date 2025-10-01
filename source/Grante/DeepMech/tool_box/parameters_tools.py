@@ -4,6 +4,79 @@
 import numpy as np
 
 import tensorflow as tf
+
+########################################################################
+#                       Parameters initialization                      #
+########################################################################
+
+# Defines a function to reinitialize a model parameters using its own i-
+# initializers
+
+def reinitialize_model_parameters(model):
+
+    # Iterates through the layers of parameters
+
+    for i in range(len(model.layers)):
+
+        # Gets the layer
+
+        layer = model.layers[i]
+
+        # Treats the standard keras layer case
+
+        if isinstance(layer, tf.keras.layers.Dense):
+
+            # Gets the initializer for the weights
+
+            initializer = type(layer.kernel_initializer)() 
+
+            # Reinitializes the weights
+
+            model.layers[i].kernel.assign(initializer(shape=
+            layer.kernel.shape, dtype=layer.kernel.dtype))
+
+            # Gets the initializer for the biases
+
+            initializer = type(layer.bias_initializer)() 
+            
+            # Reinitializes the biases
+
+            model.layers[i].bias.assign(initializer(shape=
+            layer.bias.shape, dtype=layer.bias.dtype))
+
+        # Treats the case of mixed activation layer
+
+        elif hasattr(layer, "dense"):
+
+            # Gets the initializer for the weights
+
+            initializer = type(layer.dense.kernel_initializer)() 
+
+            # Reinitializes the weights
+
+            model.layers[i].dense.kernel.assign(initializer(shape=
+            layer.dense.kernel.shape, dtype=layer.dense.kernel.dtype))
+
+            # Gets the initializer for the biases
+
+            initializer = type(layer.dense.bias_initializer)() 
+            
+            # Reinitializes the biases
+
+            model.layers[i].dense.bias.assign(initializer(shape=
+            layer.dense.bias.shape, dtype=layer.dense.bias.dtype))
+
+        # Some layers don't have parameters to be reinitialized. Raises
+        # an error only if this layer is not one of such layer types
+
+        elif not (isinstance(layer, tf.keras.layers.InputLayer)):
+
+            raise TypeError("The parameters of the model cannot be rei"+
+            "nitialized because it can either handle a standard keras "+
+            "layer or the MixedActivationLayer. The current layer is: "+
+            str(layer))
+        
+    return model
     
 ########################################################################
 #                     Assembly of model parameters                     #

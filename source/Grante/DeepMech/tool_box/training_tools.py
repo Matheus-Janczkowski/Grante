@@ -674,7 +674,8 @@ class ModelCustomTraining:
 
         for model_number, model_loss in models_ranking_dict.items():
 
-            print("model "+str(model_number+1)+": "+str(
+            print("model "+str(model_number+1)+" has a loss at the tra"+
+            "ining set of:       "+str(
             string_tools.float_to_scientific_notation(model_loss)))
 
         print("")

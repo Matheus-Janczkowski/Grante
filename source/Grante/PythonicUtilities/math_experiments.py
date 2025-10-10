@@ -16,7 +16,7 @@ def gram_schmidt_orthogonalization(list_of_vectors):
             # Subtracts this vector from the current one
 
             list_of_vectors[i] -= np.dot(list_of_vectors[j], 
-            list_of_vectors[i])*list_of_vectors[i]
+            list_of_vectors[i])*list_of_vectors[j]
 
         # Normalizes the current vector
 
@@ -24,6 +24,43 @@ def gram_schmidt_orthogonalization(list_of_vectors):
         list_of_vectors[i])
 
     return list_of_vectors
+
+# Defines a function to generate a orthonormal matrix from a upper tria-
+# gonal matrix with another subdiagonal under the diagonal
+
+def generate_orthonormal_from_quasi_triangular(dimension):
+
+    # Initializes a list of vectors
+
+    list_of_columns = []
+
+    # Iterates through the columns
+
+    for i in range(dimension):
+
+        # Generates a zero vector
+
+        v = np.zeros(dimension)
+
+        # Iterates through the nonzero terms
+
+        for j in range(min(i+2, dimension)):
+
+            # Adds the nonzero term
+
+            v[j] = np.random.rand()
+
+        # Appends this vector to the list
+
+        list_of_columns.append(v)
+
+    # Generates the orthonormal basis from these columns
+
+    print(list_of_columns)
+
+    list_of_columns = gram_schmidt_orthogonalization(list_of_columns)
+
+    print(list_of_columns)
 
 ########################################################################
 #                               Testing                                #
@@ -55,8 +92,16 @@ def test_gram_schmidt():
                 error += (np.dot(list_of_vectors[i], list_of_vectors[j])
                 )**2
 
-    print("The RMS error is "+str(np.sqrt(error/())))
+    print("The RMS error is "+str(np.sqrt(error/(d*d))))
+
+def test_orthonormal_basis():
+
+    d = 4
+
+    generate_orthonormal_from_quasi_triangular(d)
 
 if __name__=="__main__":
 
     test_gram_schmidt()
+    
+    test_orthonormal_basis()

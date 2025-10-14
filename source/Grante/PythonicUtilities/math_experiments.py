@@ -62,25 +62,64 @@ def generate_orthonormal_from_quasi_triangular(dimension):
 
     print(list_of_columns)
 
+# Defines a function to get the SVD decomposition of a random matrix 
+# with non-negative entries
+
+def SVD_decomposition(n_rows, n_columns, n_tests, amplitude_singular):
+
+    A = np.random.rand(n_rows, n_columns)
+
+    U, S, Vt = np.linalg.svd(A, full_matrices=False)
+
+    print("U.shape="+str(U.shape))
+
+    print("S.shape="+str(S.shape))
+
+    print("Vt.shape="+str(Vt.shape))
+
+    print("\nA="+str(A))
+
+    print("\nU="+str(U))
+
+    print("\nS="+str(S))
+
+    print("\nV.T="+str(Vt))
+
+    rank = min(n_rows, n_columns)
+
+    for i in range(n_tests):
+
+        for j in range(rank):
+
+            S[j] = amplitude_singular*np.random.rand()
+
+        print("\nS="+str(S))
+
+        print("A="+str(np.dot(U, np.dot(np.diag(S), Vt))))
+
 ########################################################################
 #                               Testing                                #
 ########################################################################
 
 def test_gram_schmidt():
 
-    d = 4
+    d = 2
 
-    list_of_vectors = [np.random.randn(d) for i in range(d)] 
+    n_samples = 3
+
+    list_of_vectors = [np.random.randn(d) for i in range(n_samples)] 
 
     list_of_vectors = gram_schmidt_orthogonalization(list_of_vectors)
+
+    print(list_of_vectors)
 
     # Tests the orthogonality
 
     error = 0.0
 
-    for i in range(d):
+    for i in range(n_samples):
 
-        for j in range(d):
+        for j in range(n_samples):
 
             if i==j:
 
@@ -92,13 +131,25 @@ def test_gram_schmidt():
                 error += (np.dot(list_of_vectors[i], list_of_vectors[j])
                 )**2
 
-    print("The RMS error is "+str(np.sqrt(error/(d*d))))
+    print("The RMS error is "+str(np.sqrt(error/(n_samples*n_samples))))
 
 def test_orthonormal_basis():
 
     d = 4
 
     generate_orthonormal_from_quasi_triangular(d)
+
+def test_orthonormal_basis():
+
+    n_rows = 5
+
+    n_columns = 4
+
+    n_tests = 5
+
+    amplitude_singular = 5.0
+
+    SVD_decomposition(n_rows, n_columns, n_tests, amplitude_singular)
 
 if __name__=="__main__":
 

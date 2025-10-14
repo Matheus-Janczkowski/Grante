@@ -20,6 +20,8 @@ class TestPlots(unittest.TestCase):
 
         self.unimodal_y_data = [np.exp(x) for x in self.unimodal_x_data]
 
+        self.unimodal_y_data2 = [np.exp(1.5*x) for x in self.unimodal_x_data]
+
         # Sets the multimodal data
 
         self.multimodal_x_data = []
@@ -47,7 +49,8 @@ class TestPlots(unittest.TestCase):
         y_data = [np.array([1.0, 2.0, 3.0]), np.array([1.0, 4.0, 6.0])]
 
         plotting_tools.plane_plot(x_data=x_data, y_data=y_data, 
-        file_name="test_two_curves_numpy")
+        file_name="test_two_curves_numpy", plot_type=["line", "scatter"],
+        element_size=[1.5, 10.0], color=["yellow", "black"])
 
         x_data = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
 
@@ -70,6 +73,21 @@ class TestPlots(unittest.TestCase):
         error_bar = [0.1 for i in range(len(self.unimodal_x_data))]
 
         # Calls the plotter
+
+        # Scatter single curve given the error bar but separately plotted
+
+        plot_object = plotting_tools.plane_plot(x_data=
+        self.unimodal_x_data, y_data=self.unimodal_y_data, file_name=
+        "test_error_bar_separate_plotting", plot_type="scatter")
+
+        plot_object = plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
+        self.unimodal_y_data, file_name="test_error_bar_separate_plott"+
+        "ing", plot_type="scatter", plot_object=plot_object, error_bar=
+        deepcopy(error_bar))
+
+        plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
+        self.unimodal_y_data2, file_name="test_error_bar_separate_plott"+
+        "ing", plot_type="line", plot_object=plot_object)
 
         # Scatter single curve given the error bar
 

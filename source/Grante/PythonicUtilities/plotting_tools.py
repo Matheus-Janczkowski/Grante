@@ -36,7 +36,8 @@ color_barMinimum=None, color_barTicks=None, color_barTitle=None,
 color_barIntegerTicks=False, color_barNumberOfTicks=5, 
 color_barIncludeMinMaxTicks=False, x_ticksLabels=None, y_ticksLabels=
 None, ticks_fontsize=12, label_fontsize=14, legend_fontsize=12,
-highlight_pointsColors='black', parent_path=None, error_bar=None):
+highlight_pointsColors='black', parent_path=None, error_bar=None, 
+plot_object=None):
     
     """
     You can provide an array of data, where the first column will be in
@@ -133,6 +134,34 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
         if element_style is None:
 
             element_style = "x"
+
+    elif isinstance(plot_type, list):
+
+        flag_create_element_style = False
+
+        if element_style is None:
+
+            element_style = []
+
+            flag_create_element_style = True
+
+        for local_type in plot_type:
+
+            if not (local_type in ["line", "scatter"]):
+
+                raise NameError("The 'plot_type' at the individual com"+
+                "ponent '"+str(local_type)+"' can be either 'line' or "+
+                "'scatter'")
+
+            if flag_create_element_style:
+
+                if local_type=="line":
+
+                    element_style.append("-")
+
+                else:
+
+                    element_style.append("x")
 
     else:
 
@@ -360,7 +389,9 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
     # Creates the figure and the subplots
 
-    figure, subplots_tuple = plt.subplots()
+    if plot_object is None:
+
+        figure, plot_object = plt.subplots()
 
     # Gets the keys of valid line styles and of valid marker styles
 
@@ -407,7 +438,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
             raise TypeError("Multiple curves were given to be plotted,"+
             " but the element_style variables is neither a string nor "+
-            "a list")
+            "a list: "+str(element_style))
         
         elif len(element_style)!=multiple_curves:
 
@@ -606,7 +637,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
     # Sets the aspect ratio of the plot
 
-    subplots_tuple.set_aspect(aspect_ratio)
+    plot_object.set_aspect(aspect_ratio)
 
     # Inititalizes the plotted entities
 
@@ -764,10 +795,20 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
                 raise IndexError("'error_bar' list has "+str(len(
                 error_bar))+" elements, whereas 'y_data' has "+str(
                 len( y_data))+" curves. They must have the same")
+            
+            local_plot_type = None 
+
+            if isinstance(plot_type, list):
+
+                local_plot_type = plot_type[i]
+
+            else:
+
+                local_plot_type = plot_type
 
             # Plots the error regions or bars
 
-            if plot_type=="line":
+            if local_plot_type=="line":
 
                 # Iterates through the curves
 
@@ -815,12 +856,12 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
                     # Uses 30% opacity to highlight the line itself lat-
                     # ter
 
-                    plotted_entities = subplots_tuple.fill_between(
+                    plotted_entities = plot_object.fill_between(
                     x_data[i], error_inferior_limit, 
                     error_superior_limit, linestyle=element_style, 
                     linewidth=element_size, color=color[i], alpha=0.3)
 
-            elif plot_type=="scatter":
+            elif local_plot_type=="scatter":
 
                 # Verifies if the curve is a single scatter curve
 
@@ -848,7 +889,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
                             "t possible to plot the error bar otherwis"+
                             "e")
 
-                    plotted_entities = subplots_tuple.errorbar(x_data[i
+                    plotted_entities = plot_object.errorbar(x_data[i
                     ], y_data[i], yerr=error_bar[i], color=color[i], fmt=
                     'o', alpha=0.3)
 
@@ -912,7 +953,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                 # Uses 30% opacity to highlight the line itself later
 
-                plotted_entities = subplots_tuple.fill_between(x_data, 
+                plotted_entities = plot_object.fill_between(x_data, 
                 error_inferior_limit, error_superior_limit, linestyle=
                 element_style, linewidth=element_size, color=color,
                 alpha=0.3)
@@ -931,7 +972,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
                         ". It's not possible to plot the error bar oth"+
                         "erwise")
 
-                plotted_entities = subplots_tuple.errorbar(x_data, 
+                plotted_entities = plot_object.errorbar(x_data, 
                 y_data, yerr=error_bar, color=color, fmt='o', alpha=0.3)
 
             else:
@@ -949,21 +990,31 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
             for i in range(multiple_curves):
 
-                if plot_type=="line":
+                local_plot_type = None 
+
+                if isinstance(plot_type, list):
+
+                    local_plot_type = plot_type[i]
+
+                else:
+
+                    local_plot_type = plot_type
+
+                if local_plot_type=="line":
 
                     if different_nPoints:
 
-                        plotted_entities = subplots_tuple.plot(x_data[i], 
+                        plotted_entities = plot_object.plot(x_data[i], 
                         y_data[i], linestyle=element_style[i], linewidth=
                         element_size[i], color=color[i])
 
                     else:
 
-                        plotted_entities = subplots_tuple.plot(x_data, 
+                        plotted_entities = plot_object.plot(x_data, 
                         y_data[i], linestyle=element_style[i], linewidth=
                         element_size[i], color=color[i])
 
-                elif plot_type=="scatter":
+                elif local_plot_type=="scatter":
 
                     # If multiple curves are plotted at once
 
@@ -971,14 +1022,14 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                         if different_nPoints:
 
-                            plotted_entities = subplots_tuple.scatter(
+                            plotted_entities = plot_object.scatter(
                             x_data[i], y_data[i], marker=element_style[i
                             ], s=element_size[i]**2, color=color[i], 
                             zorder=3)
 
                         else:
 
-                            plotted_entities = subplots_tuple.scatter(
+                            plotted_entities = plot_object.scatter(
                             x_data, y_data[i], marker=element_style[i], 
                             s=element_size[i]**2, color=color[i], zorder=
                             3)
@@ -988,7 +1039,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                     else:
 
-                        plotted_entities = subplots_tuple.scatter(x_data[
+                        plotted_entities = plot_object.scatter(x_data[
                         i], y_data[i], marker=element_style[i], s=
                         element_size[i]**2, color=color[i], zorder=3)
 
@@ -1003,13 +1054,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
             if plot_type=="line":
 
-                plotted_entities = subplots_tuple.plot(x_data, y_data, 
+                plotted_entities = plot_object.plot(x_data, y_data, 
                 linestyle=element_style, linewidth=element_size, color=
                 color)
 
             elif plot_type=="scatter":
 
-                plotted_entities = subplots_tuple.scatter(x_data, y_data, 
+                plotted_entities = plot_object.scatter(x_data, y_data, 
                 marker=element_style, s=element_size**2, color=color, 
                 zorder=3)
 
@@ -1036,22 +1087,32 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
                 str(multiple_curves))
 
             for i in range(multiple_curves):
+
+                local_plot_type = None 
+
+                if isinstance(plot_type, list):
+
+                    local_plot_type = plot_type[i]
+
+                else:
+
+                    local_plot_type = plot_type
                 
-                if plot_type=="line":
+                if local_plot_type=="line":
 
                     if different_nPoints:
 
-                        plotted_entities = subplots_tuple.plot(x_data[i], 
+                        plotted_entities = plot_object.plot(x_data[i], 
                         y_data[i], linestyle=element_style[i], linewidth=
                         element_size[i], color=color[i], label=label[i])
 
                     else:
 
-                        plotted_entities = subplots_tuple.plot(x_data, 
+                        plotted_entities = plot_object.plot(x_data, 
                         y_data[i], linestyle=element_style[i], linewidth=
                         element_size[i], color=color[i], label=label[i])
 
-                elif plot_type=="scatter":
+                elif local_plot_type=="scatter":
 
                     # If multiple curves are plotted at once
 
@@ -1059,14 +1120,14 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                         if different_nPoints:
 
-                            plotted_entities = subplots_tuple.scatter(
+                            plotted_entities = plot_object.scatter(
                             x_data[i], y_data[i], marker=element_style[i
                             ], s=element_size[i]**2, color=color[i], 
                             zorder=3)
 
                         else:
 
-                            plotted_entities = subplots_tuple.scatter(
+                            plotted_entities = plot_object.scatter(
                             x_data, y_data[i], marker=element_style[i], 
                             s=element_size[i]**2, color=color[i], 
                             zorder=3)
@@ -1076,7 +1137,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                     else:
 
-                        plotted_entities = subplots_tuple.scatter(x_data[
+                        plotted_entities = plot_object.scatter(x_data[
                         i], y_data[i], marker=element_style[i], s=
                         element_size[i]**2, color=color[i], zorder=3)
 
@@ -1091,13 +1152,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
             if plot_type=="line":
 
-                plotted_entities = subplots_tuple.plot(x_data, y_data, 
+                plotted_entities = plot_object.plot(x_data, y_data, 
                 linestyle=element_style, linewidth=element_size, color=
                 color, label=label)
 
             elif plot_type=="scatter":
 
-                plotted_entities = subplots_tuple.scatter(x_data, y_data, 
+                plotted_entities = plot_object.scatter(x_data, y_data, 
                 marker=element_style, s=element_size**2, color=color, 
                 label=label, zorder=3)
 
@@ -1126,13 +1187,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                     if different_nPoints:
 
-                        subplots_tuple.scatter(x_data[i], y_data[i], 
+                        plot_object.scatter(x_data[i], y_data[i], 
                         color=highlight_pointsColors, marker=
                         highlight_points, zorder=3)
 
                     else:
 
-                        subplots_tuple.scatter(x_data, y_data[i], color=
+                        plot_object.scatter(x_data, y_data[i], color=
                         highlight_pointsColors, marker=highlight_points, 
                         zorder=3)
 
@@ -1140,26 +1201,26 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                     if different_nPoints:
 
-                        subplots_tuple.scatter(x_data[i], y_data[i], 
+                        plot_object.scatter(x_data[i], y_data[i], 
                         color=color[i], marker=highlight_points, zorder=
                         3)
 
                     else:
 
-                        subplots_tuple.scatter(x_data, y_data[i], color=
+                        plot_object.scatter(x_data, y_data[i], color=
                         color[i], marker=highlight_points, zorder=3)
 
         else:
 
             if isinstance(highlight_pointsColors, str):
 
-                subplots_tuple.scatter(x_data, y_data, color=
+                plot_object.scatter(x_data, y_data, color=
                 highlight_pointsColors, marker=highlight_points, zorder=
                 3)
 
             else:
 
-                subplots_tuple.scatter(x_data, y_data, color='black', 
+                plot_object.scatter(x_data, y_data, color='black', 
                 marker=highlight_points, zorder=3)
 
     # Verifies if a color bar is asked for
@@ -1183,7 +1244,7 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
             if not isinstance(y_data[0], list):
 
-                plotted_entities = subplots_tuple.scatter(x_data[0:2], 
+                plotted_entities = plot_object.scatter(x_data[0:2], 
                 [y_data[0], y_data[1]], c=[color_map[1], color_map[2]], 
                 cmap=color_map[0], vmin=color_map[1], vmax=color_map[2], 
                 marker='x', zorder=3, s=0.001)
@@ -1194,21 +1255,21 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                 if different_nPoints:
 
-                    plotted_entities = subplots_tuple.scatter(x_data[0][
+                    plotted_entities = plot_object.scatter(x_data[0][
                     0:2], y_data[0][0:2], c=[color_map[1], color_map[2]], 
                     cmap=color_map[0], vmin=color_map[1], vmax=color_map[
                     2], marker='x', zorder=3, s=0.001)
 
                 else:
 
-                    plotted_entities = subplots_tuple.scatter(x_data[0:2
+                    plotted_entities = plot_object.scatter(x_data[0:2
                     ], y_data[0][0:2], c=[color_map[1], color_map[2]], 
                     cmap=color_map[0], vmin=color_map[1], vmax=color_map[
                     2], marker='x', zorder=3, s=0.001)
 
         else:
 
-            plotted_entities = subplots_tuple.scatter(x_data[0:2], 
+            plotted_entities = plot_object.scatter(x_data[0:2], 
             y_data[0:2], c=[color_map[1], color_map[2]], cmap=color_map[
             0], vmin=color_map[1], vmax=color_map[2], marker='x', 
             zorder=3, s=0.001)
@@ -1319,42 +1380,42 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
     if flag_scientificNotation and (not flag_noTicks):
 
-        subplots_tuple.yaxis.set_major_formatter(ticker.ScalarFormatter(
+        plot_object.yaxis.set_major_formatter(ticker.ScalarFormatter(
         useMathText=True))
 
-        subplots_tuple.xaxis.set_major_formatter(ticker.ScalarFormatter(
+        plot_object.xaxis.set_major_formatter(ticker.ScalarFormatter(
         useMathText=True))
 
-        subplots_tuple.ticklabel_format(style='sci', axis='both', 
+        plot_object.ticklabel_format(style='sci', axis='both', 
         scilimits=(0,0))
 
         # Sets the ticks' font size
 
-        subplots_tuple.tick_params(axis='both', which='major', labelsize=
+        plot_object.tick_params(axis='both', which='major', labelsize=
         ticks_fontsize)
 
     elif flag_noTicks:
 
-        subplots_tuple.tick_params(axis='both', which='both', length=0, 
+        plot_object.tick_params(axis='both', which='both', length=0, 
         labelbottom=False, labelleft=False)
 
     # Sets the grid
 
     if not (x_grid is None):
 
-        subplots_tuple.set_xticks(x_grid)
+        plot_object.set_xticks(x_grid)
 
-        subplots_tuple.set_xticklabels([])
+        plot_object.set_xticklabels([])
 
-        subplots_tuple.grid(True, axis='x')
+        plot_object.grid(True, axis='x')
 
     if not (y_grid is None):
 
-        subplots_tuple.set_yticks(y_grid)
+        plot_object.set_yticks(y_grid)
 
-        subplots_tuple.set_yticklabels([])
+        plot_object.set_yticklabels([])
 
-        subplots_tuple.grid(True, axis='y')
+        plot_object.grid(True, axis='y')
 
     # Sets the tick labels
 
@@ -1363,13 +1424,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
         # Gets the tick values and the location. Do not use minor ticks
         # when they are given as lists
 
-        subplots_tuple.set_xticks(x_ticksLabels)
+        plot_object.set_xticks(x_ticksLabels)
 
-        subplots_tuple.set_xticklabels(x_ticksLabels)
+        plot_object.set_xticklabels(x_ticksLabels)
 
         # Sets the font size of the x ticks
 
-        for tick_label in subplots_tuple.get_xminorticklabels():
+        for tick_label in plot_object.get_xminorticklabels():
 
             tick_label.set_fontsize(ticks_fontsize)
 
@@ -1381,13 +1442,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
         tick_names = list(x_ticksLabels.values())
 
-        subplots_tuple.set_xticks(tick_location, minor=True)
+        plot_object.set_xticks(tick_location, minor=True)
 
-        subplots_tuple.set_xticklabels(tick_names, minor=True)
+        plot_object.set_xticklabels(tick_names, minor=True)
 
         # Sets the font size of the x ticks
 
-        for tick_label in subplots_tuple.get_xminorticklabels():
+        for tick_label in plot_object.get_xminorticklabels():
 
             tick_label.set_fontsize(ticks_fontsize)
 
@@ -1396,13 +1457,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
         # Gets the tick values and the location. Do not use minor ticks
         # when they are given as lists
 
-        subplots_tuple.set_yticks(y_ticksLabels)
+        plot_object.set_yticks(y_ticksLabels)
 
-        subplots_tuple.set_yticklabels(y_ticksLabels)
+        plot_object.set_yticklabels(y_ticksLabels)
 
         # Sets the font size of the y ticks
 
-        for tick_label in subplots_tuple.get_yminorticklabels():
+        for tick_label in plot_object.get_yminorticklabels():
 
             tick_label.set_fontsize(ticks_fontsize)
 
@@ -1414,13 +1475,13 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
         tick_names = list(y_ticksLabels.values())
 
-        subplots_tuple.set_yticks(tick_location, minor=True)
+        plot_object.set_yticks(tick_location, minor=True)
 
-        subplots_tuple.set_yticklabels(tick_names, minor=True)
+        plot_object.set_yticklabels(tick_names, minor=True)
 
         # Sets the font size of the y ticks
 
-        for tick_label in subplots_tuple.get_yminorticklabels():
+        for tick_label in plot_object.get_yminorticklabels():
 
             tick_label.set_fontsize(ticks_fontsize)
 
@@ -1491,6 +1552,8 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
             "ualizer. Close it and try again")
 
     print("Finishes plotting\n")
+
+    return plot_object
 
 ########################################################################
 #                          Matrices plotting                           #

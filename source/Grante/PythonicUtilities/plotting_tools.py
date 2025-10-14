@@ -262,7 +262,8 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
 
                 y_data = y_data.tolist()
 
-        elif isinstance(y_data[0], list):
+        elif (isinstance(y_data[0], list) or isinstance(y_data[0], 
+        np.ndarray)):
 
             multiple_curves = len(y_data)
 
@@ -314,6 +315,14 @@ highlight_pointsColors='black', parent_path=None, error_bar=None):
                         raise IndexError("The "+str(i+1)+"-th curve do"+
                         "es not have the same length for the sublists "+
                         "x_data and of y_data")
+                    
+                    if hasattr(x_data[i], "tolist"):
+
+                        x_data[i] = x_data[i].tolist()
+                    
+                    if hasattr(y_data[i], "tolist"):
+
+                        y_data[i] = y_data[i].tolist()
 
         elif len(x_data)!=len(y_data):
 

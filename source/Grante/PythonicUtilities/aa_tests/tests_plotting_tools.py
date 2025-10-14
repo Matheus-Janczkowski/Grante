@@ -35,6 +35,27 @@ class TestPlots(unittest.TestCase):
             self.multimodal_y_data.append([np.exp((i+1)*x) for x in (
             self.multimodal_x_data[-1])])
 
+    def test_multimodal_plot(self):
+
+        print("\n#####################################################"+
+        "###################\n#                           Multimodal c"+
+        "urve                           #\n###########################"+
+        "#############################################\n")
+
+        x_data = [np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0])]
+
+        y_data = [np.array([1.0, 2.0, 3.0]), np.array([1.0, 4.0, 6.0])]
+
+        plotting_tools.plane_plot(x_data=x_data, y_data=y_data, 
+        file_name="test_two_curves_numpy")
+
+        x_data = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        y_data = [[1.0, 2.0, 3.0], [1.0, 4.0, 6.0]]
+
+        plotting_tools.plane_plot(x_data=x_data, y_data=y_data, 
+        file_name="test_two_curves_list")
+
     # Defines a function to test the plot of a curve with error bar
     
     def test_error_bar(self):

@@ -107,6 +107,19 @@ class TestPlots(unittest.TestCase):
         self.unimodal_y_data, error_bar=error_bar_lower_upper, 
         file_name="test_error_bar_lower_upper", plot_type="scatter")
 
+        # Scatter single curve given the error bar with upper and lower
+        # bounds for error
+
+        error_bar_lower_upper = [[0.1, 0.05] for i in range(len(
+        self.unimodal_x_data))]
+
+        print("\nTests error plot with error region that has upper and lo"+
+        "wer bounds")
+
+        plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
+        self.unimodal_y_data, error_bar=error_bar_lower_upper, 
+        file_name="test_error_bar_line_lower_upper", plot_type="line")
+
         # Continuous single curve given the error bar
 
         print("\nTests error plot for a continuous curve")
@@ -119,10 +132,15 @@ class TestPlots(unittest.TestCase):
 
         error_bar = []
 
+        error_bar_lower_upper = []
+
         for i in range(self.n_curves):
 
             error_bar.append([((i+1)/10) for j in range(len(
             self.multimodal_x_data[i]))])
+
+            error_bar_lower_upper.append([[((i+1)/10), ((i+1)/5)] for (
+            j) in range(len(self.multimodal_x_data[i]))])
 
         # Continuous multiple curves given the error bar
 
@@ -131,6 +149,16 @@ class TestPlots(unittest.TestCase):
         plotting_tools.plane_plot(x_data=self.multimodal_x_data, y_data=
         self.multimodal_y_data, error_bar=error_bar, file_name=
         "test_error_region_multimodal", plot_type="line")
+
+        # Continuous multiple curves given the error bar with upper and
+        # lower bounds
+
+        print("\nTests error plot for multiple continuous curve with u"+
+        "pper and lower bounds")
+
+        plotting_tools.plane_plot(x_data=self.multimodal_x_data, y_data=
+        self.multimodal_y_data, error_bar=error_bar_lower_upper, file_name=
+        "test_error_region_multimodal_upper_lower", plot_type="line")
 
         # Continuous single curve automatically evaluating the error bar
         # for the t-Student distribution

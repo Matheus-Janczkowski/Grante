@@ -666,7 +666,7 @@ plot_object=None):
                 if not ("name" in error_bar_copy):
 
                     raise KeyError("The key 'name' is not in the dicti"+
-                    "onary 'error_bar_copy', thus, no statistical distribut"+
+                    "onary 'error_bar', thus, no statistical distribut"+
                     "ion can be picked for the automatic evaluation of"+
                     " the confidence interval")
                 
@@ -708,7 +708,7 @@ plot_object=None):
         
             else:
                 
-                raise ValueError("'error_bar_copy', if string, can be eithe"+
+                raise ValueError("'error_bar', if string, can be eithe"+
                 "r 't-Student' or 'normal distribution' to automatical"+
                 "ly evaluate the confidence interval")
 
@@ -784,7 +784,7 @@ plot_object=None):
 
             if not isinstance(error_bar_copy, list):
 
-                raise TypeError("'error_bar_copy' must be a list. Each"+
+                raise TypeError("'error_bar' must be a list. Each"+
                 " value of this list must contain a list with the corr"+
                 "esponding confidence intervals of the corresponding c"+
                 "urve")
@@ -793,7 +793,7 @@ plot_object=None):
 
             elif len(error_bar_copy)!=len(y_data):
 
-                raise IndexError("'error_bar_copy' list has "+str(len(
+                raise IndexError("'error_bar' list has "+str(len(
                 error_bar_copy))+" elements, whereas 'y_data' has "+str(
                 len( y_data))+" curves. They must have the same")
             
@@ -839,7 +839,8 @@ plot_object=None):
                         confidence_interval = error_bar_copy[i][j]
 
                         if not (isinstance(confidence_interval, int) or 
-                        isinstance(confidence_interval, float)):
+                        isinstance(confidence_interval, float) or 
+                        isinstance(confidence_interval, list)):
                             
                             raise TypeError("The "+str(j)+"-th element"+
                             " of the "+str(i+1)+" curve of the 'error_"+
@@ -910,7 +911,7 @@ plot_object=None):
                         error_bar_copy[i][j], list)):
                             
                             raise TypeError("The "+str(j)+"-th element"+
-                            " of the 'error_bar_copy' of the "+str(i)+
+                            " of the 'error_bar' of the "+str(i)+
                             " curve is not an integer nor a float nor "+
                             "a list. It's not possible to plot the err"+
                             "or bar otherwise")
@@ -940,7 +941,7 @@ plot_object=None):
 
             if not isinstance(error_bar_copy, list):
 
-                raise TypeError("'error_bar_copy' must be a list, even for "+
+                raise TypeError("'error_bar' must be a list, even for "+
                 "plotting a single curve with error regions. Each valu"+
                 "e of this list must be corresponding confidence inter"+
                 "val")
@@ -949,7 +950,7 @@ plot_object=None):
 
             elif len(error_bar_copy)!=len(y_data):
 
-                raise IndexError("'error_bar_copy' list has "+str(len(
+                raise IndexError("'error_bar' list has "+str(len(
                 error_bar_copy))+" elements, whereas 'y_data' has "+str(len(
                 y_data))+". They must have the same")
 
@@ -970,10 +971,11 @@ plot_object=None):
                     confidence_interval = error_bar_copy[i]
 
                     if not (isinstance(confidence_interval, int) or 
-                    isinstance(confidence_interval, float)):
+                    isinstance(confidence_interval, float) or isinstance(
+                    confidence_interval, list)):
                         
                         raise TypeError("The "+str(i)+"-th element of "+
-                        "the 'error_bar_copy' is not an integer nor a float"+
+                        "the 'error_bar' is not an integer nor a float"+
                         ". It's not possible to plot the error bar oth"+
                         "erwise")
                     
@@ -1009,10 +1011,11 @@ plot_object=None):
                 for i in range(len(error_bar_copy)):
 
                     if not (isinstance(error_bar_copy[i], int) or isinstance(
-                    error_bar_copy[i], float)):
+                    error_bar_copy[i], float) or isinstance(
+                    error_bar_copy[i], list)):
                         
                         raise TypeError("The "+str(i)+"-th element of "+
-                        "the 'error_bar_copy' is not an integer nor a float"+
+                        "the 'error_bar' is not an integer nor a float"+
                         ". It's not possible to plot the error bar oth"+
                         "erwise")
                     

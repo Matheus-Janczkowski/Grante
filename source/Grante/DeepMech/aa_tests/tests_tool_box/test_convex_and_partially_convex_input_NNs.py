@@ -134,7 +134,7 @@ class TestANNTools(unittest.TestCase):
 
         training_class = training_tools.ModelCustomTraining(custom_model,
         self.training_inputTensor, self.training_trueTensor, 
-        self.loss_metric, convex_input_model=True, verbose=True,
+        self.loss_metric, convex_input_model="fully", verbose=True,
         n_iterations=self.maximum_iterations, verbose_deltaIterations=
         self.verbose_deltaIterations, save_model_file=
         self.save_model_file)
@@ -190,16 +190,16 @@ class TestANNTools(unittest.TestCase):
 
         custom_model = ANN_class()
 
-        """# Sets the optimization class for training
+        # Sets the optimization class for training
 
         training_class = training_tools.ModelCustomTraining(custom_model,
         self.training_inputTensor, self.training_trueTensor, 
-        self.loss_metric, convex_input_model=True, verbose=True,
+        self.loss_metric, convex_input_model="partially", verbose=True,
         n_iterations=self.maximum_iterations, verbose_deltaIterations=
         self.verbose_deltaIterations, save_model_file=
         self.save_model_file)
 
-        t_initial = time.time()
+        """t_initial = time.time()
 
         training_class()
 

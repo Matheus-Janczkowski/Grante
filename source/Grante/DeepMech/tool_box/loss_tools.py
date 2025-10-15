@@ -30,8 +30,8 @@ def linear_loss(model_output, coefficient_matrix):
 
 def build_loss_gradient_varying_model_parameters(model, loss, 
 input_tensor, trainable_variables_type="tensorflow", model_true_values=
-None, convex_input_model=False, regularizing_function="smooth absolute"+
-" value"):
+None, convex_input_model=None, regularizing_function="smooth absolute "+
+"value"):
     
     """
     Function to build the gradient of the loss function and the vector 

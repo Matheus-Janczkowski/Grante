@@ -182,7 +182,7 @@ class ModelCustomTraining:
     def __init__(self, model, training_inputArray, training_trueArray,
     loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=
     1E-3, float_type=None, verbose_deltaIterations=100, 
-    convex_input_model=False, verbose=False, regularizing_function="sm"+
+    convex_input_model=None, verbose=False, regularizing_function="sm"+
     "ooth absolute value", save_model_file="trained_model.keras", 
     parent_path="get current path"):
         
@@ -274,6 +274,15 @@ class ModelCustomTraining:
 
         # Gets a variable to inform if the model is convex to its input
         # and saves the regularizing function for the model parameters
+
+        if convex_input_model is not None:
+
+            if convex_input_model!="fully" and (convex_input_model!="p"+
+            "artially"):
+                
+                raise NameError("'convex_input_model' is '"+str(
+                convex_input_model)+"', whereas it can be either None,"+
+                " 'fully', or 'partially'")
 
         self.convex_input_model = convex_input_model
 

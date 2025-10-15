@@ -784,13 +784,12 @@ plot_object=None):
 
             if not isinstance(error_bar_copy, list):
 
-                raise TypeError("'error_bar_copy' must be a list. Each "+
-                "value of this list must contain a list with the c"+
-                "orresponding confidence intervals of the correspo"+
-                "nding curve")
+                raise TypeError("'error_bar_copy' must be a list. Each"+
+                " value of this list must contain a list with the corr"+
+                "esponding confidence intervals of the corresponding c"+
+                "urve")
             
-            # Verifies if it has the same length as the vector of y 
-            # data
+            # Verifies if it has the same length as the vector of y data
 
             elif len(error_bar_copy)!=len(y_data):
 
@@ -823,8 +822,9 @@ plot_object=None):
 
                         raise IndexError("The data has "+str(len(y_data[
                         i]))+" elements in the "+str(i+1)+"-th curve, "+
-                        "whereas the error bar has "+str(len(error_bar_copy[i
-                        ]))+" values of confidence interval")
+                        "whereas the error bar has "+str(len(
+                        error_bar_copy[i]))+" values of confidence int"+
+                        "erval")
 
                     # Creates the error limits
 
@@ -847,13 +847,28 @@ plot_object=None):
                             "not possible to plot the error bar otherw"+
                             "ise")
                         
-                        # Evaluates the superior and inferior limits
+                        # The error bar can be passed as a list, so that
+                        # upper and lower bounds can be separately given
 
-                        error_superior_limit.append(y_data[i][j]+
-                        error_bar_copy[i][j])
+                        if isinstance(error_bar_copy[i][j], list):
+                        
+                            # Evaluates the superior and inferior limits
 
-                        error_inferior_limit.append(y_data[i][j]-
-                        error_bar_copy[i][j])
+                            error_superior_limit.append(y_data[i][j]+
+                            error_bar_copy[i][j][0])
+
+                            error_inferior_limit.append(y_data[i][j]-
+                            error_bar_copy[i][j][1])
+
+                        else:
+                        
+                            # Evaluates the superior and inferior limits
+
+                            error_superior_limit.append(y_data[i][j]+
+                            error_bar_copy[i][j])
+
+                            error_inferior_limit.append(y_data[i][j]-
+                            error_bar_copy[i][j])
 
                     # Uses 30% opacity to highlight the line itself lat-
                     # ter
@@ -873,6 +888,14 @@ plot_object=None):
 
                         error_bar_copy[i] = [error_bar_copy[i]]
 
+                # Verifies if the upper and lower bound have been given
+
+                elif len(error_bar_copy[0])==2:
+
+                    for i in range(len(error_bar_copy)):
+
+                        error_bar_copy[i] = [error_bar_copy[i]]
+
                 # Iterates through the curves
 
                 for i in range(multiple_curves):
@@ -883,16 +906,23 @@ plot_object=None):
                     for j in range(len(error_bar_copy[i])):
 
                         if not (isinstance(error_bar_copy[i][j], int) or isinstance(
-                        error_bar_copy[i][j], float)):
+                        error_bar_copy[i][j], float) or isinstance(
+                        error_bar_copy[i][j], list)):
                             
                             raise TypeError("The "+str(j)+"-th element"+
-                            " of the 'error_bar_copy' of the "+str(i)+" cur"+
-                            "ve is not an integer nor a float. It's no"+
-                            "t possible to plot the error bar otherwis"+
-                            "e")
+                            " of the 'error_bar_copy' of the "+str(i)+
+                            " curve is not an integer nor a float nor "+
+                            "a list. It's not possible to plot the err"+
+                            "or bar otherwise")
+                        
+                    yerr_array = error_bar_copy[i]
+
+                    if isinstance(error_bar_copy[i][0], list):
+
+                        yerr_array = np.array(error_bar_copy[i]).T
 
                     plotted_entities = plot_object.errorbar(x_data[i
-                    ], y_data[i], yerr=error_bar_copy[i], color=color[i], fmt=
+                    ], y_data[i], yerr=yerr_array, color=color[i], fmt=
                     'o', alpha=0.3)
 
             else:
@@ -949,9 +979,21 @@ plot_object=None):
                     
                     # Evaluates the superior and inferior limits
 
-                    error_superior_limit.append(y_data[i]+error_bar_copy[i])
+                    if isinstance(error_bar_copy[i], list):
 
-                    error_inferior_limit.append(y_data[i]-error_bar_copy[i])
+                        error_superior_limit.append(y_data[i]+
+                        error_bar_copy[i][0])
+
+                        error_inferior_limit.append(y_data[i]-
+                        error_bar_copy[i][1])
+
+                    else:
+
+                        error_superior_limit.append(y_data[i]+
+                        error_bar_copy[i])
+
+                        error_inferior_limit.append(y_data[i]-
+                        error_bar_copy[i])
 
                 # Uses 30% opacity to highlight the line itself later
 
@@ -973,9 +1015,16 @@ plot_object=None):
                         "the 'error_bar_copy' is not an integer nor a float"+
                         ". It's not possible to plot the error bar oth"+
                         "erwise")
+                    
+                yerr_array = error_bar_copy
+                    
+                if isinstance(error_bar_copy[0], list):
+
+                    yerr_array = np.array(error_bar_copy).T
 
                 plotted_entities = plot_object.errorbar(x_data, 
-                y_data, yerr=error_bar_copy, color=color, fmt='o', alpha=0.3)
+                y_data, yerr=error_bar_copy, color=color, fmt='o', alpha=
+                0.3)
 
             else:
 

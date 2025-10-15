@@ -76,10 +76,13 @@ class TestPlots(unittest.TestCase):
 
         # Scatter single curve given the error bar but separately plotted
 
+        print("\nTests error plot with error bar being separately plot"+
+        "ted")
+
         plot_object = plotting_tools.plane_plot(x_data=
         self.unimodal_x_data, y_data=self.unimodal_y_data, file_name=
         "test_error_bar_separate_plotting", plot_type="scatter", 
-        error_bar=deepcopy(error_bar))
+        error_bar=deepcopy(error_bar), color="black")
 
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.unimodal_y_data2, file_name="test_error_bar_separate_plot"+
@@ -91,7 +94,22 @@ class TestPlots(unittest.TestCase):
         self.unimodal_y_data, error_bar=deepcopy(error_bar), file_name=
         "test_error_bar", plot_type="scatter")
 
+        # Scatter single curve given the error bar with upper and lower
+        # bounds for error
+
+        error_bar_lower_upper = [[0.1, 0.05] for i in range(len(
+        self.unimodal_x_data))]
+
+        print("\nTests error plot with error bar that has upper and lo"+
+        "wer bounds")
+
+        plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
+        self.unimodal_y_data, error_bar=deepcopy(error_bar_lower_upper), 
+        file_name="test_error_bar_lower_upper", plot_type="scatter")
+
         # Continuous single curve given the error bar
+
+        print("\nTests error plot for a continuous curve")
 
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.unimodal_y_data, error_bar=deepcopy(error_bar), file_name=
@@ -108,12 +126,17 @@ class TestPlots(unittest.TestCase):
 
         # Continuous multiple curves given the error bar
 
+        print("\nTests error plot for multiple continuous curve")
+
         plotting_tools.plane_plot(x_data=self.multimodal_x_data, y_data=
         self.multimodal_y_data, error_bar=deepcopy(error_bar), file_name=
         "test_error_region_multimodal", plot_type="line")
 
         # Continuous single curve automatically evaluating the error bar
         # for the t-Student distribution
+
+        print("\nTests error plot for a continuous curve and automatic"+
+        " evaluation of the error bar following t-Student")
 
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.multimodal_y_data, error_bar="t-Student", file_name="test_e"+
@@ -122,12 +145,18 @@ class TestPlots(unittest.TestCase):
         # Continuous single curve automatically evaluating the error bar
         # for the normal distribution
 
+        print("\nTests error plot for a continuous curve and automatic"+
+        " evaluation of the error bar following normal distribution")
+
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.multimodal_y_data, error_bar="normal distribution", 
         file_name="test_error_region_z_score", plot_type="line")
 
         # Scatter single curve automatically evaluating the error bar
         # for the normal distribution
+
+        print("\nTests error plot for a scatter curve and automatic ev"+
+        "aluation of the error bar following t-Student")
 
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.multimodal_y_data, error_bar="normal distribution", 
@@ -136,6 +165,10 @@ class TestPlots(unittest.TestCase):
         # Continuous single curve automatically evaluating the error bar
         # for the t-Student distribution asking for a 90% confidence
 
+        print("\nTests error plot for a scatter curve and automatic ev"+
+        "aluation of the error bar following t-Student and 90 percent "+
+        "of confidence")
+
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.multimodal_y_data, error_bar={"name": "t-Student", "confi"+
         "dence": 0.9}, file_name="test_error_region_t_student_0_90", 
@@ -143,6 +176,10 @@ class TestPlots(unittest.TestCase):
 
         # Continuous single curve automatically evaluating the error bar
         # for the normal distribution asking for a 90% confidence
+
+        print("\nTests error plot for a scatter curve and automatic ev"+
+        "aluation of the error bar following normal distribution and 9"+
+        "0 percent of confidence")
 
         plotting_tools.plane_plot(x_data=self.unimodal_x_data, y_data=
         self.multimodal_y_data, error_bar={"name": "normal distribution",

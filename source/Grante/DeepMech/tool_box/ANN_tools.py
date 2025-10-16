@@ -193,28 +193,86 @@ class MultiLayerModel:
         input_layer = tf.keras.Input(shape=(self.input_dimension,))
 
         # Gets the first layer. Here the class is used as a function di-
-        # rectly due to the call function. It goes directly there
+        # rectly due to the call function. It goes directly there. Takes
+        # care with the case of an accessory network
+
+        input_size_accessory_layer = None
+
+        input_size_main_layer = None
+
+        if self.input_size_main_network is not None:
+
+            input_size_accessory_layer = (self.input_dimension-
+            self.input_size_main_network)
 
         output_eachLayer = MixedActivationLayer(self.layers_info[0], 
         self.custom_activations_class, live_activationsDict=
         self.live_activations, activations_accessory_layer_dict=
         self.accessory_layers_info[0], layer=0, 
-        input_size_main_network=self.input_size_main_network)(
+        input_size_main_network=self.input_size_main_network,
+        input_size_accessory_layer=input_size_accessory_layer,
+        input_size_main_layer=self.input_size_main_network)(
         input_layer)
 
         # Iterates through the other layers
 
         for i in range(1,len(self.layers_info)):
 
+            # Evaluates the quantities for the case of accessory layers
+
+            if self.input_size_main_network is not None:
+
+                # Sums up the neurons of the previous accessory layer
+
+                input_size_accessory_layer = sum(
+                self.accessory_layers_info[i-1].values())
+
+                # Sums up the neurons of the previous main layer
+
+                input_size_main_layer = 0
+
+                for value in self.layers_info[i-1].values():
+
+                    if isinstance(value, int):
+
+                        input_size_main_layer += value 
+
+                    elif "number of neurons" in value:
+
+                        input_size_main_layer += value["number of neur"+
+                        "ons"]
+
+                    else:
+
+                        raise KeyError("The bit '"+str(value)+"' of th"+
+                        "e dictionary of layer info does not have the "+
+                        "key 'number of neurons'")
+
+            # Gets the output of this layer
+
             output_eachLayer = MixedActivationLayer(self.layers_info[i],
             self.custom_activations_class, live_activationsDict=
             self.live_activations, activations_accessory_layer_dict=
-            self.accessory_layers_info[i], layer=i)(output_eachLayer)
+            self.accessory_layers_info[i], input_size_main_network=
+            self.input_size_main_network, input_size_main_layer=
+            input_size_main_layer, layer=i)(output_eachLayer)
 
         # Assembles the model
 
-        model = tf.keras.Model(inputs=input_layer, outputs=
-        output_eachLayer)
+        model = None 
+
+        # If the model has an accessory layer, lets as output just the
+        # first one, corresponding to the main network
+
+        if self.input_size_main_network is not None:
+
+            model = tf.keras.Model(inputs=input_layer, outputs=
+            output_eachLayer[0])
+
+        else:
+
+            model = tf.keras.Model(inputs=input_layer, outputs=
+            output_eachLayer)
 
         # If the gradient is to be evaluated too
 
@@ -307,7 +365,7 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     def __init__(self, activation_functionDict, custom_activations_class,
     live_activationsDict=dict(), activations_accessory_layer_dict=dict(), 
     input_size_main_network=None, input_size_main_layer=None, 
-    layer=0, **kwargs):
+    input_size_accessory_layer=None, layer=0, **kwargs):
 
         # Initializes the parent class, i.e. Layer. The kwargs are opti-
         # onal arguments used during layer creation and deserialization, 
@@ -373,9 +431,11 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             self.input_size_main_network = input_size_main_network
 
             # Saves the number of input neurons for the current layer of
-            # the main network
+            # the main network and for the accessory layer
 
             self.input_size_main_layer = input_size_main_layer
+
+            self.input_size_accessory_layer = input_size_accessory_layer
 
         else:
 
@@ -397,14 +457,16 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
         total_neurons = sum(self.neurons_per_activation)
 
-        # Constructs a dense layer with identity activation functions
-
-        self.dense = tf.keras.layers.Dense(total_neurons)
-
         # If the accessory layer is used, initializes the necessary in-
         # formation for it
 
         if self.functions_dict_acessory_network:
+
+            # Constructs a dense layer with identity activation functions
+            # with no biases
+
+            self.dense = tf.keras.layers.Dense(total_neurons, use_bias=
+            False)
 
             # Gets a list with the numbers of neurons per activation 
             # function for the accessory network (u) in case of partial-
@@ -429,30 +491,39 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # Hadamard product
 
             self.dense_Wzu = tf.keras.layers.Dense(
-            self.input_size_main_layer)
+            self.input_size_main_layer, input_shape=(
+            self.input_size_accessory_layer,))
 
             # Creates a dense layer for the bit of the accessory layer's
             # result that multiplies the initial convex input using the
             # Hadamard product
 
             self.dense_Wyu = tf.keras.layers.Dense(
-            self.input_size_main_network)
+            self.input_size_main_network, input_shape=(
+            self.input_size_accessory_layer,))
 
             # Creates a dense layer without biases for the multiplica-
             # tion of the accessory layer's result by a weight matrix,
             # which, in turn, is used as a complement to the bias of the
-            # main layer
+            # main layer. The bias of this operation will be the bias to
+            # the main network, too
 
-            self.dense_Wu = tf.keras.layers.Dense(
-            self.input_size_main_layer, use_bias=False)
+            self.dense_Wu = tf.keras.layers.Dense(total_neurons, 
+            input_shape=(self.input_size_accessory_layer,))
 
             # Creates a dense layer without biases for the multiplica-
             # tion of the result of the Hadamard product between the o-
             # riginal convex input and the product of the acessory layer
             # result
 
-            self.dense_Wy = tf.keras.layers.Dense(
-            self.input_size_main_layer, use_bias=False)
+            self.dense_Wy = tf.keras.layers.Dense(total_neurons, 
+            use_bias=False)
+
+        else:
+
+            # Constructs a dense layer with identity activation functions
+
+            self.dense = tf.keras.layers.Dense(total_neurons)
 
         super().build(input_shape)
 
@@ -497,17 +568,62 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # is the initial convex input
 
         # If it's the first layer, the input tensor must be sliced: one
-        # bit for the main network and the rest for the accessory network
+        # bit for the main network, the rest for the accessory network
 
         if self.layer==0:
 
             input = (input[..., :self.input_size_main_network], input[
             ..., self.input_size_main_network:])
 
+            # Gets the multiplication of the parcel of the accessory 
+            # layer by its corresponding matrix
+
+            parcel_1 = self.dense_Wu(input[1])
+
+            # Gets the parcel of the convex input multiplied by the bit 
+            # made of the accessory layer using the Hadamard product
+
+            parcel_2 = self.dense_Wy(tf.multiply(input[0], 
+            self.dense_Wyu(input[1])))
+
+            # Initializes the input as dense layer and split it into the 
+            # different families of activation functions for the main 
+            # layer. This keeps the input as a tensor
+
+            x_splits_main_layer = tf.split(parcel_1+parcel_2, 
+            self.neurons_per_activation,  axis=-1)
+
+            # Initializes a list of outputs for each family of neurons 
+            # (organized by their activation functions)
+            
+            output_activations_main_layer = [
+            self.live_activationFunctions[name](split) for name, (split
+            ) in zip(self.functions_dict.keys(), x_splits_main_layer)]
+
+            # Does the same for the accessory layer
+
+            x_splits_accessory_layer = tf.split(
+            self.dense_accessory_layer(input[1]), 
+            self.neurons_per_activation_acessory_layer,  axis=-1)
+            
+            output_activations_accessory_layer = [
+            self.live_activationFunctions[name](split) for name, split in (
+            zip(self.functions_dict_acessory_network.keys(), 
+            x_splits_accessory_layer))]
+
+            # Concatenates the response and returns it. Uses flag axis=-1 
+            # to concatenate next to the last row. Returns always the 
+            # main layer first, then the accessory layer, then the ini-
+            # convex input
+
+            return (tf.concat(output_activations_main_layer, axis=-1), 
+            tf.concat(output_activations_accessory_layer, axis=-1), 
+            input[0])
+
         # Gets the multiplication of the parcel of the accessory layer
         # by its corresponding matrix
 
-        parcel1 = self.dense_Wu(input[1])
+        parcel_1 = self.dense_Wu(input[1])
 
         # Gets the parcel of the convex input multiplied by the bit made
         # of the accessory layer using the Hadamard product
@@ -527,7 +643,7 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # different families of activation functions for the main layer. 
         # This keeps the input as a tensor
 
-        x_splits_main_layer = tf.split(self.dense(input[0]), 
+        x_splits_main_layer = tf.split(parcel_1+parcel_2+parcel_3, 
         self.neurons_per_activation,  axis=-1)
 
         # Initializes a list of outputs for each family of neurons (or-
@@ -552,7 +668,7 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # first, then the accessory layer
 
         return (tf.concat(output_activations_main_layer, axis=-1), 
-        tf.concat(output_activations_accessory_layer, axis=-1))
+        tf.concat(output_activations_accessory_layer, axis=-1), input[2])
     
     # Defines a function to get the output of such a mixed layer given 
     # the parameters (weights and biases) as a flat list (still a tensor)

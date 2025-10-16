@@ -32,7 +32,7 @@ class MultiLayerModel:
     enforce_customLayers=False, evaluate_parameters_gradient=False,
     flat_trainable_parameters=False, verbose=False, parameters_dtype=
     "float32", accessory_layers_activationInfo=[], 
-    input_size_accessory_network=None):
+    input_size_main_network=None):
         
         # Instantiates the class of custom activation functions
 
@@ -43,7 +43,7 @@ class MultiLayerModel:
 
         self.input_dimension = input_dimension
 
-        self.input_size_accessory_network = input_size_accessory_network
+        self.input_size_main_network = input_size_main_network
 
         self.layers_info = layers_activationInfo
 
@@ -181,12 +181,12 @@ class MultiLayerModel:
         # Verifies if an accessory network is required and if the input
         # size to it has been determmined
 
-        if self.accessory_network and ((self.input_size_accessory_network
+        if self.accessory_network and ((self.input_size_main_network
         ) is None):
             
             raise ValueError("An accessory network has been required, "+
-            "but the numebr of input neurons to it has not been provid"+
-            "ed")
+            "but the numebr of input neurons to the main network, 'inp"+
+            "ut_size_main_network', has not been provided")
 
         # Initializes the input layer
 
@@ -199,7 +199,7 @@ class MultiLayerModel:
         self.custom_activations_class, live_activationsDict=
         self.live_activations, activations_accessory_layer_dict=
         self.accessory_layers_info[0], layer=0, 
-        input_size_accessory_network=self.input_size_accessory_network)(
+        input_size_main_network=self.input_size_main_network)(
         input_layer)
 
         # Iterates through the other layers
@@ -306,7 +306,8 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
     def __init__(self, activation_functionDict, custom_activations_class,
     live_activationsDict=dict(), activations_accessory_layer_dict=dict(), 
-    input_size_accessory_network=None, layer=0, **kwargs):
+    input_size_main_network=None, input_size_main_layer=None, 
+    layer=0, **kwargs):
 
         # Initializes the parent class, i.e. Layer. The kwargs are opti-
         # onal arguments used during layer creation and deserialization, 
@@ -367,9 +368,14 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
             self.call_from_input_method = self.call_from_input_with_accessory_layer
 
-            # Saves the number of input neurons for the accessory network
+            # Saves the number of input neurons for the main network
 
-            self.input_size_accessory_network = input_size_accessory_network
+            self.input_size_main_network = input_size_main_network
+
+            # Saves the number of input neurons for the current layer of
+            # the main network
+
+            self.input_size_main_layer = input_size_main_layer
 
         else:
 
@@ -422,7 +428,31 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # result that multiplies the main layer response using the 
             # Hadamard product
 
-            self.dense_Wzu = tf.keras.layers.Dense()
+            self.dense_Wzu = tf.keras.layers.Dense(
+            self.input_size_main_layer)
+
+            # Creates a dense layer for the bit of the accessory layer's
+            # result that multiplies the initial convex input using the
+            # Hadamard product
+
+            self.dense_Wyu = tf.keras.layers.Dense(
+            self.input_size_main_network)
+
+            # Creates a dense layer without biases for the multiplica-
+            # tion of the accessory layer's result by a weight matrix,
+            # which, in turn, is used as a complement to the bias of the
+            # main layer
+
+            self.dense_Wu = tf.keras.layers.Dense(
+            self.input_size_main_layer, use_bias=False)
+
+            # Creates a dense layer without biases for the multiplica-
+            # tion of the result of the Hadamard product between the o-
+            # riginal convex input and the product of the acessory layer
+            # result
+
+            self.dense_Wy = tf.keras.layers.Dense(
+            self.input_size_main_layer, use_bias=False)
 
         super().build(input_shape)
 
@@ -457,20 +487,41 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     
     # Defines a method for getting the layer value given the input when
     # an accessory layer is necessary. In this case, the input must be a
-    # tuple
+    # tuple. It follows the rationale from Amos et al, Input convex neu-
+    # ral networks
 
     def call_from_input_with_accessory_layer(self, input):
+
+        # The first element in the input tuple is the main layer. The 
+        # second element is due to the accessory layer. The third element
+        # is the initial convex input
 
         # If it's the first layer, the input tensor must be sliced: one
         # bit for the main network and the rest for the accessory network
 
         if self.layer==0:
 
-            input = (input[..., :self.input_size_accessory_network], input[
-            ..., self.input_size_accessory_network:])
+            input = (input[..., :self.input_size_main_network], input[
+            ..., self.input_size_main_network:])
 
-        # The first element in the input tuple is the main layer. The 
-        # second element is due to the accessory layer
+        # Gets the multiplication of the parcel of the accessory layer
+        # by its corresponding matrix
+
+        parcel1 = self.dense_Wu(input[1])
+
+        # Gets the parcel of the convex input multiplied by the bit made
+        # of the accessory layer using the Hadamard product
+
+        parcel_2 = self.dense_Wy(tf.multiply(input[2], self.dense_Wyu(
+        input[1])))
+
+        # Gets the parcel of the input of the main network multiplied by
+        # the absolute value of the bit given by accessory previous 
+        # layer, using the Hadamard product. Then, multiplies by the cor-
+        # responding weight matrix
+
+        parcel_3 = self.dense(tf.multiply(input[0], tf.abs(
+        self.dense_Wzu(input[1]))))
 
         # Initializes the input as dense layer and split it into the 
         # different families of activation functions for the main layer. 

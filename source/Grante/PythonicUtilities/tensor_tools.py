@@ -1,5 +1,7 @@
 # Routine to store some functions for tensors
 
+import numpy as np
+
 ########################################################################
 #                       Useful and famous tensors                      #
 ########################################################################
@@ -38,3 +40,54 @@ def third_order_permutation_tensor_components(i,j,k):
     else:
 
         return 0.0
+    
+# Defines a function to give the 3D rotation tensor as a function of a
+# rotation pseudo-vector using Euler-Rodrigues formula
+
+def tridimensional_rotation_tensor(pseudo_vector: np.ndarray):
+
+    """
+    pseudo_vector: a numpy vector 3 x 1. The direction of this vector is
+    the rotation axle, whereas its magnitude is the rotation angle in 
+    radians"""
+
+    angle = np.linalg.norm(pseudo_vector)
+
+    # Gets some trigonometric quantities to be used later
+
+    c_1 = 1.0
+
+    c_2 = 1.0
+
+    c_3 = 0.5
+
+    if angle>1E-5:
+
+        c_1 = np.cos(angle)
+
+        c_2 = np.sin(angle)/angle 
+
+        c_3 = (1-c_1)/(angle**2)
+
+    # Creates the rotation tensor with the identity bit and the dyadic
+    # product
+
+    R = (c_1*np.eye(3))+(c_3*np.outer(pseudo_vector, pseudo_vector))
+
+    # Adds the skew bit
+
+    R[0,1] -= c_2*pseudo_vector[2]
+
+    R[1,0] = c_2*pseudo_vector[2]
+
+    R[0,2] = c_2*pseudo_vector[1]
+
+    R[2,0] -= c_2*pseudo_vector[1]
+
+    R[1,2] -= c_2*pseudo_vector[0]
+
+    R[2,1] = c_2*pseudo_vector[0]
+
+    # Returns the rotation tensor
+
+    return R

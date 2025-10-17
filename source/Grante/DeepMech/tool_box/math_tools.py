@@ -6,9 +6,44 @@ from ...PythonicUtilities.tensor_tools import kroneckers_delta as delta
 
 from ...PythonicUtilities.tensor_tools import third_order_permutation_tensor_components as epsilon
 
+from ...PythonicUtilities.tensor_tools import tridimensional_rotation_tensor as R_tensor
+
 ########################################################################
 #                 Identification of rigid body motion                  #
 ########################################################################
+
+# Defines a function to get the objective function of the identification
+# of a rigid body kinematics approximation
+
+def objective_optimization_rigid_body(translated_deformed_points: 
+np.ndarray, reference_points: np.ndarray, rotation_pseudovector: 
+np.ndarray):
+    
+    """
+    translated_deformed_points: a numpy array n x 3, where n is the 
+    number of points to be rotated. The rows of this matrix, hence, are
+    the coordinates of the deformed point translated already to the re-
+    ference configuration
+
+    reference_point: a numpy array n x 3, with the coordinates of the 
+    corresponding points in the reference configuration
+    
+    rotation_pseudovector: a numpy vector 3 x 1, which gives the axis 
+    and magnitude of the rigid body rotation to be evaluated"""
+
+    # Gets the rotation tensor
+
+    R = R_tensor(rotation_pseudovector)
+
+    # Initializes the objective function, which is the deformed motion
+
+    deformed_motion = 0.0
+
+    # Iterates through the points' position
+
+    for i in range(translated_deformed_points.shape[0]):
+
+        pass
 
 # Defines a function to get the derivative of the objective function 
 # with respect to the rotation pseudo-vector

@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from scipy.optimize import minimize
+
 from ...PythonicUtilities.tensor_tools import kroneckers_delta as delta
 
 from ...PythonicUtilities.tensor_tools import third_order_permutation_tensor_components as epsilon
@@ -11,6 +13,77 @@ from ...PythonicUtilities.tensor_tools import tridimensional_rotation_tensor as 
 ########################################################################
 #                 Identification of rigid body motion                  #
 ########################################################################
+
+# Defines a function to get the rigid body motion (translation and rota-
+# tion that minimizes the deformation of a set of points)
+
+def get_rigid_body_motion(displacement_points: np.ndarray, 
+reference_points: np.ndarray, optimization_method="CG", 
+gradient_tolerance=1E-4, n_max_iterations=1000):
+    
+    """
+    displacement_points: a numpy array n x 3, with the displacement 
+    vector for each one of the n points
+
+    reference_points: a numpy array n x 3, with the coordinates of the 
+    corresponding points in the reference configuration"""
+
+    # Gets an estimate of the rotation pseudo-vector as an average of 
+    # the cross-product of the reference configuration point position to
+    # the displacement vector
+
+    rotation_pseudovector = np.zeros(3)
+
+    # Evaluates the average displacement
+
+    average_displacement = np.mean(displacement_points, axis=0)
+
+    # Uses the average displacement as the translation, and translates 
+    # the points of the deformed configuration back to a superposition 
+    # onto the reference configuration
+
+    translated_deformed_points = displacement_points+reference_points
+
+    for i in range(displacement_points.shape[0]):
+
+        translated_deformed_points[i,:] -= average_displacement
+
+        rotation_pseudovector += np.cross(reference_points[i,:],
+        displacement_points[i,:])
+
+    # Divides the rotation estimation by the number of points to get the
+    # average
+
+    rotation_pseudovector = (1/displacement_points.shape[0]
+    )*rotation_pseudovector
+
+    # Sets the objective function as a function of the rotation pseudo-
+    # vector
+
+    objective_function = lambda phi: objective_optimization_rigid_body(
+    translated_deformed_points, reference_points, phi)
+
+    # Does the same for the gradient
+
+    objective_gradient = lambda phi: derivative_optimization_rigid_body(
+    translated_deformed_points, reference_points, phi)
+
+    # Sets the minimization problem using the minimize class from scipy
+
+    minimization_problem = minimize(objective_function, 
+    rotation_pseudovector, method=optimization_method, jac=
+    objective_gradient, tol=gradient_tolerance, options={"maxiter": 
+    n_max_iterations})
+
+    # Gets the optimized rotation pseudo-vector
+
+    rotation_pseudovector = minimization_problem.x
+
+    # Returns the translation motion, the rotation tensor, and the rota-
+    # tion tensor
+
+    return (average_displacement, R_tensor(rotation_pseudovector),
+    rotation_pseudovector)
 
 # Defines a function to get the objective function of the identification
 # of a rigid body kinematics approximation
@@ -25,7 +98,7 @@ np.ndarray):
     the coordinates of the deformed point translated already to the re-
     ference configuration
 
-    reference_point: a numpy array n x 3, with the coordinates of the 
+    reference_points: a numpy array n x 3, with the coordinates of the 
     corresponding points in the reference configuration
     
     rotation_pseudovector: a numpy vector 3 x 1, which gives the axis 
@@ -35,15 +108,27 @@ np.ndarray):
 
     R = R_tensor(rotation_pseudovector)
 
-    # Initializes the objective function, which is the deformed motion
+    # Initializes the objective function, which is the norm of the defor-
+    # med motion
 
-    deformed_motion = 0.0
+    deformed_motion_norm = 0.0
 
     # Iterates through the points' position
 
     for i in range(translated_deformed_points.shape[0]):
 
-        pass
+        # Evaluates the distance from the translated deformed vector to
+        # the rotation of the reference vector
+
+        distance = (translated_deformed_points[i,:]-np.matmul(R, 
+        reference_points[i,:]))
+
+        # Evaluates the norm of this vector and adds it to the objective
+        # function
+        
+        deformed_motion_norm += np.linalg.norm(distance)
+
+    return 0.5*deformed_motion_norm 
 
 # Defines a function to get the derivative of the objective function 
 # with respect to the rotation pseudo-vector
@@ -140,4 +225,4 @@ np.ndarray):
 
     # Multiplies the vector of derivatives by 2 and returns it
 
-    return 2*derivative_vector
+    return derivative_vector

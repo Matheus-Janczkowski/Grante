@@ -119,8 +119,8 @@ None):
         # Assigns the values and regularizes only if the layer is of 
         # weights
 
-        if (regularizing_function is None) or (model.trainable_variables[
-        i].name.lower()=="bias"):
+        if (regularizing_function is None) or (not hasattr(
+        model.trainable_variables[i], "regularizable")):
 
             model.trainable_variables[i].assign(parameters_slice)
 
@@ -153,16 +153,10 @@ def model_parameters_to_flat_tensor_and_shapes(model):
 
     for layer in model.trainable_variables:
 
-        print("Object: "+str(layer.name)+", shape: "+str(layer.shape))
+        # Adds the shape of the tensor of parameters, and adds if it has
+        # the regularizable attribute
 
-        if hasattr(layer, "layer_tag"):
-
-            print("Object has layer tag: "+str(layer.layer_tag)+"\n")
-
-        # Adds the shape of the layer tensor of parameters, and adds the
-        # name of the layer also
-
-        shapes.append((layer.shape, layer.name.lower()))
+        shapes.append((layer.shape, hasattr(layer, "regularizable")))
 
         # Adds the parameters as a vector tensor
 
@@ -225,23 +219,25 @@ regularization_function):
 
         size = np.prod(shape[0])
 
-        # Gets the name of the tensor to be unflatten
+        # Gets the the flag to tell if the tensor is to be regularized
+        # or not
 
-        tensor_name = shape[1]
+        regularizable_tensor = shape[1]
 
         # Gets the parameters for this tensor, and appends to the ten-
-        # sors list. Regularizes only if the tensor is not bias
+        # sors list. Regularizes only if the tensor is indeed to be re-
+        # gularized
 
-        if tensor_name=="bias":
-
-            tensors.append(tf.reshape(flat_parameters[parameter_index:(
-            parameter_index+size)], shape[0]))
-
-        else:
+        if regularizable_tensor:
 
             tensors.append(regularization_function(tf.reshape(
             flat_parameters[parameter_index:(parameter_index+size)], 
             shape[0])))
+
+        else:
+
+            tensors.append(tf.reshape(flat_parameters[parameter_index:(
+            parameter_index+size)], shape[0]))
 
         # Updates the index counter
 
@@ -260,71 +256,6 @@ regularization_function):
 
 def model_output_given_trainable_parameters(input_variables, model,
 model_parameters, parameters_shapes, regularizing_function=None):
-    
-    # Gets the parameters from a 1D tensor to the conventional tensor 
-    # format for building models
-
-    if regularizing_function is None:
-    
-        parameters = unflatten_parameters(model_parameters, 
-        parameters_shapes)
-
-    else:
-    
-        parameters = unflatten_regularize_parameters(model_parameters, 
-        parameters_shapes, regularizing_function)
-
-    # Initializes the index of the parameters to be read in the new ten-
-    # sor format
-    
-    parameter_index = 0
-
-    # Iterates through the layers
-
-    for layer in model.layers:
-        
-        # Verifies if the layer has the call with parameters attribute,
-        # which signals it as an instance of the MixedActivationLayer 
-        # class
-
-        if hasattr(layer, "call_with_parameters"):
-
-            # Gets the number of parameters in this layer
-
-            n_parameters = len(layer.trainable_variables)
-
-            # Gets the output of this layer from the method call with 
-            # parameters
-            
-            input_variables = layer.call_with_parameters(input_variables, 
-            parameters[parameter_index:(parameter_index+n_parameters)])
-
-            # Updates the index of the parameter tensors
-
-            parameter_index += n_parameters
-
-        # Verifies if it is not an input layer, throws an error, because
-        # the input layer does not do anything really
-
-        elif layer.__class__.__name__!="InputLayer":
-
-            raise TypeError("Layer '"+str(layer.__class__.__name__)+"'"+
-            " is not an instance of 'MixedActivationLayer' nor of 'Inp"+
-            "utLayer'")
-        
-    # Returns the input variables as the output of the NN model, because
-    # it has been passed through the NN model
-        
-    return input_variables
-
-# Defines a function to compute the output of a partially input convex
-# NN model given the parameters (weights and biases) as input. The regu-
-# larizing function modulates the weights W_z (AMOS ET AL, Input convex
-# neural networks)
-
-def partially_convex_model_output_given_trainable_parameters(
-input_variables, model, model_parameters, parameters_shapes, 
-regularizing_function=None):
     
     # Gets the parameters from a 1D tensor to the conventional tensor 
     # format for building models

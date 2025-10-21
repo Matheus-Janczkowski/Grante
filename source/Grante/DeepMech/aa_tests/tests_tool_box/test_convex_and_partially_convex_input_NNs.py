@@ -128,7 +128,7 @@ class TestANNTools(unittest.TestCase):
         self.input_dimension_gradient_tests, 
         self.activation_list_gradient_tests, enforce_customLayers=True, 
         evaluate_parameters_gradient=False, verbose=True, 
-        parameters_dtype="float64")
+        parameters_dtype="float64", input_convex_model="fully")
 
         custom_model = ANN_class()
 
@@ -136,8 +136,8 @@ class TestANNTools(unittest.TestCase):
 
         training_class = training_tools.ModelCustomTraining(custom_model,
         self.training_inputTensor, self.training_trueTensor, 
-        self.loss_metric, convex_input_model="fully", verbose=True,
-        n_iterations=self.maximum_iterations, verbose_deltaIterations=
+        self.loss_metric, verbose=True, n_iterations=
+        self.maximum_iterations, verbose_deltaIterations=
         self.verbose_deltaIterations, save_model_file=
         self.save_model_file)
 
@@ -189,7 +189,8 @@ class TestANNTools(unittest.TestCase):
         evaluate_parameters_gradient=False, verbose=True, 
         parameters_dtype="float64", accessory_layers_activationInfo=
         self.accessory_activation_list_gradient_tests, 
-        input_size_main_network=self.input_size_main_network)
+        input_size_main_network=self.input_size_main_network,
+        input_convex_model="partially")
 
         custom_model = ANN_class()
 
@@ -197,8 +198,8 @@ class TestANNTools(unittest.TestCase):
 
         training_class = training_tools.ModelCustomTraining(custom_model,
         self.training_inputTensor, self.training_trueTensor, 
-        self.loss_metric, convex_input_model="partially", verbose=True,
-        n_iterations=self.maximum_iterations, verbose_deltaIterations=
+        self.loss_metric, verbose=True, n_iterations=
+        self.maximum_iterations, verbose_deltaIterations=
         self.verbose_deltaIterations, save_model_file=
         self.save_model_file)
 

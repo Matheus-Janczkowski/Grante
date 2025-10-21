@@ -32,7 +32,7 @@ class MultiLayerModel:
     enforce_customLayers=False, evaluate_parameters_gradient=False,
     flat_trainable_parameters=False, verbose=False, parameters_dtype=
     "float32", accessory_layers_activationInfo=[], 
-    input_size_main_network=None, input_convex_model=False):
+    input_size_main_network=None, input_convex_model=None):
         
         # Instantiates the class of custom activation functions
 
@@ -118,6 +118,15 @@ class MultiLayerModel:
         # Saves the flag for input-convex models
 
         self.input_convex_model = input_convex_model
+
+        if self.input_convex_model is not None:
+
+            if self.input_convex_model!="fully" and (
+            self.input_convex_model!="partially"):
+                
+                raise NameError("'input_convex_model' is '"+str(
+                self.input_convex_model)+"', whereas it can be either "+
+                "None, 'fully', or 'partially'")
 
     # Defines a function to verify the list of dictionaries and, then,
     # it creates the model accordingly
@@ -259,6 +268,14 @@ class MultiLayerModel:
                         raise KeyError("The bit '"+str(value)+"' of th"+
                         "e dictionary of layer info does not have the "+
                         "key 'number of neurons'")
+                    
+            # Gets the layer number. If it is the last layer, gives -1
+    
+            layer_number = i
+
+            if layer_number==len(self.layers_info)-1:
+
+                layer_number = -1
 
             # Gets the output of this layer
 
@@ -282,10 +299,18 @@ class MultiLayerModel:
             model = tf.keras.Model(inputs=input_layer, outputs=
             output_eachLayer[0])
 
+            # Adds the input convex information
+
+            model.input_convex_model = self.input_convex_model
+
         else:
 
             model = tf.keras.Model(inputs=input_layer, outputs=
             output_eachLayer)
+
+            # Adds the input convex information
+
+            model.input_convex_model = self.input_convex_model
 
         # If the gradient is to be evaluated too
 
@@ -378,7 +403,7 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     def __init__(self, activation_functionDict, custom_activations_class,
     live_activationsDict=dict(), activations_accessory_layer_dict=dict(), 
     input_size_main_network=None, input_size_main_layer=None, 
-    input_size_accessory_layer=None, layer=0, input_convex_model=False,
+    input_size_accessory_layer=None, layer=0, input_convex_model=None,
     **kwargs):
 
         # Initializes the parent class, i.e. Layer. The kwargs are opti-
@@ -428,6 +453,26 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
         self.layer = layer
 
+        # Saves the flag to inform if the model is supposed to be input-
+        # convex or not
+
+        self.input_convex_model = input_convex_model
+
+        # Verifies the input convex flag and the corresponding required
+        # activation functions
+
+        if self.input_convex_model=="partially":
+
+            # If the model is partially convex with respect to its in-
+            # put, activation functions for the accessory network must
+            # be provided
+
+            if not activations_accessory_layer_dict:
+
+                raise ValueError("A partially input convex model has b"+
+                "een required, but no activations functions were given"+
+                " to the accessory network")
+
         # Gets the dictionary of functions of the accessory network in 
         # the case of partially input-convex networks
 
@@ -438,7 +483,15 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
         if activations_accessory_layer_dict:
 
+            # Defines the method that will be used to call the layer's 
+            # response when the trainable parameters are fixed
+
             self.call_from_input_method = self.call_from_input_with_accessory_layer
+
+            # Defines the method that will be used to call the layer's 
+            # response when the trainable parameters are given
+
+            self.call_given_parameters = self.call_partially_convex_layer_with_parameters
 
             # Saves the number of input neurons for the main network
 
@@ -453,12 +506,15 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
         else:
 
+            # Defines o method that will be used to call the layer's 
+            # response when the trainable parameters are fixed
+
             self.call_from_input_method = self.call_from_input_no_accessory_layer
 
-        # Saves the flag to inform if the model is supposed to be input-
-        # convex or not
+            # Defines the method that will be used to call the layer's 
+            # response when the trainable parameters are given
 
-        self.input_convex_model = input_convex_model
+            self.call_given_parameters = self.call_with_parameters_without_accessory_network
 
     # Defines a function to help Keras build the layer
 
@@ -575,7 +631,10 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
                         tensor.regularizable = True
 
-        elif self.input_convex_model and self.layer!=0:
+        # If the model is to be fully input convex, the weight tensors
+        # must be strictly positive, except for the first layer
+
+        elif self.input_convex_model=="fully" and self.layer!=0:
 
             # Builds the layer's parameters
 
@@ -597,6 +656,13 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     def call(self, input):
 
         return self.call_from_input_method(input)
+
+    # Defines a function to get the output of such a mixed layer when 
+    # the trainable parameters are given
+
+    def call_with_parameters(self, input, parameters):
+
+        return self.call_given_parameters(input, parameters)
     
     # Defines a method for getting the layer value given the input when
     # no accessory layer is necessary
@@ -738,7 +804,8 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     # Defines a function to get the output of such a mixed layer given 
     # the parameters (weights and biases) as a flat list (still a tensor)
 
-    def call_with_parameters(self, input, parameters):
+    def call_with_parameters_without_accessory_network(self, input, 
+    parameters):
 
         # Gets the weights and biases
 
@@ -766,12 +833,65 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     # Neural Networks)
 
     def call_partially_convex_layer_with_parameters(self, layer_input, 
-    acessory_layer_input, network_convex_input, parameters):
+    parameters):
         
         # Gets the weights and biases
 
         W_tilde, b_tilde, W_z, W_zu, W_y, W_yu, W_u, b_z, b_y, b_layer = (
         parameters)
+        
+        # If it's the first layer, the input tensor must be sliced: one
+        # bit for the main network, the rest for the accessory network
+
+        if self.layer==0:
+
+            layer_input = (layer_input[..., :self.input_size_main_network
+            ], layer_input[..., self.input_size_main_network:])
+
+            # Gets the multiplication of the parcel of the accessory 
+            # layer by its corresponding matrix
+
+            parcel_1 = tf.matmul(layer_input[1], W_u)+b_layer
+
+            # Gets the parcel of the convex input multiplied by the bit 
+            # made of the accessory layer using the Hadamard product
+
+            parcel_2 = tf.matmul(tf.multiply(layer_input[0], tf.matmul(
+            layer_input[1], W_yu)+b_y), W_y)
+
+            # Initializes the input as dense layer and split it into the 
+            # different families of activation functions for the main 
+            # layer. This keeps the input as a tensor
+
+            x_splits_main_layer = tf.split(parcel_1+parcel_2, 
+            self.neurons_per_activation,  axis=-1)
+
+            # Initializes a list of outputs for each family of neurons 
+            # (organized by their activation functions)
+            
+            output_activations_main_layer = [
+            self.live_activationFunctions[name](split) for name, (split
+            ) in zip(self.functions_dict.keys(), x_splits_main_layer)]
+
+            # Does the same for the accessory layer
+
+            x_splits_accessory_layer = tf.split(tf.matmul(layer_input[1], 
+            W_tilde)+b_tilde, self.neurons_per_activation_acessory_layer, 
+            axis=-1)
+            
+            output_activations_accessory_layer = [
+            self.live_activationFunctions[name](split) for name, split in (
+            zip(self.functions_dict_acessory_network.keys(), 
+            x_splits_accessory_layer))]
+
+            # Concatenates the response and returns it. Uses flag axis=-1 
+            # to concatenate next to the last row. Returns always the 
+            # main layer first, then the accessory layer, then the ini-
+            # convex input
+
+            return (tf.concat(output_activations_main_layer, axis=-1), 
+            tf.concat(output_activations_accessory_layer, axis=-1), 
+            layer_input[0])
 
         ################################################################
         #                    Accessory layer update                    #
@@ -781,8 +901,8 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # puts of the acessory layer and, then, adds the biases. Finally,
         # splits by activation function family
 
-        x_splits_u = tf.split(tf.matmul(acessory_layer_input, W_tilde)+
-        b_tilde, self.neurons_per_activation_acessory_layer, axis=-1)
+        x_splits_u = tf.split(tf.matmul(layer_input[1], W_tilde)+b_tilde, 
+        self.neurons_per_activation_acessory_layer, axis=-1)
 
         # Initializes a list of outputs for each family of neurons (or-
         # ganized by their activation functions) for the accessory layer
@@ -803,22 +923,22 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # Gets the multiplication of the matrix W_u by the output of the
         # accessory previous layer, and adds this layer bias
 
-        parcel_1 = tf.matmul(acessory_layer_input, W_u)+b_layer
+        parcel_1 = tf.matmul(layer_input[1], W_u)+b_layer
 
         # Gets the parcel of the convex input multiplied by the bit made
         # of the accessory layer using the Hadamard product. Then, mul-
         # tiplies the whole by the corresponding weight matrix
 
-        parcel_2 = tf.matmul(tf.multiply(network_convex_input, tf.matmul(
-        acessory_layer_input, W_yu)+b_y), W_y)
+        parcel_2 = tf.matmul(tf.multiply(layer_input[2], tf.matmul(
+        layer_input[1], W_yu)+b_y), W_y)
 
         # Gets the parcel of the input of the main network multiplied by
         # the absolute value of the bit given by accessory previous 
         # layer, using the Hadamard product. Then, multiplies by the cor-
         # responding weight matrix
 
-        parcel_3 = tf.matmul(tf.multiply(layer_input, tf.abs(tf.matmul(
-        acessory_layer_input, W_zu)+b_z)), W_z)
+        parcel_3 = tf.matmul(tf.multiply(layer_input[0], tf.abs(
+        tf.matmul(layer_input[1], W_zu)+b_z)), W_z)
 
         # Sums the parcels and splits it according to the families of 
         # activation functions
@@ -837,7 +957,12 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
         output_z = tf.concat(output_activations_z, axis=-1)
 
-        # Returns both outputs
+        # Returns both outputs if this is not the last layer. Otherwise,
+        # returns just the main layer
+
+        if self.layer==-1:
+
+            return output_z
 
         return output_z, output_u
     

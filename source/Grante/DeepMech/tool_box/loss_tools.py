@@ -31,7 +31,7 @@ def linear_loss(model_output, coefficient_matrix):
 def build_loss_gradient_varying_model_parameters(model, loss, 
 input_tensor, trainable_variables_type="tensorflow", model_true_values=
 None, convex_input_model=None, regularizing_function="smooth absolute "+
-"value"):
+"value", verbose=False):
     
     """
     Function to build the gradient of the loss function and the vector 
@@ -83,9 +83,12 @@ None, convex_input_model=None, regularizing_function="smooth absolute "+
         model_parameters, parameters_shapes = parameters_tools.model_parameters_to_flat_tensor_and_shapes(
         model)
 
-        print("The shape of the model parameters flat tensor: "+str(
-        model_parameters.shape)+".\nAnd the shapes object is: "+str(
-        parameters_shapes))
+        if verbose:
+
+            print("\nThe shape of the model parameters flat tensor: "+
+            str(model_parameters.shape)+".\n\nThere are "+str(len(
+            parameters_shapes))+" tensors of trainable parameters, and"+
+            " the vector of shapes is: "+str(parameters_shapes)+"\n")
 
         # Gets the class instance to evaluate the gradient and returns 
         # it alongside the 1D tensor of model parameters

@@ -299,7 +299,7 @@ class ModelCustomTraining:
         self.model, self.loss_metric, self.training_input, 
         model_true_values=self.training_trueValues, convex_input_model=
         self.input_convex_model, regularizing_function=
-        regularizing_function)
+        regularizing_function, verbose=verbose)
 
         # Gets the number of output neurons
         

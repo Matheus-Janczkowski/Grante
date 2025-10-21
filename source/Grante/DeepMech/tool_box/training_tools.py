@@ -181,10 +181,9 @@ class ModelCustomTraining:
 
     def __init__(self, model, training_inputArray, training_trueArray,
     loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=
-    1E-3, float_type=None, verbose_deltaIterations=100, 
-    convex_input_model=None, verbose=False, regularizing_function="sm"+
-    "ooth absolute value", save_model_file="trained_model.keras", 
-    parent_path="get current path"):
+    1E-3, float_type=None, verbose_deltaIterations=100, verbose=False, 
+    regularizing_function="smooth absolute value", save_model_file="tr"+
+    "ained_model.keras", parent_path="get current path"):
         
         """
         Class for training a model whose trainable parameters (weights
@@ -275,16 +274,22 @@ class ModelCustomTraining:
         # Gets a variable to inform if the model is convex to its input
         # and saves the regularizing function for the model parameters
 
-        if convex_input_model is not None:
+        if hasattr(model, "input_convex_model"):
 
-            if convex_input_model!="fully" and (convex_input_model!="p"+
-            "artially"):
+            self.input_convex_model = model.input_convex_model
+
+            if self.input_convex_model is not None:
+
+                if self.input_convex_model!="fully" and (
+                self.input_convex_model!="partially"):
+                    
+                    raise NameError("'input_convex_model' is '"+str(
+                    self.input_convex_model)+"', whereas it can be eit"+
+                    "her None, 'fully', or 'partially'")
                 
-                raise NameError("'convex_input_model' is '"+str(
-                convex_input_model)+"', whereas it can be either None,"+
-                " 'fully', or 'partially'")
+        else:
 
-        self.convex_input_model = convex_input_model
+            self.input_convex_model = None
 
         # Construct a class to give the loss function, its gradient, and
         # the instructions for parameters (weights and biases) flattening
@@ -293,7 +298,7 @@ class ModelCustomTraining:
         self.loss_class, self.model_parameters = loss_tools.build_loss_gradient_varying_model_parameters(
         self.model, self.loss_metric, self.training_input, 
         model_true_values=self.training_trueValues, convex_input_model=
-        self.convex_input_model, regularizing_function=
+        self.input_convex_model, regularizing_function=
         regularizing_function)
 
         # Gets the number of output neurons
@@ -500,7 +505,7 @@ class ModelCustomTraining:
 
         # Gets the trained parameters and reassigns them to the model
 
-        if self.convex_input_model:
+        if self.input_convex_model:
 
             self.model = parameters_tools.update_model_parameters(
             self.model, self.model_parameters, regularizing_function=

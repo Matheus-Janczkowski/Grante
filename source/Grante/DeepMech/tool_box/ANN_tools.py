@@ -32,7 +32,7 @@ class MultiLayerModel:
     enforce_customLayers=False, evaluate_parameters_gradient=False,
     flat_trainable_parameters=False, verbose=False, parameters_dtype=
     "float32", accessory_layers_activationInfo=[], 
-    input_size_main_network=None):
+    input_size_main_network=None, input_convex_model=False):
         
         # Instantiates the class of custom activation functions
 
@@ -115,6 +115,10 @@ class MultiLayerModel:
 
         self.parameters_dtype = parameters_dtype
 
+        # Saves the flag for input-convex models
+
+        self.input_convex_model = input_convex_model
+
     # Defines a function to verify the list of dictionaries and, then,
     # it creates the model accordingly
 
@@ -168,6 +172,14 @@ class MultiLayerModel:
 
                 print("Uses Keras layers to build the model\n")
 
+            # Keras models cannot be used yet for input convex networks
+
+            if self.input_convex_model:
+
+                raise NotImplementedError("'input_convex_model' is Tru"+
+                "e, but Keras models does not feature the input convex"+
+                " option yet. Enforce the use of custom model instead")
+
             return self.multilayer_modelKeras()
 
     # Defines a function to construct a multilayer model with custom 
@@ -211,8 +223,8 @@ class MultiLayerModel:
         self.accessory_layers_info[0], layer=0, 
         input_size_main_network=self.input_size_main_network,
         input_size_accessory_layer=input_size_accessory_layer,
-        input_size_main_layer=self.input_size_main_network)(
-        input_layer)
+        input_size_main_layer=self.input_size_main_network, 
+        input_convex_model=self.input_convex_model)(input_layer)
 
         # Iterates through the other layers
 
@@ -255,7 +267,8 @@ class MultiLayerModel:
             self.live_activations, activations_accessory_layer_dict=
             self.accessory_layers_info[i], input_size_main_network=
             self.input_size_main_network, input_size_main_layer=
-            input_size_main_layer, layer=i)(output_eachLayer)
+            input_size_main_layer, layer=i, input_convex_model=
+            self.input_convex_model)(output_eachLayer)
 
         # Assembles the model
 
@@ -365,7 +378,8 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     def __init__(self, activation_functionDict, custom_activations_class,
     live_activationsDict=dict(), activations_accessory_layer_dict=dict(), 
     input_size_main_network=None, input_size_main_layer=None, 
-    input_size_accessory_layer=None, layer=0, **kwargs):
+    input_size_accessory_layer=None, layer=0, input_convex_model=False,
+    **kwargs):
 
         # Initializes the parent class, i.e. Layer. The kwargs are opti-
         # onal arguments used during layer creation and deserialization, 
@@ -441,6 +455,11 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
             self.call_from_input_method = self.call_from_input_no_accessory_layer
 
+        # Saves the flag to inform if the model is supposed to be input-
+        # convex or not
+
+        self.input_convex_model = input_convex_model
+
     # Defines a function to help Keras build the layer
 
     def build(self, input_shape):
@@ -495,17 +514,17 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # Hadamard product
 
             self.dense_Wzu = tf.keras.layers.Dense(
-            self.input_size_main_layer, input_shape=(
-            self.input_size_accessory_layer,), name="Wzu_layer_"+str(
-            self.layer))
+            self.input_size_main_layer)#, input_shape=(
+            #self.input_size_accessory_layer,), name="Wzu_layer_"+str(
+            #self.layer))
 
             # Creates a dense layer for the bit of the accessory layer's
             # result that multiplies the initial convex input using the
             # Hadamard product
 
             self.dense_Wyu = tf.keras.layers.Dense(
-            self.input_size_main_network, input_shape=(
-            self.input_size_accessory_layer,))
+            self.input_size_main_network)#, input_shape=(
+            #self.input_size_accessory_layer,))
 
             # Creates a dense layer without biases for the multiplica-
             # tion of the accessory layer's result by a weight matrix,
@@ -513,8 +532,8 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # main layer. The bias of this operation will be the bias to
             # the main network, too
 
-            self.dense_Wu = tf.keras.layers.Dense(total_neurons, 
-            input_shape=(self.input_size_accessory_layer,))
+            self.dense_Wu = tf.keras.layers.Dense(total_neurons)#, 
+            #input_shape=(self.input_size_accessory_layer,))
 
             # Creates a dense layer without biases for the multiplica-
             # tion of the result of the Hadamard product between the o-
@@ -530,11 +549,48 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
             self.dense = tf.keras.layers.Dense(total_neurons)
 
+        # Constructs the layer
+
         super().build(input_shape)
 
-        if hasattr(self, "dense"):
+        # Adds the custom tag for regularization of the weights in case
+        # of convex neural networks
 
-            print("Layer name: "+str(self.dense.name))
+        if self.functions_dict_acessory_network:
+
+            # Verifies if the dense layer is present
+
+            if hasattr(self, "dense"):
+
+                self.dense.build(input_shape[0])
+
+                # Adds a custom tag with regularization flag
+
+                for tensor in self.dense.trainable_variables:
+
+                    # Adds the flag for regularization for weights ma-
+                    # trices only
+
+                    if tensor.name=="kernel":
+
+                        tensor.regularizable = True
+
+        elif self.input_convex_model and self.layer!=0:
+
+            # Builds the layer's parameters
+
+            self.dense.build(input_shape)
+
+            # Adds a custom tag with regularization flag
+
+            for tensor in self.dense.trainable_variables:
+
+                # Adds the flag for regularization for weights matrices
+                # only
+
+                if tensor.name=="kernel":
+
+                    tensor.regularizable = True
 
     # Defines a function to get the output of such a mixed layer
 

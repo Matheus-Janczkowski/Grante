@@ -149,11 +149,7 @@ def model_parameters_to_flat_tensor_and_shapes(model):
 
     shapes = []
 
-    # Iterates over the layers
-
-    for layer in model.layers:
-
-        print(layer.name)
+    # Iterates over the tensors of weights and biases
 
     for layer in model.trainable_variables:
 
@@ -187,7 +183,8 @@ def unflatten_parameters(flat_parameters, shapes):
 
     parameter_index = 0
 
-    # Iterates over the list of shapes of the tensors
+    # Iterates over the list of shapes of the tensors of weights and 
+    # biases
 
     for shape in shapes:
 

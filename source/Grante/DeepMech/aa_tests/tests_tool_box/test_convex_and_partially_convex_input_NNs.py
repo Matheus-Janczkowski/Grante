@@ -87,18 +87,6 @@ class TestANNTools(unittest.TestCase):
 
         self.dtype = tf.float64
 
-        self.training_inputTensor = tf.constant(self.training_data, 
-        dtype=self.dtype)
-
-        self.test_inputTensor = tf.constant(self.test_data, dtype=
-        self.dtype)
-
-        self.training_trueTensor = tf.constant(self.training_trueValues, 
-        dtype=self.dtype)
-
-        self.test_trueTensor = tf.constant(self.test_trueValues, dtype=
-        self.dtype)
-
         # Defines the loss function metric
 
         self.loss_metric = tf.keras.losses.MeanAbsoluteError()
@@ -135,7 +123,7 @@ class TestANNTools(unittest.TestCase):
         # Sets the optimization class for training
 
         training_class = training_tools.ModelCustomTraining(custom_model,
-        self.training_inputTensor, self.training_trueTensor, 
+        self.training_data, self.training_trueValues, 
         self.loss_metric, verbose=True, n_iterations=
         self.maximum_iterations, verbose_deltaIterations=
         self.verbose_deltaIterations, save_model_file=
@@ -154,8 +142,8 @@ class TestANNTools(unittest.TestCase):
 
         print("\nThe loss function evaluated again over the set of tra"+
         "ining data is "+str(training_class.loss_unseen_data(
-        self.training_trueTensor, self.training_inputTensor, 
-        output_as_numpy=True)))
+        self.training_trueValues, self.training_data, output_as_numpy=
+        True)))
 
         # Checks the hessian matrices
 
@@ -170,6 +158,14 @@ class TestANNTools(unittest.TestCase):
 
         training_class.monte_carlo_training(n_realizations=5, 
         best_models_rank_size=5, show_reinitialization_distance=True)
+
+        # Checks the loss again with the best model of the Monte Carlo
+        # training
+
+        print("\nThe loss function evaluated again over the set of tra"+
+        "ining data for the best model is "+str(
+        training_class.loss_unseen_data(self.training_trueValues, 
+        self.training_data, output_as_numpy=True)))
 
     # Defines a function to test the partially convex-input neural net-
     # works
@@ -197,11 +193,10 @@ class TestANNTools(unittest.TestCase):
         # Sets the optimization class for training
 
         training_class = training_tools.ModelCustomTraining(custom_model,
-        self.training_inputTensor, self.training_trueTensor, 
-        self.loss_metric, verbose=True, n_iterations=
-        self.maximum_iterations, verbose_deltaIterations=
-        self.verbose_deltaIterations, save_model_file=
-        self.save_model_file)
+        self.training_data, self.training_trueValues, self.loss_metric, 
+        verbose=True, n_iterations=self.maximum_iterations, 
+        verbose_deltaIterations=self.verbose_deltaIterations, 
+        save_model_file=self.save_model_file)
 
         t_initial = time.time()
 
@@ -216,7 +211,7 @@ class TestANNTools(unittest.TestCase):
 
         print("\nThe loss function evaluated again over the set of tra"+
         "ining data is "+str(training_class.loss_unseen_data(
-        self.training_trueTensor, self.training_inputTensor, 
+        self.training_trueValues, self.training_data, 
         output_as_numpy=True)))
 
         # Checks the hessian matrices
@@ -232,6 +227,14 @@ class TestANNTools(unittest.TestCase):
 
         training_class.monte_carlo_training(n_realizations=5, 
         best_models_rank_size=5, show_reinitialization_distance=True)
+
+        # Checks the loss again with the best model of the Monte Carlo
+        # training
+
+        print("\nThe loss function evaluated again over the set of tra"+
+        "ining data for the best model is "+str(
+        training_class.loss_unseen_data(self.training_trueValues, 
+        self.training_data, output_as_numpy=True)))
 
 # Runs all tests
 

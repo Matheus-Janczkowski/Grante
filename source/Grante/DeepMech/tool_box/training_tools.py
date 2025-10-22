@@ -182,8 +182,8 @@ class ModelCustomTraining:
     def __init__(self, model, training_inputArray, training_trueArray,
     loss_metric, optimizer="CG", n_iterations=1000, gradient_tolerance=
     1E-3, float_type=None, verbose_deltaIterations=100, verbose=False, 
-    regularizing_function="smooth absolute value", save_model_file="tr"+
-    "ained_model.keras", parent_path="get current path"):
+    save_model_file="trained_model.keras", parent_path="get current pa"+
+    "th"):
         
         """
         Class for training a model whose trainable parameters (weights
@@ -235,7 +235,7 @@ class ModelCustomTraining:
 
         if float_type is None:
 
-            float_type = model_parameters_dtype
+            self.float_type = model_parameters_dtype
 
         elif model_parameters_dtype!=float_type:
 
@@ -246,6 +246,10 @@ class ModelCustomTraining:
             "omTraining', "+str(float_type)+", is different to that of"+
             " the trainable parameters of the given model, "+str(
             model_parameters_dtype))
+        
+        else:
+
+            self.float_type = float_type
 
         # Transforms the data to TensorFlow tensors
 
@@ -258,21 +262,23 @@ class ModelCustomTraining:
                 "the float type required, "+str(float_type))
 
         self.training_input = tf.constant(training_inputArray, dtype=
-        float_type)
+        self.float_type)
 
         if hasattr(training_trueArray, "dtype"):
 
-            if training_trueArray.dtype!=float_type:
+            if training_trueArray.dtype!=self.float_type:
 
                 raise TypeError("The type of the training input array,"+
                 " "+str(training_trueArray.dtype)+", is different to t"+
-                "he float type required, "+str(float_type))
+                "he float type required, "+str(self.float_type))
 
         self.training_trueValues = tf.constant(training_trueArray, dtype
-        =float_type)
+        =self.float_type)
 
-        # Gets a variable to inform if the model is convex to its input
-        # and saves the regularizing function for the model parameters
+        # Gets a variable to inform if the model is convex to its input,
+        # and saves the regularizing function
+
+        regularizing_function = "smooth absolute value"
 
         if hasattr(model, "input_convex_model"):
 
@@ -286,6 +292,19 @@ class ModelCustomTraining:
                     raise NameError("'input_convex_model' is '"+str(
                     self.input_convex_model)+"', whereas it can be eit"+
                     "her None, 'fully', or 'partially'")
+                
+            # Gets the regularizing function
+
+            if hasattr(model, "regularizing_function"):
+                
+                regularizing_function = model.regularizing_function
+
+            else:
+
+                raise AttributeError("The model is required to be inpu"+
+                "t convex or partially input convex, but no regularizi"+
+                "ng function has been provided for regularizing weight"+
+                " matrices")
                 
         else:
 
@@ -392,6 +411,16 @@ class ModelCustomTraining:
         the model has already been trained. 'true_data' is the tensor
         with true values, whereas 'unseen_data' is the tensor with input
         samples for the corresponding true values"""
+
+        # Verifies if the data is a TensorFlow tensor
+
+        if not hasattr(true_data, "dtype"):
+
+            true_data = tf.constant(true_data, dtype=self.float_type)
+
+        if not hasattr(unseen_data, "dtype"):
+
+            unseen_data = tf.constant(unseen_data, dtype=self.float_type)
 
         # Gets the model and evaluates the response
 

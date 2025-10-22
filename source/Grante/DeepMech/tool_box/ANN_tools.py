@@ -32,7 +32,8 @@ class MultiLayerModel:
     enforce_customLayers=False, evaluate_parameters_gradient=False,
     flat_trainable_parameters=False, verbose=False, parameters_dtype=
     "float32", accessory_layers_activationInfo=[], 
-    input_size_main_network=None, input_convex_model=None):
+    input_size_main_network=None, input_convex_model=None, 
+    regularizing_function="smooth absolute value"):
         
         # Instantiates the class of custom activation functions
 
@@ -127,6 +128,11 @@ class MultiLayerModel:
                 raise NameError("'input_convex_model' is '"+str(
                 self.input_convex_model)+"', whereas it can be either "+
                 "None, 'fully', or 'partially'")
+            
+        # Saves the regularizing function variable to instruct how to 
+        # train input convex or partially input convex models
+
+        self.regularizing_function = regularizing_function
 
     # Defines a function to verify the list of dictionaries and, then,
     # it creates the model accordingly
@@ -217,21 +223,13 @@ class MultiLayerModel:
         # rectly due to the call function. It goes directly there. Takes
         # care with the case of an accessory network
 
-        input_size_accessory_layer = None
-
         input_size_main_layer = None
-
-        if self.input_size_main_network is not None:
-
-            input_size_accessory_layer = (self.input_dimension-
-            self.input_size_main_network)
 
         output_eachLayer = MixedActivationLayer(self.layers_info[0], 
         self.custom_activations_class, live_activationsDict=
         self.live_activations, activations_accessory_layer_dict=
         self.accessory_layers_info[0], layer=0, 
         input_size_main_network=self.input_size_main_network,
-        input_size_accessory_layer=input_size_accessory_layer,
         input_size_main_layer=self.input_size_main_network, 
         input_convex_model=self.input_convex_model)(input_layer)
 
@@ -242,11 +240,6 @@ class MultiLayerModel:
             # Evaluates the quantities for the case of accessory layers
 
             if self.input_size_main_network is not None:
-
-                # Sums up the neurons of the previous accessory layer
-
-                input_size_accessory_layer = sum(
-                self.accessory_layers_info[i-1].values())
 
                 # Sums up the neurons of the previous main layer
 
@@ -298,6 +291,11 @@ class MultiLayerModel:
         model.input_convex_model = self.input_convex_model
 
         model.output_dimension = self.output_dimension
+
+        # Adds the regularizing function for regularizing weight matrices
+        # in case of input convex models or partially input convex models
+
+        model.regularizing_function = self.regularizing_function
 
         # If the gradient is to be evaluated too
 
@@ -395,9 +393,8 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
     def __init__(self, activation_functionDict, custom_activations_class,
     live_activationsDict=dict(), activations_accessory_layer_dict=dict(), 
-    input_size_main_network=None, input_size_main_layer=None, 
-    input_size_accessory_layer=None, layer=0, input_convex_model=None,
-    **kwargs):
+    input_size_main_network=None, input_size_main_layer=None, layer=0, 
+    input_convex_model=None, **kwargs):
 
         # Initializes the parent class, i.e. Layer. The kwargs are opti-
         # onal arguments used during layer creation and deserialization, 
@@ -495,8 +492,6 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
             self.input_size_main_layer = input_size_main_layer
 
-            self.input_size_accessory_layer = input_size_accessory_layer
-
         else:
 
             # Defines o method that will be used to call the layer's 
@@ -508,6 +503,15 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # response when the trainable parameters are given
 
             self.call_given_parameters = self.call_with_parameters_without_accessory_network
+
+            # Saves the parameters for the case of accessory networks,
+            # even though they are not used. This saving is done so that
+            # this class can be reinstantiated later when loaded from a
+            # file
+
+            self.input_size_main_network = input_size_main_network
+
+            self.input_size_main_layer = input_size_main_layer
 
     # Defines a function to help Keras build the layer
 
@@ -563,17 +567,14 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # Hadamard product
 
             self.dense_Wzu = tf.keras.layers.Dense(
-            self.input_size_main_layer)#, input_shape=(
-            #self.input_size_accessory_layer,), name="Wzu_layer_"+str(
-            #self.layer))
+            self.input_size_main_layer)
 
             # Creates a dense layer for the bit of the accessory layer's
             # result that multiplies the initial convex input using the
             # Hadamard product
 
             self.dense_Wyu = tf.keras.layers.Dense(
-            self.input_size_main_network)#, input_shape=(
-            #self.input_size_accessory_layer,))
+            self.input_size_main_network)
 
             # Creates a dense layer without biases for the multiplica-
             # tion of the accessory layer's result by a weight matrix,
@@ -581,8 +582,7 @@ class MixedActivationLayer(tf.keras.layers.Layer):
             # main layer. The bias of this operation will be the bias to
             # the main network, too
 
-            self.dense_Wu = tf.keras.layers.Dense(total_neurons)#, 
-            #input_shape=(self.input_size_accessory_layer,))
+            self.dense_Wu = tf.keras.layers.Dense(total_neurons)
 
             # Creates a dense layer without biases for the multiplica-
             # tion of the result of the Hadamard product between the o-
@@ -601,8 +601,6 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         # Constructs the layer
 
         super().build(input_shape)
-
-        print("Deserializes initial")
 
         # Adds the custom tag for regularization of the weights in case
         # of convex neural networks
@@ -646,14 +644,10 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
                     tensor.regularizable = True
 
-        print("Deserializes final layer="+str(self.layer))
-
     # Defines a function to get the output of such a mixed layer
 
     def call(self, input):
-
-        print("Calls layer "+str(self.layer))
-
+        
         return self.call_from_input_method(input)
 
     # Defines a function to get the output of such a mixed layer when 
@@ -668,8 +662,6 @@ class MixedActivationLayer(tf.keras.layers.Layer):
 
     def call_from_input_no_accessory_layer(self, input):
 
-        print("Call with no accessory layer")
-
         # Initializes the input as dense layer and split it into the 
         # different families of activation functions. This keeps the in-
         # put as a tensor
@@ -677,15 +669,11 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         x_splits = tf.split(self.dense(input), 
         self.neurons_per_activation,  axis=-1)
 
-        print("Splits x")
-
         # Initializes a list of outputs for each family of neurons (or-
         # ganized by their activation functions)
         
         output_activations = [self.live_activationFunctions[name](split
         ) for name, split in zip(self.functions_dict.keys(), x_splits)]
-
-        print("Gets the activation functions evaluated")
 
         # Concatenates the response and returns it. Uses flag axis=-1 to
         # concatenate next to the last row
@@ -698,8 +686,6 @@ class MixedActivationLayer(tf.keras.layers.Layer):
     # ral networks
 
     def call_from_input_with_accessory_layer(self, input):
-
-        print("Call with accessory layer")
 
         # The first element in the input tuple is the main layer. The 
         # second element is due to the accessory layer. The third element
@@ -1000,7 +986,11 @@ class MixedActivationLayer(tf.keras.layers.Layer):
         config.update({"activation_functionDict": self.functions_dict,
         "layer": self.layer, "custom_activations_config": 
         self.custom_activations_class.get_config(), "custom_activation"+
-        "s_class": None})
+        "s_class": None, "activations_accessory_layer_dict":
+        self.functions_dict_acessory_network, "input_size_main_network":
+        self.input_size_main_network, "input_size_main_layer":
+        self.input_size_main_layer, "input_convex_model": 
+        self.input_convex_model})
 
         return config
     

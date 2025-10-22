@@ -1,5 +1,8 @@
 % File to store functions and commands to work with LaTeX. Created by
 % Matheus Janczkowski Fogaça
+%
+% Usage instructions, paste on preambule:
+% \usepackage{LaTeXUtilities}
 
 \ProvidesPackage{LaTeXUtilities}[2025/10/06 Custom commands by Matheus Janczkowski Fogaca]
 
@@ -46,6 +49,74 @@
 % neath it
 
 \newcommand{\CommentedArrow}[2]{\xRightarrow[#2]{#1}}
+
+% Macro to put a dot over an expresion, important when there is a dot 
+% over another dot
+
+\newcommand*{\dotao}[1]{%
+  \accentset{\mbox{\large .}}{#1}}
+
+% Macro to make integral differentials prettier
+% Example: \dit t
+
+\newcommand*\dif{\mathop{}\!\mathrm{d}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                              Code blocks                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Command for defining the code block style         
+
+\lstdefinestyle{ffcode}{
+  backgroundcolor=\color{lightgray},
+  basicstyle=\ttfamily\footnotesize,
+  frame=single,
+  rulecolor=\color{barcolor},
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=0.5em,
+  breaklines=true,
+  tabsize=2,
+  columns=fullflexible
+}
+
+% Command for creating a code block
+
+\lstnewenvironment{ffcodeMimic}[1][]{
+  \lstset{style=ffcode,#1}
+}{}
+
+% Another command for code block
+
+\newenvironment{ffcodeMimicRef}[2][]{%
+  \noindent
+  \ifstrempty{#2}{}{%
+    \captionof{command}{#2}%
+  }%
+  \ifstrempty{#1}{}{%
+    \label{#1}%
+  }%
+  \begin{ffcodeMimic}
+}{%
+  \end{ffcodeMimic}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                              Algorithms                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Comamand to generate identation blocks in algorithms
+
+\newlength\myindent
+\setlength\myindent{2em}
+\newcommand\bindent{%
+  \begingroup
+  \setlength{\itemindent}{\myindent}
+  \addtolength{\algorithmicindent}{\myindent}
+}
+\newcommand\eindent{\endgroup}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

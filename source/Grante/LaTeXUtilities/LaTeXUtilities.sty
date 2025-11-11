@@ -54,6 +54,7 @@
 \lstset{basicstyle=\ttfamily, breaklines=true, columns=fullflexible}
 \RequirePackage[numbers]{natbib}
 \RequirePackage{geometry}
+\RequirePackage{setspace}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,10 +63,27 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Command for setting the left, right, top, and bottom margins, respec-
-% tively
+% tively. This setting will be kept for all pages
 
 \newcommand{\SetMargins}[4]{\geometry{left=#1, right=#2, top=#3,% 
 bottom=#4}}
+
+% Command for setting the left, right, top, and bottom margins, respec-
+% tively. This setting will be alternated from odd to even page numbers.
+% The first commands are to override the twoside flag in the document 
+% environment; this flag is often overrun and set in many template clas-
+% ses, such as the one from Elsevier
+
+\newcommand{\SetBindingMargins}[4]{\AtBeginDocument{\makeatletter%
+\@twosidetrue\@mparswitchtrue\makeatother\geometry{a4paper, inner=#1,%
+outer=#2, top=#3, bottom=#4, twoside}}}
+
+% Command for setting ABNT spacing and margin standards
+
+\newcommand{\SetABNTSpacings}[1]{\ifthenelse{\equal{#1}{FrenteVerso}}{%
+\SetBindingMargins{3cm}{2cm}{3cm}{2cm}}{\geometry{left=3cm, right=2cm,% 
+top=3cm, bottom=2cm}}\onehalfspacing\setlength{\parindent}{1.25cm}%
+\setlength{\parskip}{0pt}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

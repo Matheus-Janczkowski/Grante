@@ -1,10 +1,16 @@
-\documentclass[12pt,3p]{elsarticle}
+\documentclass[12pt,3p, twoside]{elsarticle}
 
 % Calls our own package, which already loads a bunch of other packages
 \usepackage{LaTeXUtilities}
 
 % Sets the left, right, top, and bottom margins, respectively
 \SetMargins{3.0cm}{2.0cm}{3.0cm}{2.0cm}
+
+% Sets the left, right, top, and bottom margins, respectively. Odd and even numbered-pages will have alternated margins
+%\SetBindingMargins{3.0cm}{2.0cm}{3.0cm}{2.0cm}
+
+% Sets the ABNT spacings. Use argument FrenteVerso if you want the margins to be alternating from odd to even numbered pages. Comment this line or delete it if you don't want ABNT spacings
+%\SetABNTSpacings{FrenteVerso}
 
 % Takes out the tag "Preprint submitted to Elsevier"
 \TakeOutPreprintElsevier

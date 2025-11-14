@@ -136,6 +136,12 @@ top=3cm, bottom=2cm}}\onehalfspacing\setlength{\parindent}{1.25cm}%
 
 \newcommand*\IntegralDif{\mathop{}\!\mathrm{d}}
 
+% Macro to make an integral. The first argument is the integration do-
+% main; the second is the integrand; the third, the integration diffe-
+% rential
+
+\newcommand{\RegionIntegration}[3]{\int\limits_{#1}#2\IntegralDif#3}
+
 % Command for creating the vertical bar that evaluates derivatives
 
 \newcommand{\EvaluateBar}[2]{\left.#1\right|_{#2}}

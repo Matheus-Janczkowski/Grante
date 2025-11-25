@@ -173,6 +173,10 @@ top=3cm, bottom=2cm}}\onehalfspacing\setlength{\parindent}{1.25cm}%
 
 \newcommand{\RegionIntegration}[3]{\int\limits_{#1}#2\IntegralDif#3}
 
+% Command for partial derivative
+
+\newcommand{\PartialDerivative}[2]{\frac{\partial #1}{\partial #2}}
+
 % Command for creating the vertical bar that evaluates derivatives
 
 \newcommand{\EvaluateBar}[2]{\left.#1\right|_{#2}}
@@ -197,6 +201,14 @@ top=3cm, bottom=2cm}}\onehalfspacing\setlength{\parindent}{1.25cm}%
 
 \newcommand{\Transpose}[1]{{#1}^{\!\raisebox{0.2ex}{\scriptsize$%
 \mathrm{T}$}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                               Tensors                                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Command for a standard fourth-order tensor
+
+\newcommand{\FourthOrderTensor}[1]{\pmb{\mathbb{#1}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                      Vector and function spaces                      %

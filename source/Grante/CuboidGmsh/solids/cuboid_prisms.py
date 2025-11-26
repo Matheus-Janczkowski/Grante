@@ -39,3 +39,62 @@ shape_spin=0.0, geometric_data=[0, [[],[],[],[]], [[],[],[],[]], [[],[],
     =base_point, geometric_data=geometric_data)
 
     return geometric_data
+
+# Defines a function to create a generic 6-sided prism
+
+def hexahedron_from_corners(corner_points, transfinite_directions=[], 
+bias_directions=dict(), geometric_data=[0, [[],[],[],[]
+], [[],[],[],[]], [[],[],[]], dict(), [], dict(), [], [], [], 0.5, False]):
+    
+    # Tests if the corner points is a numpy array
+
+    if isinstance(corner_points, np.ndarray):
+
+        # Tests if it has the right shape
+
+        if corner_points.shape==(8,3):
+
+            corner_points = corner_points.T
+
+        elif corner_points.shape!=(3,8):
+
+            raise ValueError("'corner_points' is a numpy array of shap"+
+            "e "+str(corner_points.shape)+", but it should have shape "+
+            "(3,8) to create a hexadron")
+        
+        # Transforms it to a list
+
+        corner_points = corner_points.tolist()
+
+    elif isinstance(corner_points, list):
+
+        if len(corner_points)==8:
+
+            corner_points = (np.array(corner_points).T).tolist()
+
+        elif len(corner_points)!=3:
+
+            raise IndexError("'corner_points' is a list, but it has le"+
+            "ngth of "+str(len(corner_points))+", whereas it should be"+
+            " 3 or 8 (transposed) to construct a hexadron")
+
+        for point in corner_points:
+
+            if len(point)!=8:
+
+                raise IndexError("The sublist '"+str(point)+"' in "+
+                "'corner_points' does not have length of 8. Thus, "+
+                "it is not possible to create a hexadron")
+                
+    else:
+
+        raise TypeError("'corner_points' should be a list of lists or "+
+        "numpy array of shape (8,3) or (3,8) to create a hexadron")
+
+    # Makes the shape
+
+    geometric_data = cuboid.make_cuboid(corner_points, 
+    transfinite_directions=transfinite_directions, bias_directions=
+    bias_directions, geometric_data=geometric_data)
+
+    return geometric_data

@@ -2,8 +2,6 @@
 
 from dolfin import *
 
-import os
-
 import gmsh
 
 import meshio
@@ -11,6 +9,8 @@ import meshio
 from ..tool_box import region_finder
 
 from ..tool_box import mesh_data_retriever
+
+from ...PythonicUtilities import path_tools
 
 ########################################################################
 #                         Meshio - mesh writing                        #
@@ -58,6 +58,8 @@ file_name):
         mesh_set = meshio.Mesh(points=original_mesh.points, cells={
         desired_elements[i]: cells_dictionary[desired_elements[i]]},
         cell_data={data_sets[i]: [cell_dataPhysical]})
+
+        print(file_name+"_"+data_sets[i]+".xdmf")
 
         meshio.write(file_name+"_"+data_sets[i]+".xdmf", mesh_set)
 
@@ -307,21 +309,10 @@ file_directory=None, volume_elementType='tetra', surface_elementType=
 
         if file_directory==None:
 
-            if not os.path.exists("results"):
+            file_directory = path_tools.get_parent_path_of_file(
+            function_calls_to_retrocede=2)
 
-                os.mkdir("results")
-
-            file_name = "results//"+file_name
-
-        else:
-
-            # Verifies if this directory exists
-
-            if not os.path.exists(file_directory):
-
-                os.mkdir(file_directory)
-
-            file_name = file_directory+"//"+file_name
+        file_name = path_tools.verify_path(file_directory, file_name)
 
         # Sets the gmsh format version and saves the mesh to a file
 

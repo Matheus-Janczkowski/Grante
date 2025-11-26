@@ -141,9 +141,12 @@ def mesh_disc():
     [-0.9*length_x, 0.4*length_y, 0.0], [-1.2*length_x, 0.6*length_y, 0.0], 
     [-0.8*length_x, 0.8*length_y, 0.0]]}
 
+    # Explicitely tells the physical group of this volume
+
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
-    geometric_data, edges_points=edge_points)
+    geometric_data, edges_points=edge_points, 
+    explicit_volume_physical_group_name="volume 2")
 
     # Creates the geometry and meshes it
 

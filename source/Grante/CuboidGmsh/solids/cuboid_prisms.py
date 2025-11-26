@@ -45,7 +45,7 @@ shape_spin=0.0, geometric_data=[0, [[],[],[],[]], [[],[],[],[]], [[],[],
 def hexahedron_from_corners(corner_points, edges_points=None,
 transfinite_directions=[], bias_directions=dict(), geometric_data=[0, [[
 ],[],[],[]], [[],[],[],[]], [[],[],[]], dict(), [], dict(), [], [], [], 
-0.5, False]):
+0.5, False], explicit_volume_physical_group_name=None):
 
     ####################################################################
     #                       Arguments consistency                      #
@@ -205,6 +205,8 @@ transfinite_directions=[], bias_directions=dict(), geometric_data=[0, [[
     geometric_data = cuboid.make_cuboid(corner_points, 
     transfinite_directions=transfinite_directions, bias_directions=
     bias_directions, geometric_data=geometric_data, 
-    lines_instructionsOriginal=lines_instructions)
+    lines_instructionsOriginal=lines_instructions, 
+    explicit_volume_physical_group_name=
+    explicit_volume_physical_group_name)
 
     return geometric_data

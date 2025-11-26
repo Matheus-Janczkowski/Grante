@@ -22,7 +22,8 @@ dict(), surfaces_instructions=["surface filling", "surface filling",
 "surface filling"], transfinite_directions=[], bias_directions=dict(), 
 rotation_vector=[0.0, 0.0, 0.0], translation_vector=[0.0, 0.0, 0.0], 
 geometric_data=[0, [[],[],[],[]], [[],[],[],[]], [[],[],[]], dict(), [], 
-dict(), [], [], [], 0.5, False], verbose=False):
+dict(), [], [], [], 0.5, False], verbose=False, 
+explicit_volume_physical_group_name=None):
     
     # If the transfinite directions are equal to zero, it means they are
     # not to be transfinite
@@ -119,24 +120,47 @@ dict(), [], [], [], 0.5, False], verbose=False):
 
     flag_identified = False
 
-    for i in range(len(volume_identifiers)):
+    # Verifies if a explicit physical group is given
 
-        # If the volume identifier returns true, the volume is indeed in
-        # the region
+    if explicit_volume_physical_group_name is not None:
 
-        if volume_identifiers[i](corner_coordinates):
+        for i in range(len(volume_regionsNames)):
 
-            dictionary_volumesPhysGroups[i+1].append(volume)
+            if explicit_volume_physical_group_name==volume_regionsNames[
+            i]:
 
-            flag_identified = True
+                dictionary_volumesPhysGroups[i+1].append(volume)
 
-            # Colors the volume
+                flag_identified = True 
 
-            color = color_interpolation(i+1, len(volume_identifiers))
+                # Colors the volume
 
-            gmsh.model.setColor([(3,volume)], *color)
+                color = color_interpolation(i+1, len(volume_identifiers))
 
-            break
+                gmsh.model.setColor([(3,volume)], *color)
+
+                break 
+
+    if not flag_identified:
+
+        for i in range(len(volume_identifiers)):
+
+            # If the volume identifier returns true, the volume is inde-
+            # ed in the region
+
+            if volume_identifiers[i](corner_coordinates):
+
+                dictionary_volumesPhysGroups[i+1].append(volume)
+
+                flag_identified = True
+
+                # Colors the volume
+
+                color = color_interpolation(i+1, len(volume_identifiers))
+
+                gmsh.model.setColor([(3,volume)], *color)
+
+                break
 
     # If this volume is not part of a physical group, turns this volume 
     # into the generic physical group

@@ -85,14 +85,14 @@ topological_dimension, generic_group=False):
 
     if len(entities_names)!=len(entities_identifiers):
 
-        if len(entities_names)>0:
+        if len(entities_names)<len(entities_identifiers):
 
             raise ValueError("There are "+str(len(entities_names))+" n"+
             "ames for "+str(len(entities_identifiers))+" identifiers o"+
             "f topological dimension "+str(topological_dimension)+". T"+
             "he quantity of them must be equal.\n")
         
-        else:
+        elif len(entities_names)==0:
 
             raise ValueError("There are no names for the identifiers o"+
             "f topological dimension "+str(topological_dimension)+"\n")
@@ -109,7 +109,7 @@ topological_dimension, generic_group=False):
 
     # Proceeds to add the solicited physical groups
 
-    for i in range(len(entities_identifiers)):
+    for i in range(len(entities_names)):
 
         entities_dictionary[i+1] = []
 

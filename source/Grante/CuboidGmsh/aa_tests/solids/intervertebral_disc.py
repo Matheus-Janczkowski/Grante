@@ -146,7 +146,8 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, edges_points=edge_points, 
-    explicit_volume_physical_group_name="volume 2")
+    explicit_volume_physical_group_name="volume 2",
+    explicit_surface_physical_group_name={1: "back"})
 
     # Creates the geometry and meshes it
 

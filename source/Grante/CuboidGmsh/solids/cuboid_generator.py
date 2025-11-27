@@ -23,7 +23,8 @@ dict(), surfaces_instructions=["surface filling", "surface filling",
 rotation_vector=[0.0, 0.0, 0.0], translation_vector=[0.0, 0.0, 0.0], 
 geometric_data=[0, [[],[],[],[]], [[],[],[],[]], [[],[],[]], dict(), [], 
 dict(), [], [], [], 0.5, False], verbose=False, 
-explicit_volume_physical_group_name=None):
+explicit_volume_physical_group_name=None, 
+explicit_surface_physical_group_name=None):
     
     # If the transfinite directions are equal to zero, it means they are
     # not to be transfinite
@@ -101,18 +102,45 @@ explicit_volume_physical_group_name=None):
 
     # Verifies whether any of these surfaces belong to a boundary
 
-    for surface_tag, surface_points in surfaces_cornersDict.items():
+    if explicit_surface_physical_group_name is not None:
 
-        for i in range(len(surface_identifiers)):
+        if not isinstance(explicit_surface_physical_group_name, dict):
 
-            if surface_identifiers[i](surface_points):
+            raise TypeError("'explicit_surface_physical_group_name' is"+
+            " "+str(explicit_surface_physical_group_name)+", it must b"+
+            "e a dictionary")
 
-                # Adds the surface tag to the dictionary of physical 
-                # surfaces
+        for surface_tag, surface_points in surfaces_cornersDict.items():
 
-                dictionary_surfacesPhysGroups[i+1].append(surface_tag)
+            if surface_points[1] in explicit_surface_physical_group_name:
 
-                break
+                for i in range(len(surface_regionsNames)):
+
+                    if explicit_surface_physical_group_name[
+                    surface_points[1]]==surface_regionsNames[i]:
+
+                        # Adds the surface tag to the dictionary of phy-
+                        # sical surfaces
+
+                        dictionary_surfacesPhysGroups[i+1].append(
+                        surface_tag)
+
+                        break
+
+    else:
+
+        for surface_tag, surface_points in surfaces_cornersDict.items():
+
+            for i in range(len(surface_identifiers)):
+
+                if surface_identifiers[i](surface_points[0]):
+
+                    # Adds the surface tag to the dictionary of physical 
+                    # surfaces
+
+                    dictionary_surfacesPhysGroups[i+1].append(surface_tag)
+
+                    break
 
     # Verifies whether this volume belongs to a physical group
 
@@ -641,7 +669,8 @@ False):
                 corners_coordinates.append(gmsh.model.getValue(0,corner,
                 []))
 
-            surfaces_cornersDict[surface_tag] = corners_coordinates
+            surfaces_cornersDict[surface_tag] = [corners_coordinates, 
+            loop]
 
             #print("Surface", surface_tag, " has the corner points:",
             #corner_points, "for local corners:", surface_corners[loop], 

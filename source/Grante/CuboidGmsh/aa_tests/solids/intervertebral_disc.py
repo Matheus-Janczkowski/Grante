@@ -42,7 +42,7 @@ def mesh_disc():
 
     # Sets the names of the surface regions
 
-    surface_regionsNames = ['lower', 'upper']
+    surface_regionsNames = ['lower', 'upper', 'outer side']
 
     ####################################################################
     #                    Volumetric regions setting                    #
@@ -238,8 +238,8 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="annulus",
-    explicit_surface_physical_group_name={1: "lower", 6: "upper"},
-    edges_points={1: edge_points_1, 5: edge_points_5})
+    explicit_surface_physical_group_name={1: "lower", 6: "upper", 2:
+    "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5})
 
     # Second annulus flare
 
@@ -273,8 +273,8 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="annulus",
-    explicit_surface_physical_group_name={1: "lower", 6: "upper"},
-    edges_points={1: edge_points_1, 5: edge_points_5})
+    explicit_surface_physical_group_name={1: "lower", 6: "upper", 2: 
+    "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5})
 
     # Third annulus flare
 
@@ -308,8 +308,8 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="annulus",
-    explicit_surface_physical_group_name={1: "lower", 6: "upper"},
-    edges_points={1: edge_points_1, 5: edge_points_5})
+    explicit_surface_physical_group_name={1: "lower", 6: "upper", 2: 
+    "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5})
 
     # Fourth annulus flare
 
@@ -343,8 +343,8 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="annulus",
-    explicit_surface_physical_group_name={1: "lower", 6: "upper"},
-    edges_points={1: edge_points_1, 5: edge_points_5})
+    explicit_surface_physical_group_name={1: "lower", 6: "upper", 2: 
+    "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5})
 
     # Creates the geometry and meshes it
 

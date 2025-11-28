@@ -109,10 +109,16 @@ explicit_surface_physical_group_name=None):
             raise TypeError("'explicit_surface_physical_group_name' is"+
             " "+str(explicit_surface_physical_group_name)+", it must b"+
             "e a dictionary")
+        
+        # Iterates through the surfaces of the volume
 
         for surface_tag, surface_points in surfaces_cornersDict.items():
 
+            # If the local number of the surface is one of the requested
+
             if surface_points[1] in explicit_surface_physical_group_name:
+
+                # Iterates through the available surface names
 
                 for i in range(len(surface_regionsNames)):
 
@@ -572,10 +578,10 @@ False):
 
                         break
 
-    # Initializes a dictionary to tell the new numbering of a surface 
+    # Initializes a dictionary to tell the old numbering of a surface 
     # after the rotations 
 
-    new_surface_numbering = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+    old_surface_numbering = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
 
     # If no common surface has been found, the preliminary points dic-
     # tionary is indeed the right one
@@ -610,15 +616,15 @@ False):
                 if is_theSameList(new_corner_enumeration, corners_numbers
                 ):
                     
-                    new_surface_numbering[surface_number] = (
-                    new_surface_number)
+                    old_surface_numbering[new_surface_number] = (
+                    surface_number)
 
                     break
 
         if verbose:
 
             print("The surface local numbering was switched to: "+str(
-            new_surface_numbering))
+            old_surface_numbering))
 
     if verbose:
 
@@ -712,7 +718,7 @@ False):
                 []))
 
             surfaces_cornersDict[surface_tag] = [corners_coordinates, 
-            new_surface_numbering[loop]]
+            old_surface_numbering[loop]]
 
             #print("Surface", surface_tag, " has the corner points:",
             #corner_points, "for local corners:", surface_corners[loop], 

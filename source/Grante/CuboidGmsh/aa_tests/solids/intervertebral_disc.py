@@ -10,7 +10,7 @@ from ...tool_box import meshing_tools as tools
 
 def mesh_disc():
 
-    n_points_spline = 3
+    n_points_spline = 15
 
     inner_radius = 3.0
 
@@ -19,7 +19,7 @@ def mesh_disc():
     inner_curve_x = lambda theta: inner_radius*np.cos((2*np.pi*theta)+(
     (7/4)*np.pi))
 
-    inner_curve_y = lambda theta: 1.5*inner_radius*np.sin((2*np.pi*theta)+(
+    inner_curve_y = lambda theta: 1.0*inner_radius*np.sin((2*np.pi*theta)+(
     (7/4)*np.pi))
 
     outer_curve_x = lambda theta: outer_radius*np.cos((2*np.pi*theta)+(
@@ -34,7 +34,7 @@ def mesh_disc():
 
     height = 2.5
 
-    transfinite_directions = [5,6,10]
+    transfinite_directions = [10,10,20]
 
     ####################################################################
     #                     Boundary surfaces setting                    #
@@ -170,7 +170,7 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="nucleus",
-    explicit_surface_physical_group_name={6: "lower", 1: "upper"},
+    explicit_surface_physical_group_name={1: "lower", 6: "upper"},
     edges_points={1: edge_points_1, 5: edge_points_5})
 
     # Fourth nucleus flare
@@ -308,7 +308,7 @@ def mesh_disc():
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="annulus",
-    explicit_surface_physical_group_name={6: "lower", 1: "upper"},
+    explicit_surface_physical_group_name={1: "lower", 6: "upper"},
     edges_points={1: edge_points_1, 5: edge_points_5})
 
     # Fourth annulus flare

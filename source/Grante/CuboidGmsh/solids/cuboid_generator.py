@@ -571,12 +571,54 @@ False):
                         whole_setOfSurfaces[1][i])
 
                         break
+
+    # Initializes a dictionary to tell the new numbering of a surface 
+    # after the rotations 
+
+    new_surface_numbering = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+
     # If no common surface has been found, the preliminary points dic-
     # tionary is indeed the right one
 
     if not flag_dictionaryAlteration:
 
         points_dictionary = preliminary_points
+
+    # Otherwise, verifies how the surface numbering changed
+
+    else:
+
+        # Gets the new indexes of the points
+
+        points_new_local_numbering = get_keys(points_dictionary, [
+        preliminary_points[i+1] for i in range(8)])
+
+        # Iterates through the surface corners
+
+        for surface_number, corners_local_numbers in surface_corners.items():
+
+            # Gets the new local numbers
+
+            new_corner_enumeration = [points_new_local_numbering[corner-1
+            ] for corner in corners_local_numbers]
+
+            # Iterates through the original corners again to find the 
+            # matching sequence of points
+
+            for new_surface_number, corners_numbers in surface_corners.items():
+
+                if is_theSameList(new_corner_enumeration, corners_numbers
+                ):
+                    
+                    new_surface_numbering[surface_number] = (
+                    new_surface_number)
+
+                    break
+
+        if verbose:
+
+            print("The surface local numbering was switched to: "+str(
+            new_surface_numbering))
 
     if verbose:
 
@@ -670,7 +712,7 @@ False):
                 []))
 
             surfaces_cornersDict[surface_tag] = [corners_coordinates, 
-            loop]
+            new_surface_numbering[loop]]
 
             #print("Surface", surface_tag, " has the corner points:",
             #corner_points, "for local corners:", surface_corners[loop], 

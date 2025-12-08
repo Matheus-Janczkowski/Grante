@@ -282,6 +282,115 @@ constitutive_modelDictionary, mesh_dataClass):
 
     return inner_work
 
+# Defines a function to construct the variational form of a steady-state
+# heat transfer problem. The constitutive model can be either a class (
+# when the whole domain has only one constitutive model); or it can be a
+# dictionary, when the domain is heterogeneous. The keys of the dictio-
+# naries are the volumetric physical groups, whereas the values are the
+# constitutive model classes
+
+def steady_state_heat_internal_work(field_name, solution_fields, 
+variation_fields, constitutive_modelDictionary, mesh_dataClass):
+    
+    # Gets the field and its variation
+    
+    trial_function = solution_fields[field_name]
+    
+    test_function = variation_fields[field_name]
+    
+    # Gets the physical groups from the domain mesh function
+
+    physical_groupsList = set(mesh_dataClass.dx.subdomain_data().array())
+
+    # Initializes the variational form of the inner work
+
+    inner_work = 0.0
+
+    # If the constitutive model is a dictionary, the domain is heteroge-
+    # neous
+
+    if isinstance(constitutive_modelDictionary, dict):
+
+        # Iterates through the dictionary
+
+        for physical_group, constitutive_model in (
+        constitutive_modelDictionary.items()):
+            
+            # Verifies physical group consistency, i.e. if it exists and
+            # if it is an integer or a tuple of integers
+
+            physical_group = verify_physicalGroups(physical_group, 
+            physical_groupsList, physical_groupsNamesToTags=
+            mesh_dataClass.domain_physicalGroupsNameToTag)
+
+            # Initializes objects for the internal heat flux at the re-
+            # ference configuration
+
+            heat_flux = programming_tools.get_result(
+            constitutive_model.referential_heat_flux(trial_function), 
+            "referential_heat_flux")
+
+            # If the physical group is indeed a list of tags, i.e. mul-
+            # tiple regions are integrated using the same constitutive
+            # model
+
+            if isinstance(physical_group, list):
+
+                # Iterates through the subdomains
+
+                for sub_physicalGroup in physical_group:
+
+                    print("The volume of the", sub_physicalGroup, "sub"+
+                    "domain is:", assemble(1*mesh_dataClass.dx(
+                    sub_physicalGroup)), "\n")
+
+                    # Constructs the variational forms for the inner 
+                    # work
+
+                    inner_work += (dot(heat_flux, grad(test_function))*
+                    mesh_dataClass.dx(sub_physicalGroup))
+
+            else:
+
+                print("The volume of the", physical_group, "subdomain "+
+                "is:", assemble(1*mesh_dataClass.dx(physical_group)), 
+                "\n")
+
+                # Constructs the variational forms for the inner work
+
+                inner_work += (dot(heat_flux, grad(test_function))*
+                mesh_dataClass.dx(physical_group))
+
+    # If the constitutive model is not a dictionary, the domain is homo-
+    # geneous
+
+    else:
+
+        print("The volume of the domain is:", assemble(1*
+        mesh_dataClass.dx), "\n")
+
+        # Initializes objects for the internal heat flux at the referen-
+        # ce configuration
+
+        heat_flux = programming_tools.get_result(
+        constitutive_model.referential_heat_flux(trial_function), "ref"+
+        "erential_heat_flux")
+
+        # Constructs the variational forms for the inner work
+
+        inner_work = (dot(heat_flux, grad(test_function))*
+        mesh_dataClass.dx)
+
+    # Returns the inner work variational form
+
+    if mesh_dataClass.verbose:
+
+        print("Finishes creating the variational form of the inner wor"+
+        "k done by the\nfirst Piola stress tensor in a Cauchy continuu"+
+        "m medium\n")
+
+    return inner_work
+
 ########################################################################
 #               Work done by Neumann boundary conditions               #
 ########################################################################
@@ -607,6 +716,126 @@ field_variation, neumann_loads):
         integral_measure(physical_group))
 
     return variational_form, neumann_loads
+
+########################################################################
+#                         Heat generation work                         #
+########################################################################
+
+# Defines a function to construct the variational form of the work done
+# by heat generation in the reference configuration given a dictionary 
+# of heat generation loads, where the keys are the corresponding domain
+# physical groups and the values are the heat generation loads
+
+def heat_generation_work(heat_generator_dict, field_name, solution_fields, 
+variation_fields, monolithic_solution, fields_namesDict, mesh_dataClass, 
+neumann_loads):
+    
+    # Gets the symbolic field and its variation
+
+    field = solution_fields[field_name]
+
+    field_variation = variation_fields[field_name]
+
+    # Gets the physical groups tags
+
+    physical_groupsTags = set(mesh_dataClass.ds.subdomain_data().array(
+    ))
+
+    # Initializes the variational form
+
+    body_form = 0.0
+
+    # Initializes a dictionary of load-generating functions from the 
+    # body_loading_tools file
+
+    methods_functionsDict = None
+
+    methods_functionsDict = programming_tools.dispatch_functions([], 
+    body_loading_tools, methods_functionsDict=methods_functionsDict)[1]
+
+    # Initializes the dictionary of fixed arguments for the loading 
+    # functions
+
+    fixed_arguments = {"field": field, "mesh_dataClass": mesh_dataClass,
+    "field_variation": field_variation}
+
+    # For evaluation of the value of the field at a point, the numerical
+    # information must be provided, which is trickier in mixed finite e-
+    # lements formulation
+
+    if len(fields_namesDict.keys())>1:
+
+        # Splits the solution and gets the current numerical format of
+        # the field
+
+        fixed_arguments["field_numerical"] = monolithic_solution.split()[
+        fields_namesDict[field_name]]
+
+    else:
+
+        # In single field formulations, the symbolic and numerical func-
+        # tions coincide
+
+        fixed_arguments["field_numerical"] = field
+
+    # Iterates through the dictionary
+
+    for physical_group, heat_generator in heat_generator_dict.items():
+
+        # Verifies if the heat generator is a list, to add multiple loads 
+        # to a single physical group
+
+        if isinstance(heat_generator, list):
+
+            # Tests if the first element is a list in its own right
+
+            if isinstance(heat_generator[0], list):
+
+                pass
+
+            # Iterates through the loads
+
+            for load in heat_generator:
+
+                # If load is a list with the value of the heat genera-
+                # tion in the first slot, and the load class in the se-
+                # cond slot
+
+                if isinstance(load, list):
+
+                    # Updates the variational form and the list of Neu-
+                    # mann loads
+
+                    body_form += ((load[0]*field_variation)*
+                    mesh_dataClass.dx(physical_group))
+
+                    neumann_loads.append(load[1])
+
+                else:
+
+                    # Updates the variational form only
+
+                    body_form += ((load*field_variation)*
+                    mesh_dataClass.dx(physical_group))
+
+        # If the body force is not a list, updates the variational form 
+        # directly
+
+        else:
+            
+            # Updates the variational form only
+
+            body_form += ((load*field_variation)*mesh_dataClass.dx(
+            physical_group))
+
+    # Returns the variational form
+
+    if mesh_dataClass.verbose:
+
+        print("Finishes creating the variational form of the work done"+
+        " by the body forces on the domain\n")
+
+    return body_form, neumann_loads
 
 ########################################################################
 #                              Utilities                               #

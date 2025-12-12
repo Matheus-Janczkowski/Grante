@@ -11,11 +11,18 @@ import functools
 # Defines a function to get the arguments of a function and list the 
 # keyword arguments into a dictionary
 
-def get_functions_arguments(function_object):
+def get_functions_arguments(function_object, number_of_arguments_only=
+False):
 
     # Gets the signature of the function
 
     signature = inspect.signature(function_object)
+
+    # If just the number of arguments is to be given
+
+    if number_of_arguments_only:
+
+        return len(signature.parameters.keys())
 
     # Initializes the dictionary of keyword arguments
 

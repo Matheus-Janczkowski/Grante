@@ -949,10 +949,82 @@ node_number, node_coordinates, set_ofNodes=None):
 
         return node_number, node_coordinates
     
+# Defines a function to create a list of nodes indexes that lie on a
+# surface
+
+def find_nodesOnSurface(mesh_dataClass, physical_group, 
+return_coordinates=False):
+
+    # Verifies if the physical group is a string
+
+    if isinstance(physical_group, str):
+
+        # Tests if it is in the dictionary of physical groups of the 
+        # boundary
+
+        if physical_group in mesh_dataClass.boundary_physicalGroupsNameToTag:
+
+            # Converts it
+
+            physical_group = mesh_dataClass.boundary_physicalGroupsNameToTag[
+            physical_group]
+
+        else:
+
+            raise KeyError("The physical group '"+str(physical_group)+
+            "' is not in the dictionary of boundary physical groups. T"+
+            "hus, cannot be used to find the nodes in the boundary of "+
+            "surface. Check out the available options of physical grou"+
+            "ps in the boundary: "+str(
+            mesh_dataClass.boundary_physicalGroupsNameToTag.keys()))
+        
+    # Do not accept other formats than integer
+
+    elif not isinstance(physical_group, int):
+
+        raise TypeError("The physical group "+str(physical_group)+" is"+
+        " not an integer, thus cannot be used to find the nodes in the"+
+        " boundary of a surface")
+    
+    # Initializes a set of nodes
+
+    nodes_set = set()
+
+    # Iterates through the 2D elements of the mesh
+
+    for element in facets(mesh_dataClass.mesh):
+
+        # Verifies if this 2D element belongs to the physical group
+        
+        if (mesh_dataClass.boundary_meshFunction[element.index()]==(
+        physical_group)):
+            
+            # Iterates through the nodes of this element
+
+            for node in vertices(element):
+
+                nodes_set.add(node.index())
+
+    # If the nodes coordinates is to be given
+
+    if return_coordinates:
+
+        # Gets the coordinates and returns it
+
+        return mesh_dataClass.mesh.coordinates()[list(nodes_set)]
+
+    else:
+
+        # Returns the set of nodes' indices at the boundary and converts
+        # to a list
+
+        return list(nodes_set)
+    
 # Defines a function to create a list of nodes indexes that lie on the
 # boundary of surface
 
-def find_nodesOnSurfaceBoundary(mesh_dataClass, physical_group):
+def find_nodesOnSurfaceBoundary(mesh_dataClass, physical_group, 
+return_coordinates=False):
 
     # Verifies if the physical group is a string
 
@@ -1036,10 +1108,20 @@ def find_nodesOnSurfaceBoundary(mesh_dataClass, physical_group):
 
                 boundary_nodes.add(node.index())
 
-    # Returns the set of nodes' indices at the boundary and converts to
-    # a list
+    # If the nodes coordinates is to be given
 
-    return list(boundary_nodes)
+    if return_coordinates:
+
+        # Gets the coordinates and returns it
+
+        return mesh_dataClass.mesh.coordinates()[list(boundary_nodes)]
+
+    else:
+
+        # Returns the set of nodes' indices at the boundary and converts to
+        # a list
+
+        return list(boundary_nodes)
 
 # Defines a function to create a list of nodes indexes that lie on the 
 # vertices of elements around a node

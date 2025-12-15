@@ -11,15 +11,24 @@ from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
 
 from .....Grante.PythonicUtilities.coordinate_systems_tools import cartesian_to_cylindrical_coordinates
 
+from .....Grante.PythonicUtilities.interpolation_tools import spline_1D_interpolation
+
 from .....Grante.MultiMech.tool_box.expressions_tools import interpolate_scalar_function
 
-# Defines the limit values of the property at theta=0.0 and theta=pi, 
-# respectively. Sup is the value of the property at the outermost surfa-
-# ce; whereas inf is at the interface between nucleus and annulus
+# Defines the parametric curves for the circumferential variation of the
+# material parameter using splines. The x points are the angles in a cy-
+# lindrical coordinate system, and the y points are the property value at
+# those angles
 
-k_sup = [5.0, 7.0]
+x_points = [4.]
 
-k_inf = [2.0, 3.0]
+k_superior_parametric_curve = spline_1D_interpolation(x_points=[0.0, 
+0.25*np.pi, 0.5*np.pi, 0.75*np.pi, np.pi, 1.25*np.pi, 1.5*np.pi, (1.7*
+np.pi), 2*np.pi], y_points=[5.0, 5.5, 6.0, 6.5, 7.0, 6.5, 6.0, 5.5, 5.0])
+
+k_inferior_parametric_curve = spline_1D_interpolation(x_points=[0.0, 
+0.25*np.pi, 0.5*np.pi, 0.75*np.pi, np.pi, 1.25*np.pi, 1.5*np.pi, (1.7*
+np.pi), 2*np.pi], y_points=[2.0, 2.5, 3.0, 3.5, 4.0, 3.5, 3.0, 2.5, 2.0])
 
 # Gets the path to the mesh
 
@@ -199,11 +208,9 @@ def k_material(x_vector, current_physical_group=None, dof=None):
 
     # Evaluates the limits of the k parameter in the current angle
 
-    k_s = (k_sup[0]*0.5*(np.cos(theta)+1.0))+(k_sup[1]*0.5*(1.0+np.cos(
-    theta+np.pi)))
+    k_s = k_superior_parametric_curve(theta)
 
-    k_i = (k_inf[0]*0.5*(1.0+np.cos(theta)))+(k_inf[1]*0.5*(1.0+np.cos(
-    theta+np.pi)))
+    k_i = k_inferior_parametric_curve(theta)
 
     # Verifies the limit radii
 

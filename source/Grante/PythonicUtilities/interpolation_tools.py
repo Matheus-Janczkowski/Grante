@@ -204,3 +204,158 @@ points_array=None, add_initial_point_as_end_point=False):
     cubic_spline_y(theta), cubic_spline_z(theta)]
 
     return parametric_curve
+
+# Defines a function to return a spline interpolation of a curve in 1D
+# space
+
+def spline_1D_interpolation(x_points=None, y_points=None, points_array=
+None, add_initial_point_as_end_point=False):
+    
+    """
+    Function for creating a cubic spline interpolation function of a
+    parametric curve given a set of points. It returns a function of a
+    single argument, which is the parameter variable that belongs to the
+    interval [0,1]
+    
+    x_points: list or numpy array of x values of the points
+
+    y_points: list or numpy array of y values of the points
+
+    points_array: list of lists or numpy array of the values of the 
+    points. It can be a list with 2 sublists (one for each dimension), or
+    one sublist with 2 values for each point. Likewise for numpy arrays
+
+    add_initial_point_as_end_point: Flag to add a copy of the initial 
+    point as end point to close the curve
+    """
+
+    # Tests if the points array is not None
+
+    if points_array is not None:
+
+        # Tests if it is a numpy array
+
+        if isinstance(points_array, np.ndarray):
+
+            # Tests if has two shape informations
+
+            if len(points_array.shape)!=2:
+
+                raise IndexError("The 'points_array' in 'spline_1D_int"+
+                "erpolation' has shape "+str(points_array.shape)+", wh"+
+                "ereas it should be a matrix")
+
+            # Tests which dimension has length of 3
+
+            if points_array.shape[0]==2:
+
+                # Gets the individual dimensions
+
+                x_points = points_array[0,:]
+
+                y_points = points_array[1,:]
+
+            elif points_array.shape[1]==2:
+
+                # Gets the individual dimensions
+
+                x_points = points_array[:,0]
+
+                y_points = points_array[:,1]
+
+            else:
+
+                raise IndexError("'points_array' in 'spline_1D_interpo"+
+                "lation' has shape "+str(points_array.shape)+". It sho"+
+                "uld have one dimension with length of 2")
+            
+        # Tests if it is a list
+
+        elif isinstance(points_array, list):
+
+            # Tests which dimension has length of 2
+
+            if len(points_array)==2:
+
+                # Gets the individual dimensions
+
+                x_points = points_array[0]
+
+                y_points = points_array[1]
+
+            else:
+
+                # Gets the individual dimensions
+
+                x_points = []
+
+                y_points = []
+
+                # Iterates though the points
+
+                for point in points_array:
+
+                    # Tests if this points has 2 dimensions
+
+                    if len(point)!=2:
+
+                        raise IndexError("'points_array' in 'spline_1D"+
+                        "_interpolation' has the individual point "+str(
+                        point)+"; it should have 2 elements: x, y, and"+
+                        " z")
+                    
+                    x_points.append(point[0])
+
+                    y_points.append(point[1])
+                    
+        else:
+
+            raise TypeError("'points_array' in 'spline_1D_interpolatio"+
+            "n' must be a numpy array or a list. It currently is: "+str(
+            points_array))
+        
+    else:
+
+        # Verifies if all dimensions are not None
+
+        if x_points is None:
+
+            raise TypeError("'x_points' is None in 'spline_1D_interpol"+
+            "ation', but so is 'points_array'")
+        
+        elif y_points is None:
+
+            raise TypeError("'y_points' is None in 'spline_1D_interpol"+
+            "ation', but so is 'points_array'")
+        
+    # Gets the number of points
+
+    n_points = len(x_points)
+
+    if n_points==0:
+
+        raise IndexError("No points were given for 'spline_1D_interpol"+
+        "ation', x_points="+str(x_points))
+
+    if len(y_points)!=n_points:
+
+        raise IndexError("There are "+str(n_points)+" points in the x "+
+        "direction; whereas there are "+str(len(y_points))+" points in"+
+        " the y direction. They must have the same size in 'spline_1D_"+
+        "interpolation'")
+    
+    # If the initial point is meant to be copied as the end point
+
+    if add_initial_point_as_end_point:
+
+        x_points.append(x_points[0])
+
+        y_points.append(y_points[0])
+
+        n_points += 1
+
+    # Gets the spline interpolation of the y points
+
+    cubic_spline_y = interpolate.CubicSpline(x_points, y_points)
+
+    return cubic_spline_y

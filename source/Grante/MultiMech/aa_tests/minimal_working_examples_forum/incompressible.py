@@ -4,7 +4,7 @@ from dolfin import *
 
 import ufl_legacy as ufl
 
-import os
+from ....PythonicUtilities.path_tools import get_parent_path_of_file
 
 # Geometry information
 
@@ -187,10 +187,10 @@ u_solution.rename("Displacement", "DNS")
 
 lambda_solution.rename("Pressure", "DNS")
 
-file = XDMFFile(os.getcwd()+"//tests//displacement.xdmf")
+file = XDMFFile(get_parent_path_of_file()+"//tests//displacement.xdmf")
 
 file.write(u_solution)
 
-file = XDMFFile(os.getcwd()+"//tests//pressure.xdmf")
+file = XDMFFile(get_parent_path_of_file()+"//tests//pressure.xdmf")
 
 file.write(lambda_solution)

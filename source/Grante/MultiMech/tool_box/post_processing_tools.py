@@ -32,6 +32,11 @@ def post_processingSelectionSingleField(post_processes, context_class):
     # Iterates through the dictionary of wanted processes
     
     for process_name, additional_informationDict in post_processes.items():
+
+        # Initializes a list of names of additional informations for this
+        # post process
+
+        additional_info_names = []
         
         # Iterates through the possible additional information names
 
@@ -42,6 +47,8 @@ def post_processingSelectionSingleField(post_processes, context_class):
 
             additional_infoName = available_processes[process_name
             ].additional_information[i]
+
+            additional_info_names.append(additional_infoName)
 
             # If it is a list, i.e. there's a default value, takes the 
             # name only
@@ -115,7 +122,7 @@ def post_processingSelectionSingleField(post_processes, context_class):
             raise KeyError("The additional infos "+str(list(
             additional_informationDict.keys()))+" are not valid additi"+
             "onal information keys for the '"+str(process_name)+"' pro"+
-            "cess.")
+            "cess. Check available options: "+str(additional_info_names))
 
     # Returns the new and complete dictionary of processes
 

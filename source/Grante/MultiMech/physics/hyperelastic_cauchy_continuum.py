@@ -16,7 +16,7 @@ from ...PythonicUtilities import programming_tools
 
 @programming_tools.optional_argumentsInitializer({'neumann_loads': 
 lambda: [], 'dirichlet_loads': lambda: [], 'solution_name': lambda: [
-"solution", "DNS"], 'volume_physGroupsSubmesh': lambda: [], ('post_pro'+
+"Displacement", "DNS"], 'volume_physGroupsSubmesh': lambda: [], ('post_pro'+
 'cessesSubmesh'): lambda: dict(), 'dirichlet_boundaryConditions': lambda: 
 dict(), "body_forcesDict": lambda: dict()})
 

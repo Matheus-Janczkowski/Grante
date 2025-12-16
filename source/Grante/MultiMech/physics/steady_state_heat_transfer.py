@@ -1,6 +1,8 @@
 # Routine to store the variational form and other accessories for heat
 # transfer
 
+from dolfin import *
+
 from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import variational_tools
@@ -110,9 +112,7 @@ heat_generation_dict=None):
 
     residual_form = (internal_VarForm-out_heat_flux_variational_form-
     heat_generation_variational_form)
-
-    print(residual_form)
-
+    
     solver = functional_tools.set_nonlinearProblem(residual_form, 
     solution_new, delta_solution, bc, solver_parameters=
     solver_parameters)

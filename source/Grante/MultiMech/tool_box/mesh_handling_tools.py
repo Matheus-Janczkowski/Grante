@@ -12,6 +12,10 @@ from scipy.spatial import KDTree
 
 from ...PythonicUtilities import programming_tools
 
+from ...CuboidGmsh.tool_box import meshing_tools as tools_gmsh
+
+from ...CuboidGmsh.solids import cuboid_prisms as prism_gmsh
+
 # Defines a class for the mesh data
 
 class MeshData:
@@ -54,87 +58,29 @@ class MeshData:
 # Defines a function to create a simple box mesh
 
 def create_box_mesh(length_x, length_y, length_z, n_divisions_x,
-n_divisions_y, n_divisions_z, verbose=False):
+n_divisions_y, n_divisions_z, verbose=False, file_name="box_mesh",
+file_directory=None):
 
-    # Creates a simple box mesh
+    # Uses CuboidGmsh to avoid topology loss with fenics built-in meshes
 
-    mesh = BoxMesh(Point(0,0,0), Point(length_x, length_y, length_z), 
-    n_divisions_x, n_divisions_y, n_divisions_z)
+    geometric_data = tools_gmsh.gmsh_initialization(
+    surface_regionsNames=["bottom", "front", "right", "back", "left",
+    "top"], volume_regionsNames=["volume"])
 
-    # Sets the surface domains
+    geometric_data = prism_gmsh.hexahedron_from_corners(
+    [[length_x, 0.0, 0.0], [length_x, length_y, 0.0], [0.0, length_y, 
+    0.0], [0.0, 0.0, 0.0], [length_x, 0.0, length_z], [length_x, 
+    length_y, length_z], [0.0, length_y, length_z], [0.0, 0.0, length_z]
+    ], transfinite_directions=[n_divisions_x, n_divisions_y, 
+    n_divisions_z], geometric_data=geometric_data, 
+    explicit_volume_physical_group_name="volume", 
+    explicit_surface_physical_group_name={1: "bottom", 2: "front", 3: 
+    "right", 4: "back", 5: "left", 6: "top"})
 
-    bottom_facet = CompiledSubDomain("near(x[2], 0)")
+    tools_gmsh.gmsh_finalize(geometric_data=geometric_data, file_name=
+    file_name, verbose=verbose, file_directory=file_directory)
 
-    front_facet = CompiledSubDomain("near(x[0], length_x)", length_x=
-    length_x)
-
-    right_facet = CompiledSubDomain("near(x[1], length_y)", length_y=
-    length_y)
-
-    back_facet = CompiledSubDomain("near(x[0], 0)")
-
-    left_facet = CompiledSubDomain("near(x[1], 0)")
-
-    top_facet = CompiledSubDomain("near(x[2], length_z)", length_z=
-    length_z)
-
-    # Sets the volume markers as zero
-
-    volume_markers = MeshFunction("size_t", mesh, mesh.topology().dim())
-
-    volume_markers.set_all(0)
-
-    domain_meshCollection = MeshValueCollection("size_t", mesh, 
-    mesh.topology().dim())
-
-    domain_physicalGroupsNameToTag = {"volume": 0}
-
-    # Sets the boundaries
-
-    boundary_markers = MeshFunction("size_t", mesh, mesh.topology().dim(
-    )-1)
-
-    boundary_markers.set_all(1)
-
-    bottom_facet.mark(boundary_markers, 1)
-
-    front_facet.mark(boundary_markers, 2)
-
-    right_facet.mark(boundary_markers, 3)
-
-    back_facet.mark(boundary_markers, 4)
-
-    left_facet.mark(boundary_markers, 5)
-
-    top_facet.mark(boundary_markers, 6)
-
-    boundary_meshCollection = MeshValueCollection("size_t", mesh, 
-    mesh.topology().dim()-1)
-
-    boundary_physicalGroupsNameToTag = {"bottom": 1, "front": 2, "righ"+
-    "t": 3, "back": 4, "left": 5, "top": 6}
-
-    # Sets the integration measures
-
-    dx = Measure("dx", domain=mesh, metadata={"quadrature_degree": 2},
-    subdomain_data=volume_markers)
-
-    ds = Measure("ds", domain=mesh, subdomain_data=boundary_markers)
-
-    # Sets the normal vector to the mesh's boundary
-
-    n  = FacetNormal(mesh)
-
-    # Sets the position vector
-
-    x_position = SpatialCoordinate(mesh)
-
-    # Creates the 
-
-    return MeshData(mesh, dx, ds, n, x_position, domain_meshCollection, 
-    volume_markers, boundary_meshCollection, boundary_markers, 
-    domain_physicalGroupsNameToTag, boundary_physicalGroupsNameToTag,
-    verbose)
+    return read_mshMesh(file_directory+"//"+file_name)
 
 # Defines a function to read a mesh from a msh file
 
@@ -228,11 +174,43 @@ quadrature_degree=2, verbose=False):
             " mesh is to be used, but no key 'number of divisions in z"+
             "' was provided. The keys provided are: "+str(
             file_name.keys()))
+        
+        verbose_gmsh = verbose
+        
+        if "verbose" in file_name:
+
+            verbose_gmsh = file_name["verbose"]
+
+        mesh_directory = None
+
+        if "mesh file directory" in file_name:
+
+            mesh_directory = file_name["mesh file directory"]
+
+        else:
+
+            raise KeyError("'file_name' is a dictionary, so a built-in"+
+            " mesh is to be used, but no key 'mesh file directory' was"+
+            " provided. The keys provided are: "+str(file_name.keys()))
+
+        mesh_file_name = None
+
+        if "mesh file name" in file_name:
+
+            mesh_file_name = file_name["mesh file name"]
+
+        else:
+
+            raise KeyError("'file_name' is a dictionary, so a built-in"+
+            " mesh is to be used, but no key 'mesh file name' was prov"+
+            "ided. The keys provided are: "+str(file_name.keys()))
 
         # Retuns the built in mesh
 
         return create_box_mesh(length_x, length_y, length_z, 
-        n_divisions_x, n_divisions_y, n_divisions_z, verbose=verbose)
+        n_divisions_x, n_divisions_y, n_divisions_z, verbose=
+        verbose_gmsh, file_name=mesh_file_name, file_directory=
+        mesh_directory)
 
     # Reads the saved gmsh mesh using meshio
 

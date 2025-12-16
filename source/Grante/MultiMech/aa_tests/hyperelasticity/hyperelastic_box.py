@@ -1,7 +1,5 @@
 # Routine to test a hyperelastic disc
 
-import os
-
 from ....PythonicUtilities.path_tools import get_parent_path_of_file
 
 from ....MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity as constitutive_models
@@ -62,7 +60,8 @@ constitutive_model = constitutive_models.Neo_Hookean(material_properties)
 
 mesh_fileName = {"length x": 1.0, "length y": 1.5, "length z": 5.0, "n"+
 "umber of divisions in x": 5, "number of divisions in y": 7, "number o"+
-"f divisions in z": 25}#"tests//test_meshes//intervertebral_disc"
+"f divisions in z": 25, "verbose": False, "mesh file name": "box_mesh", 
+"mesh file directory": get_parent_path_of_file()}
 
 ########################################################################
 #                            Function space                            #
@@ -104,7 +103,7 @@ maximum_loadingSteps = 5
 
 # Defines a load expression
 
-maximum_load = 2E6
+maximum_load = 2E7
 
 # Assemble the traction vector using this load expression
 

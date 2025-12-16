@@ -35,7 +35,7 @@ post_processes["SaveField"] = {"directory path":results_path,
 
 # Sets the conductivity parameters
 
-k = 0.01
+k = 10.0
 
 # Sets a dictionary of properties
 
@@ -57,7 +57,8 @@ constitutive_model = constitutive_models.Fourier(material_properties)
 
 mesh_fileName = {"length x": 1.0, "length y": 1.5, "length z": 5.0, "n"+
 "umber of divisions in x": 5, "number of divisions in y": 7, "number o"+
-"f divisions in z": 25}#"tests//test_meshes//intervertebral_disc"
+"f divisions in z": 25, "verbose": False, "mesh file name": "box_mesh", 
+"mesh file directory": get_parent_path_of_file()}
 
 ########################################################################
 #                            Function space                            #
@@ -101,7 +102,11 @@ maximum_loadingSteps = 1
 
 boundary_heat_flux = dict()
 
-boundary_heat_flux["top"] = 100000.0
+#boundary_heat_flux["top"] = 1E2
+
+# Defines a dictionary for volumetric heat generation
+
+heat_generation_dict = {"volume": 100.0}
 
 # Defines a dictionary of boundary conditions. Each key is a physical
 # group and each value is another dictionary or a list of dictionaries 
@@ -111,7 +116,9 @@ boundary_heat_flux["top"] = 100000.0
 
 bcs_dictionary = dict()
 
-bcs_dictionary["bottom"] = 100.0
+bcs_dictionary["bottom"] = 200.0
+
+#bcs_dictionary["top"] = 500.0
 
 ########################################################################
 ########################################################################
@@ -125,4 +132,5 @@ variational_framework.steady_state_heat_transfer_temperature_based(
 constitutive_model, boundary_heat_flux, maximum_loadingSteps, t_final, 
 post_processes, mesh_fileName, solver_parameters, 
 polynomial_degree=polynomial_degree, t=t, 
-dirichlet_boundaryConditions=bcs_dictionary, verbose=True)
+dirichlet_boundaryConditions=bcs_dictionary, verbose=True,
+heat_generation_dict=heat_generation_dict)

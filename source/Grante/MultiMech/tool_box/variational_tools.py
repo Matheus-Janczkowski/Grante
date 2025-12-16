@@ -842,8 +842,8 @@ neumann_loads):
             
             # Updates the variational form only
 
-            body_form += ((load*field_variation)*mesh_dataClass.dx(
-            physical_group))
+            body_form += ((heat_generator*field_variation)*
+            mesh_dataClass.dx(physical_group))
 
     # Returns the variational form
 

@@ -3,8 +3,6 @@
 
 from dolfin import *
 
-import numpy as np
-
 from ..tool_box import variational_tools
 
 from ..tool_box import homogenization_tools

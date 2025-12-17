@@ -69,8 +69,7 @@ heat_generation_dict=None):
     # using the dictionary of boundary conditions
 
     bc, dirichlet_loads = functional_tools.construct_DirichletBCs(
-    dirichlet_boundaryConditions, functional_data_class.fields_names_dict, 
-    functional_data_class.monolithic_function_space, mesh_dataClass, 
+    dirichlet_boundaryConditions, functional_data_class, mesh_dataClass, 
     dirichlet_loads=dirichlet_loads)
 
     ####################################################################
@@ -80,29 +79,20 @@ heat_generation_dict=None):
     # Constructs the variational form for the inner work
 
     internal_VarForm = variational_tools.steady_state_heat_internal_work(
-    "Temperature", functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, constitutive_model, 
+    "Temperature", functional_data_class, constitutive_model, 
     mesh_dataClass)
 
     # Constructs the variational forms for the traction work
 
     out_heat_flux_variational_form, neumann_loads = variational_tools.boundary_heat_flux_work(
-    heat_flux_dictionary, "Temperature", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    neumann_loads)
+    heat_flux_dictionary, "Temperature", functional_data_class, 
+    mesh_dataClass, neumann_loads)
 
     # Constructs the variational form for the work of heat generation
 
     heat_generation_variational_form, neumann_loads = variational_tools.heat_generation_work(
-    heat_generation_dict, "Temperature", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    neumann_loads)
+    heat_generation_dict, "Temperature", functional_data_class, 
+    mesh_dataClass, neumann_loads)
 
     ####################################################################
     #              Problem and solver parameters setting               #
@@ -115,9 +105,7 @@ heat_generation_dict=None):
     heat_generation_variational_form)
     
     solver = functional_tools.set_nonlinearProblem(residual_form, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.trial_functions, bc, solver_parameters=
-    solver_parameters)
+    functional_data_class, bc, solver_parameters=solver_parameters)
 
     ####################################################################
     #                 Solution and pseudotime stepping                 #
@@ -126,10 +114,9 @@ heat_generation_dict=None):
     # Iterates through the pseudotime stepping algorithm
 
     newton_raphson_tools.newton_raphsonSingleField(solver, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    constitutive_model, post_processesDict=post_processes, 
-    post_processesSubmeshDict=post_processesSubmesh, neumann_loads=
-    neumann_loads, dirichlet_loads=dirichlet_loads, solution_name=
-    solution_name, volume_physGroupsSubmesh=volume_physGroupsSubmesh, 
-    t=t, t_final=t_final, maximum_loadingSteps=maximum_loadingSteps)
+    functional_data_class, mesh_dataClass, constitutive_model, 
+    post_processesDict=post_processes, post_processesSubmeshDict=
+    post_processesSubmesh, neumann_loads=neumann_loads, dirichlet_loads=
+    dirichlet_loads, solution_name=solution_name, 
+    volume_physGroupsSubmesh=volume_physGroupsSubmesh, t=t, t_final=
+    t_final, maximum_loadingSteps=maximum_loadingSteps)

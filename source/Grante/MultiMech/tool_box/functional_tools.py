@@ -31,9 +31,15 @@ from ...PythonicUtilities import programming_tools
 @programming_tools.optional_argumentsInitializer({'boundary_conditions':
 lambda: [], 'dirichlet_loads': lambda: []})
 
-def construct_DirichletBCs(boundary_conditionsDict, fields_namesDict,
-monolithic_functionSpace, mesh_dataClass, boundary_conditions=None,
+def construct_DirichletBCs(boundary_conditionsDict, 
+functional_data_class, mesh_dataClass, boundary_conditions=None,
 dirichlet_loads=None):
+    
+    # Gets the function space information
+    
+    fields_namesDict = functional_data_class.fields_names_dict
+    
+    monolithic_functionSpace = functional_data_class.monolithic_function_space
 
     # Initializes a dictionary of functions that generate boundary con-
     # ditions
@@ -253,8 +259,14 @@ dirichlet_loads=None):
 # Defines a function to set the nonlinear problem from the residual and
 # the Gateaux derivative
 
-def set_nonlinearProblem(residual_form, monolithic_solution, 
-trial_functions, boundary_conditions, solver_parameters=None):
+def set_nonlinearProblem(residual_form, functional_data_class, 
+boundary_conditions, solver_parameters=None):
+    
+    # Gets the entities from the functional class
+
+    monolithic_solution = functional_data_class.monolithic_solution
+
+    trial_functions = functional_data_class.trial_functions
     
     # Evaluates the Gateaux derivative of the residue form
     

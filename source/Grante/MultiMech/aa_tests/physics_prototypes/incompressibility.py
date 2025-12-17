@@ -2,32 +2,26 @@
 
 from dolfin import *
 
-import ufl_legacy as ufl
-
 from ....PythonicUtilities.path_tools import get_parent_path_of_file
 
 from ....MultiMech.tool_box.mesh_handling_tools import read_mshMesh
 
-from ....MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity
+from ....MultiMech.constitutive_models.hyperelasticity.isotropic_hyperelasticity import Neo_Hookean
 
-# Geometry information
+from ....MultiMech.tool_box import functional_tools
 
-L, H, W = 1.0, 0.2, 0.3
+from ....MultiMech.tool_box import variational_tools
 
 # Creates a box mesh using gmsh
 
-mesh_data_class = read_mshMesh({"length x": W, "length y": H, "length "+
-"z": L, "number of divisions in x": 5, "number of divisions in y": 5, 
-"number of divisions in z": 25, "verbose": False, "mesh file name": "b"+
-"ox_mesh", "mesh file directory": get_parent_path_of_file()})
+mesh_data_class = read_mshMesh({"length x": 0.3, "length y": 0.2, "len"+
+"gth z": 1.0, "number of divisions in x": 5, "number of divisions in y":
+5, "number of divisions in z": 25, "verbose": False, "mesh file name": 
+"box_mesh", "mesh file directory": get_parent_path_of_file()})
 
 # Neumann boundary conditions
 
-traction_vectors = {"top": Constant([0.0, 0.0, 5E5])}
-
-# Evaluates the geometry volume
-
-inv_V0 = 1/assemble(1.0*mesh_data_class.dx)
+maximum_load = 5E5
 
 # Sets the constitutive model
 
@@ -35,70 +29,67 @@ E = 1E6
 
 poisson = 0.3
 
-constitutive_model = isotropic_hyperelasticity.Neo_Hookean({"E": E, "nu":
-poisson})
+constitutive_model = Neo_Hookean({"E": E, "nu": poisson})
 
 # Sets the function space
 
-mixed_element = MixedElement([VectorElement("Lagrange", 
-mesh_data_class.mesh.ufl_cell(), 2), FiniteElement("Lagrange", 
-mesh_data_class.mesh.ufl_cell(), 1)], )
-
-monolithic_functionSpace = FunctionSpace(mesh_data_class.mesh, 
-mixed_element)
-
-trial_functions = TrialFunction(monolithic_functionSpace)
-
-monolithic_solution = Function(monolithic_functionSpace)
-
-u, lmbda = split(monolithic_solution)
-
-delta_u, delta_lambda = split(TestFunction(monolithic_functionSpace))
+functional_data_class = functional_tools.construct_monolithicFunctionSpace(
+{"Displacement": {"field type": "vector", "interpolation function": "C"+
+"G", "polynomial degree": 2}, "Pressure": {"field type": "scalar", "in"+
+"terpolation function": "CG", "polynomial degree": 1}}, mesh_data_class)
 
 # Dirichlet boundary conditions
 
-bc = [DirichletBC(monolithic_functionSpace.sub(0), Constant((0.0, 0.0, 
-0.0)), mesh_data_class.boundary_meshFunction, 
-mesh_data_class.boundary_physicalGroupsNameToTag["bottom"])]
+bc, dirichlet_loads = functional_tools.construct_DirichletBCs({"bottom": 
+{"BC case": "FixedSupportDirichletBC", "sub_fieldsToApplyBC": "Displac"+
+"ement"}}, functional_data_class, mesh_data_class)
 
-# Variational form
+# Variational form of the exterior work using an uniform referential 
+# traction
 
-external_work = 0.0
+external_work, neumann_loads = variational_tools.traction_work({"top": {
+"load case": "UniformReferentialTraction", "amplitude_tractionX": 0.0, 
+"amplitude_tractionY": 0.0, "amplitude_tractionZ": maximum_load, "para"+
+"metric_load_curve": "square root", "t": 0.0, "t_final": 1.0}}, "Displ"+
+"acement", functional_data_class, mesh_data_class, [])
+
+# Update the load class
+
+neumann_loads[0].update_load(1.0)
+
+# Gets the variational form of the inner work
+
+internal_work = variational_tools.hyperelastic_internalWorkFirstPiola(
+"Displacement", functional_data_class, constitutive_model, 
+mesh_data_class)
+
+# Adds the contribution of the volume constraint
 
 I = Identity(3)
 
-F = grad(u)+I
+F = grad(functional_data_class.solution_fields["Displacement"])+I
 
 F_invT = inv(F).T
 
 J = det(F)
 
-internal_work = ((inner(constitutive_model.first_piolaStress(u)+(lmbda*
-inv_V0*J*F_invT), grad(delta_u))*dx)+(inv_V0*(((J-1)*delta_lambda)*
-mesh_data_class.dx)))
+inv_V0 = Constant(1/assemble(1.0*mesh_data_class.dx))
 
-for physical_group, traction in traction_vectors.items():
-
-    external_work += dot(traction, delta_u)*mesh_data_class.ds(
-    mesh_data_class.boundary_physicalGroupsNameToTag[physical_group])
+internal_work += ((inner(functional_data_class.solution_fields["Pressu"+
+"re"]*inv_V0*J*F_invT, grad(functional_data_class.variation_fields["Di"+
+"splacement"]))*mesh_data_class.dx)+(inv_V0*(((J-1)*
+functional_data_class.variation_fields["Pressure"])*mesh_data_class.dx)))
 
 # Solver
 
-residual_form = internal_work-external_work
-
-residual_derivative = derivative(residual_form , monolithic_solution, 
-trial_functions)
-
-Res = NonlinearVariationalProblem(residual_form, monolithic_solution, 
-bc, J=residual_derivative)
-
-solver = NonlinearVariationalSolver(Res)
+solver = functional_tools.set_nonlinearProblem((internal_work-
+external_work), functional_data_class, bc)
 
 solver.solve()
 
 # Solution saving
 
-u_solution, lambda_solution = monolithic_solution.split()
+u_solution, lambda_solution = functional_data_class.monolithic_solution.split()
 
 J = det(grad(u_solution)+I)
 

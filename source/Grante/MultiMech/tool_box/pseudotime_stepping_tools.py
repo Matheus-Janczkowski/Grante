@@ -26,15 +26,31 @@ from ...PythonicUtilities import programming_tools
 @programming_tools.optional_argumentsInitializer({'post_processesDict': 
 lambda: dict(), 'post_processesSubmeshDict': lambda: dict(), 
 'dirichlet_loads': lambda: [], 'neumann_loads': lambda: [], ('solution'+
-'_name'): lambda: ["solution", "DNS"], 'volume_physGroupsSubmesh': 
-lambda: [], 'macro_quantitiesClasses': lambda: []})
+'_name'): lambda: [], 'volume_physGroupsSubmesh':  lambda: [], 'macro_'+
+'quantitiesClasses': lambda: []})
 
-def newton_raphsonSingleField(solver, solution_field, fields_namesDict,
+def newton_raphsonSingleField(solver, functional_data_class,
 mesh_dataClass, constitutive_model, post_processesDict=None, 
 post_processesSubmeshDict=None, dirichlet_loads=None, neumann_loads=None, 
 solution_name=None, volume_physGroupsSubmesh=None, 
 macro_quantitiesClasses=None, t=None, t_final=None, maximum_loadingSteps=
 None, field_correction=None):
+    
+    # If no solution name was provided
+
+    if len(solution_name)==0:
+
+        for field_name in functional_data_class.fields_names_dict:
+
+            solution_name = [field_name, "DNS"]
+
+            break
+    
+    # Gets the information from the functional data class
+
+    solution_field = functional_data_class.monolithic_solution
+    
+    fields_namesDict = functional_data_class.fields_names_dict
     
     print("\n#########################################################"+
     "###############\n#              The Newton-Raphson scheme will be"+
@@ -448,16 +464,30 @@ None, field_correction=None):
 
 @programming_tools.optional_argumentsInitializer({'post_processesList': 
 lambda: [], 'post_processesSubmeshList': lambda: [], 'dirichlet_loads': 
-lambda: [], 'neumann_loads': lambda: [], 'solution_name': lambda: ["so"+
-"lution", "DNS"], 'volume_physGroupsSubmesh': lambda: [], ('macro_quan'+
-'titiesClasses'): lambda: [], 'fields_corrections': lambda: dict()})
+lambda: [], 'neumann_loads': lambda: [], 'solution_name': lambda: [], 
+'volume_physGroupsSubmesh': lambda: [], ('macro_quantitiesClasses'): 
+lambda: [], 'fields_corrections': lambda: dict()})
 
-def newton_raphsonMultipleFields(solver, solution_field, 
-fields_namesDict, mesh_dataClass, constitutive_model, post_processesList=
-None, post_processesSubmeshList=None, dirichlet_loads=None, 
-neumann_loads=None, solution_name=None, volume_physGroupsSubmesh=None, 
+def newton_raphsonMultipleFields(solver, functional_data_class, 
+mesh_dataClass, constitutive_model, post_processesList=None, 
+post_processesSubmeshList=None, dirichlet_loads=None, neumann_loads=None, 
+solution_name=None, volume_physGroupsSubmesh=None, 
 macro_quantitiesClasses=None, t=None, t_final=None, maximum_loadingSteps=
 None, fields_corrections=None):
+    
+    # If no solution name was provided
+
+    if len(solution_name)==0:
+
+        for field_name in functional_data_class.fields_names_dict:
+
+            solution_name.append([field_name, "DNS"])
+    
+    # Gets the information from the functional data class
+
+    solution_field = functional_data_class.monolithic_solution
+    
+    fields_namesDict = functional_data_class.fields_names_dict
 
     # Verifies if the classes of macroscale quantities are indeed ins-
     # tances of some class
@@ -569,9 +599,9 @@ None, fields_corrections=None):
         # Calls the appropriate function to iterate in a single-field 
         # problem
 
-        return newton_raphsonSingleField(solver, solution_field, 
-        fields_namesDict, mesh_dataClass, constitutive_model, 
-        post_processesDict=post_processesList, post_processesSubmeshDict=
+        return newton_raphsonSingleField(solver, functional_data_class, 
+        mesh_dataClass, constitutive_model, post_processesDict=
+        post_processesList, post_processesSubmeshDict=
         post_processesSubmeshList, dirichlet_loads=dirichlet_loads, 
         neumann_loads=neumann_loads, solution_name=solution_name, 
         volume_physGroupsSubmesh=volume_physGroupsSubmesh, 

@@ -26,14 +26,14 @@ from ...PythonicUtilities import programming_tools
 # are the constitutive model classes. This internal work is calculated 
 # using the first Piola-Kirchhoff stress tensor
 
-def hyperelastic_internalWorkFirstPiola(field_name, solution_fields, 
-variation_fields, constitutive_modelDictionary, mesh_dataClass):
+def hyperelastic_internalWorkFirstPiola(field_name, 
+functional_data_class, constitutive_modelDictionary, mesh_dataClass):
     
     # Gets the field and its variation
     
-    trial_function = solution_fields[field_name]
+    trial_function = functional_data_class.solution_fields[field_name]
     
-    test_function = variation_fields[field_name]
+    test_function = functional_data_class.variation_fields[field_name]
     
     # Gets the physical groups from the domain mesh function
 
@@ -138,18 +138,22 @@ variation_fields, constitutive_modelDictionary, mesh_dataClass):
 # stress
 
 def hyperelastic_micropolarInternalWorkFirstPiola(displacement_name, 
-microrotation_name, solution_fields, variation_fields,
-constitutive_modelDictionary, mesh_dataClass):
+microrotation_name, functional_data_class, constitutive_modelDictionary, 
+mesh_dataClass):
     
     # Gets the fields and their variations 
 
-    displacement_trialFunction = solution_fields[displacement_name]
+    displacement_trialFunction = functional_data_class.solution_fields[
+    displacement_name]
     
-    microrotation_trialFunction = solution_fields[microrotation_name]
+    microrotation_trialFunction = functional_data_class.solution_fields[
+    microrotation_name]
 
-    displacement_testFunction = variation_fields[displacement_name]
+    displacement_testFunction = functional_data_class.variation_fields[
+    displacement_name]
     
-    microrotation_testFunction = variation_fields[microrotation_name]
+    microrotation_testFunction = functional_data_class.variation_fields[
+    microrotation_name]
     
     # Gets the physical groups from the domain mesh function
 
@@ -289,14 +293,14 @@ constitutive_modelDictionary, mesh_dataClass):
 # naries are the volumetric physical groups, whereas the values are the
 # constitutive model classes
 
-def steady_state_heat_internal_work(field_name, solution_fields, 
-variation_fields, constitutive_modelDictionary, mesh_dataClass):
+def steady_state_heat_internal_work(field_name, functional_data_class, 
+constitutive_modelDictionary, mesh_dataClass):
     
     # Gets the field and its variation
     
-    trial_function = solution_fields[field_name]
+    trial_function = functional_data_class.solution_fields[field_name]
     
-    test_function = variation_fields[field_name]
+    test_function = functional_data_class.variation_fields[field_name]
     
     # Gets the physical groups from the domain mesh function
 
@@ -399,15 +403,18 @@ variation_fields, constitutive_modelDictionary, mesh_dataClass):
 # nary of traction loads, where the keys are the corresponding boundary
 # physical groups and the values are the traction loads
 
-def traction_work(traction_dictionary, field_name, solution_fields, 
-variation_fields, monolithic_solution, fields_namesDict, mesh_dataClass, 
-neumann_loads):
+def traction_work(traction_dictionary, field_name, functional_data_class, 
+mesh_dataClass, neumann_loads):
     
     # Gets the symbolic field and its variation
 
-    field = solution_fields[field_name]
+    field = functional_data_class.solution_fields[field_name]
 
-    field_variation = variation_fields[field_name]
+    field_variation = functional_data_class.variation_fields[field_name]
+
+    monolithic_solution = functional_data_class.monolithic_solution
+
+    fields_namesDict = functional_data_class.fields_names_dict
 
     # Gets the physical groups tags
 
@@ -499,15 +506,18 @@ neumann_loads):
 # tionary of body forces loads, where the keys are the corresponding do-
 # main physical groups and the values are the body forces loads
 
-def body_forcesWork(body_forcesDict, field_name, solution_fields, 
-variation_fields, monolithic_solution, fields_namesDict, mesh_dataClass, 
-neumann_loads):
+def body_forcesWork(body_forcesDict, field_name, functional_data_class, 
+mesh_dataClass, neumann_loads):
     
     # Gets the symbolic field and its variation
 
-    field = solution_fields[field_name]
+    field = functional_data_class.solution_fields[field_name]
 
-    field_variation = variation_fields[field_name]
+    field_variation = functional_data_class.variation_fields[field_name]
+
+    monolithic_solution = functional_data_class.monolithic_solution
+
+    fields_namesDict = functional_data_class.fields_names_dict
 
     # Gets the physical groups tags
 
@@ -725,15 +735,18 @@ field_variation, neumann_loads):
 # of heat generation loads, where the keys are the corresponding domain
 # physical groups and the values are the heat generation loads
 
-def heat_generation_work(heat_generator_dict, field_name, solution_fields, 
-variation_fields, monolithic_solution, fields_namesDict, mesh_dataClass, 
-neumann_loads):
+def heat_generation_work(heat_generator_dict, field_name, 
+functional_data_class,  mesh_dataClass, neumann_loads):
     
     # Gets the symbolic field and its variation
 
-    field = solution_fields[field_name]
+    field = functional_data_class.solution_fields[field_name]
 
-    field_variation = variation_fields[field_name]
+    field_variation = functional_data_class.variation_fields[field_name]
+
+    monolithic_solution = functional_data_class.monolithic_solution
+
+    fields_namesDict = functional_data_class.fields_names_dict
 
     # Gets the physical groups tags
 
@@ -865,15 +878,18 @@ neumann_loads):
 # which means that it is already the inner product of the heat flux with
 # the normal vector) loads
 
-def boundary_heat_flux_work(heat_flux_dict, field_name, solution_fields, 
-variation_fields, monolithic_solution, fields_namesDict, mesh_dataClass, 
-neumann_loads):
+def boundary_heat_flux_work(heat_flux_dict, field_name, 
+functional_data_class, mesh_dataClass, neumann_loads):
     
     # Gets the symbolic field and its variation
 
-    field = solution_fields[field_name]
+    field = functional_data_class.solution_fields[field_name]
 
-    field_variation = variation_fields[field_name]
+    field_variation = functional_data_class.variation_fields[field_name]
+
+    monolithic_solution = functional_data_class.monolithic_solution
+
+    fields_namesDict = functional_data_class.fields_names_dict
 
     # Gets the physical groups tags
 

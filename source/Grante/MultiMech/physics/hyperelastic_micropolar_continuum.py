@@ -72,8 +72,7 @@ body_momentsDict=None):
     # using the dictionary of boundary conditions
 
     bc, dirichlet_loads = functional_tools.construct_DirichletBCs(
-    dirichlet_boundaryConditions, functional_data_class.fields_names_dict, 
-    functional_data_class.monolithic_function_space, mesh_dataClass, 
+    dirichlet_boundaryConditions, functional_data_class, mesh_dataClass, 
     dirichlet_loads=dirichlet_loads)
 
     ####################################################################
@@ -83,52 +82,34 @@ body_momentsDict=None):
     # Constructs the variational form for the inner work
 
     internal_VarForm = variational_tools.hyperelastic_micropolarInternalWorkFirstPiola(
-    "Displacement", "Microrotation", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, constitutive_model, 
-    mesh_dataClass)
+    "Displacement", "Microrotation", functional_data_class, 
+    constitutive_model, mesh_dataClass)
 
     # Constructs the variational forms for the traction work
 
     traction_VarForm, neumann_loads = variational_tools.traction_work(
-    traction_dictionary, "Displacement", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    neumann_loads)
+    traction_dictionary, "Displacement", functional_data_class, 
+    mesh_dataClass, neumann_loads)
 
     # Constructs the variational forms for the moment work on the boun-
     # dary. Note that the function traction_work was reused, because the
     # variational construction is the same for traction and for moment
 
     moment_VarForm, neumann_loads = variational_tools.traction_work(
-    moment_dictionary, "Microrotation", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    neumann_loads)
+    moment_dictionary, "Microrotation", functional_data_class, 
+    mesh_dataClass, neumann_loads)
 
     # Constructs the variational form for the work of the body forces
 
     body_forcesVarForm, neumann_loads = variational_tools.body_forcesWork(
-    body_forcesDict, "Displacement", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    neumann_loads)
+    body_forcesDict, "Displacement", functional_data_class, 
+    mesh_dataClass, neumann_loads)
 
     # Constructs the variational form for the work of the body moments
 
     body_momentsVarForm, neumann_loads = variational_tools.body_forcesWork(
-    body_momentsDict, "Microrotation", 
-    functional_data_class.solution_fields, 
-    functional_data_class.variation_fields, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    neumann_loads)
+    body_momentsDict, "Microrotation", functional_data_class, 
+    mesh_dataClass, neumann_loads)
 
     ####################################################################
     #              Problem and solver parameters setting               #
@@ -137,12 +118,11 @@ body_momentsDict=None):
     # Assembles the residual and the nonlinear problem object. Sets the
     # solver parameters too
 
-    residual_form = internal_VarForm-traction_VarForm-moment_VarForm
+    residual_form = (internal_VarForm-traction_VarForm-moment_VarForm-
+    body_forcesVarForm-body_momentsVarForm)
 
     solver = functional_tools.set_nonlinearProblem(residual_form, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.trial_functions, bc, solver_parameters=
-    solver_parameters)
+    functional_data_class, bc, solver_parameters=solver_parameters)
 
     ####################################################################
     #                 Solution and pseudotime stepping                 #
@@ -150,18 +130,10 @@ body_momentsDict=None):
 
     # Iterates through the pseudotime stepping algorithm 
 
-    if len(solution_name)==0:
-
-        for field_name in functional_data_class.fields_names_dict:
-
-            solution_name.append([field_name, "DNS"])
-
     newton_raphson_tools.newton_raphsonMultipleFields(solver, 
-    functional_data_class.monolithic_solution, 
-    functional_data_class.fields_names_dict, mesh_dataClass, 
-    constitutive_model, post_processesList=post_processes, 
-    post_processesSubmeshList=post_processesSubmesh, dirichlet_loads=
-    dirichlet_loads, neumann_loads=neumann_loads, 
-    volume_physGroupsSubmesh=volume_physGroupsSubmesh, solution_name=
-    solution_name, t=t, t_final=t_final, maximum_loadingSteps=
-    maximum_loadingSteps)
+    functional_data_class, mesh_dataClass, constitutive_model, 
+    post_processesList=post_processes, post_processesSubmeshList=
+    post_processesSubmesh, dirichlet_loads=dirichlet_loads, 
+    neumann_loads=neumann_loads, volume_physGroupsSubmesh=
+    volume_physGroupsSubmesh, solution_name=solution_name, t=t, t_final=
+    t_final, maximum_loadingSteps=maximum_loadingSteps)

@@ -213,6 +213,23 @@ class SavePressureAtPoint(PostProcessMethod):
         "lotting"], [context.mesh, context.constitutive_model, context.dx,  
         context.physical_groupsList, context.domain_physGroupsNamesToTags])
 
+# Sets a class for the method to save the ratio of the mesh's volume to
+# the reference volume along the iterations
+
+class SaveMeshVolumeRatioToReferenceVolume(PostProcessMethod):
+
+    def __init__(self, context: PostProcessContext):
+
+        # Initializes the parent template class and already passes to it
+        # the initialization function, the update function, the additio-
+        # nal data names, and the code-provided information. The additi-
+        # onal data names as lists are optional arguments, the first va-
+        # lue is the name, and the second one is the default value
+
+        super().__init__(post_functions.initialize_mesh_volume, 
+        post_functions.update_mesh_volume, ["directory path", 
+        "file name"], [context.dx])
+
 # Sets a class for the method to homogenize a field
 
 class HomogenizeField(PostProcessMethod):

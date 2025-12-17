@@ -76,6 +76,8 @@ directory_path=None):
                     print("Saves the field '"+str(field_name)+"' at "+
                     file_name)
 
+                    print("")
+
                     # Gets the individual field and renames it
 
                     individual_field = split_fields[fields_names_dict[
@@ -116,6 +118,8 @@ directory_path=None):
                     print("Saves the field '"+str(field_name)+"' at "+
                     file_name)
 
+                    print("")
+
                     # Gets the individual field and renames it
 
                     individual_field = split_fields[fields_names_dict[
@@ -151,6 +155,8 @@ directory_path=None):
 
                     print("Saves the field '"+str(field_name)+"' at "+
                     file_name)
+
+                    print("")
 
                     # Gets the individual field and renames it
 
@@ -191,6 +197,8 @@ directory_path=None):
 
                 print("Saves the field '"+str(field_name)+"' at "+
                 file_name)
+
+                print("")
 
                 # Gets the individual field and renames it
 

@@ -15,6 +15,8 @@ from ..tool_box import numerical_tools
 
 from ...PythonicUtilities import path_tools
 
+from ...PythonicUtilities import file_handling_tools as file_tools
+
 ########################################################################
 #                      Post-processing tools list                      #
 ########################################################################
@@ -788,6 +790,119 @@ fields_namesDict):
     
     return constitutive_tools.save_pressureAtPoint(output_object, field, 
     time, "cauchy", "cauchy_stress", fields_namesDict)
+
+########################################################################
+########################################################################
+##                          Mesh properties                           ##
+########################################################################
+########################################################################
+
+# Defines a function to initialize the file to store the mesh volume a-
+# long iterations
+
+def initialize_mesh_volume(data, direct_codeData, submesh_flag):
+
+    # Gets the directory and the name of the file
+
+    parent_path = data[0]
+
+    file_name = data[1]
+
+    # Gets the volume integrator from the data directly provided by the 
+    # code
+
+    dx = direct_codeData[0]
+
+    # Gets the initial volume
+
+    initial_volume = assemble(1.0*dx)
+
+    # Gets the name of the file with the path to it
+
+    file_name = path_tools.verify_path(parent_path, file_name)
+
+    # Verifies if an extension has been added to the file name
+
+    if len(file_name)>4:
+
+        if file_name[-4:len(file_name)]==".txt":
+
+            file_name = file_name[0:-4]
+
+    # Initializes the list of values of the ratio of the new volume to
+    # the reference volume along the loading steps
+
+    volume_ratio_list = []
+
+    # Assembles the file and the function space into a class
+
+    class OutputObject:
+
+        def __init__(self, file_name, dx, volume_ratio_list, 
+        initial_volume):
+
+            self.dx = dx 
+
+            self.file_name = file_name
+
+            self.result = volume_ratio_list
+
+            self.initial_volume = initial_volume
+
+    output_object = OutputObject(file_name, dx, volume_ratio_list, 
+    initial_volume)
+
+    return output_object
+
+# Defines a function to update the mesh volume
+
+def update_mesh_volume(output_object, field, field_number, time, 
+fields_namesDict):
+    
+    # Verifies if the field is the displacement field
+
+    for field_name, field_number_dict in fields_namesDict.items():
+
+        if field_number_dict==field_number:
+
+            if field_name!="Displacement":
+
+                raise NameError("The field name is '"+str(field_name)+
+                "', but the field required to evaluate the 'SaveMeshVo"+
+                "lumeRatioToReferenceVolume' post-process must be 'Dis"+
+                "placement'")
+            
+            break
+    
+    print("Updates the saving of the ratio of the meshe's volume to th"+
+    "e initial volume of the mesh\n")
+
+    # Gets the jacobian
+
+    I = Identity(3)
+
+    F = grad(field[field_number])+I 
+
+    J = det(F)
+    
+    # Calculates the new mesh volume
+
+    new_volume = assemble(J*output_object.dx) 
+
+    # Gets the ratio of the new volume to the reference
+
+    ratio = new_volume/output_object.initial_volume
+
+    # Appends this result to the output class
+
+    output_object.result.append([time, ratio])
+
+    # Saves the list of volume ratios in a txt file
+
+    file_tools.list_toTxt(output_object.result, output_object.file_name, 
+    add_extension=True)
+    
+    return output_object
 
 ########################################################################
 #                            Homogenization                            #

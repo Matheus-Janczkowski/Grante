@@ -27,15 +27,18 @@ post_processes = dict()
 post_processes["SaveField"] = {"directory path":results_path, 
 "file name":displacement_fileName}
 
+post_processes["SaveMeshVolumeRatioToReferenceVolume"] = {"directory p"+
+"ath":results_path, "file name": "volume_ratio.txt"}
+
 ########################################################################
 #                         Material properties                          #
 ########################################################################
 
 # Sets the Young modulus and the Poisson ratio
 
-E = 100E6
+E = 1E6
 
-v = 0.4
+poisson = 0.3
 
 # Sets a dictionary of properties
 
@@ -43,7 +46,7 @@ material_properties = dict()
 
 material_properties["E"] = E
 
-material_properties["nu"] = v
+material_properties["nu"] = poisson
 
 # Sets the material as a neo-hookean material using the corresponding
 # class
@@ -58,8 +61,8 @@ constitutive_model = constitutive_models.Neo_Hookean(material_properties)
 # le termination, e.g. .msh or .xdmf; both options will be saved automa-
 # tically
 
-mesh_fileName = {"length x": 1.0, "length y": 1.5, "length z": 5.0, "n"+
-"umber of divisions in x": 5, "number of divisions in y": 7, "number o"+
+mesh_fileName = {"length x": 0.3, "length y": 0.2, "length z": 1.0, "n"+
+"umber of divisions in x": 5, "number of divisions in y": 5, "number o"+
 "f divisions in z": 25, "verbose": False, "mesh file name": "box_mesh", 
 "mesh file directory": get_parent_path_of_file()}
 
@@ -105,7 +108,7 @@ maximum_loadingSteps = 5
 
 # Defines a load expression
 
-maximum_load = 2E6
+maximum_load = 5E5
 
 # Assemble the traction vector using this load expression
 

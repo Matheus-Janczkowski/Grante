@@ -38,7 +38,7 @@ False):
     # Reads the mesh and constructs some fenics objects using the xdmf 
     # file
     
-    mesh_dataClass = mesh_tools.read_mshMesh(mesh_fileName, verbose=
+    mesh_data_class = mesh_tools.read_mshMesh(mesh_fileName, verbose=
     verbose)
 
     ####################################################################
@@ -62,7 +62,7 @@ False):
     # cording to the element's name
 
     functional_data_class = functional_tools.construct_monolithicFunctionSpace(
-    elements_dictionary, mesh_dataClass, verbose=verbose)
+    elements_dictionary, mesh_data_class, verbose=verbose)
 
     ####################################################################
     #                        Boundary conditions                       #
@@ -88,7 +88,7 @@ False):
     # using the dictionary of boundary conditions
 
     bc, dirichlet_loads = functional_tools.construct_DirichletBCs(
-    dirichlet_boundaryConditions, functional_data_class, mesh_dataClass, 
+    dirichlet_boundaryConditions, functional_data_class, mesh_data_class, 
     dirichlet_loads=dirichlet_loads)
 
     ####################################################################
@@ -99,7 +99,7 @@ False):
 
     internal_VarForm = variational_tools.hyperelastic_internalWorkFirstPiola(
     "Displacement", functional_data_class, constitutive_model, 
-    mesh_dataClass)
+    mesh_data_class)
 
     # Evaluates the entities necessary for the incompressibility cons-
     # traint
@@ -112,59 +112,27 @@ False):
 
     J = det(F)
 
-    inv_V0 = Constant(1/assemble(1.0*mesh_dataClass.dx))
-
-    factor = 0.0
-
-    """internal_VarForm = ((inner(constitutive_model.first_piolaStress(
-    functional_data_class.solution_fields["Displacement"])+(functional_data_class.solution_fields["Pressure"]*
-    inv_V0*J*F_invT), grad(functional_data_class.variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx)))
-
-    internal_VarForm = ((inner(constitutive_model.first_piolaStress(
-    functional_data_class.solution_fields["Displacement"])+(functional_data_class.solution_fields["Pressure"]*
-    inv_V0*J*F_invT), grad(functional_data_class.variation_fields["Displacement"
-    ]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx)))
-
-    internal_VarForm = ((inner(P+(factor*inv_V0*functional_data_class.solution_fields["Pressure"]*J*
-    F_invT), grad(functional_data_class.variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx)))"""
-
-    flag_1 = False
-
-    flag_2 = False
-
-    if flag_1:
-
-        internal_VarForm += ((inner(inv_V0*
-        functional_data_class.solution_fields["Pressure"]*J*F_invT, grad(
-        functional_data_class.variation_fields["Displacement"]))*
-        mesh_dataClass.dx))
-
-    if flag_2:
-
-        internal_VarForm += ((inv_V0*((J-1.0)*
-        functional_data_class.variation_fields["Pressure"])*
-        mesh_dataClass.dx))
+    inv_V0 = Constant(1/assemble(1.0*mesh_data_class.dx))
 
     # Adds the contribution of the incompressibility constraint
 
-    """internal_VarForm += ((inner(inv_V0*functional_data_class.solution_fields["Pressure"]*J*
-    F_invT, grad(functional_data_class.variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*((J-1.0)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx))"""
+    internal_VarForm += ((inner(functional_data_class.solution_fields[
+    "Pressure"]*inv_V0*J*F_invT, grad(functional_data_class.variation_fields[
+    "Displacement"]))*mesh_data_class.dx)+(inv_V0*(((J-1)*
+    functional_data_class.variation_fields["Pressure"])*
+    mesh_data_class.dx)))
 
     # Constructs the variational forms for the traction work
 
     traction_VarForm, neumann_loads = variational_tools.traction_work(
     traction_dictionary, "Displacement", functional_data_class, 
-    mesh_dataClass, neumann_loads)
+    mesh_data_class, neumann_loads)
 
     # Constructs the variational form for the work of the body forces
 
     body_forcesVarForm, neumann_loads = variational_tools.body_forcesWork(
     body_forcesDict, "Displacement", functional_data_class, 
-    mesh_dataClass, neumann_loads)
+    mesh_data_class, neumann_loads)
 
     ####################################################################
     #              Problem and solver parameters setting               #
@@ -204,7 +172,7 @@ False):
     # Iterates through the pseudotime stepping algorithm 
 
     newton_raphson_tools.newton_raphsonMultipleFields(solver, 
-    functional_data_class, mesh_dataClass, constitutive_model, 
+    functional_data_class, mesh_data_class, constitutive_model, 
     post_processesList=post_processes, post_processesSubmeshList=
     post_processesSubmesh, dirichlet_loads=dirichlet_loads, 
     neumann_loads=neumann_loads, volume_physGroupsSubmesh=

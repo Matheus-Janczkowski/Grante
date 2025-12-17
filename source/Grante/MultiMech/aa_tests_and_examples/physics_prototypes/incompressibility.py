@@ -91,6 +91,10 @@ solver.solve()
 
 # Solution saving
 
+write_field_to_xdmf(functional_data_class)
+
+# Verifies the volume after the deformation
+
 u_solution, lambda_solution = functional_data_class.monolithic_solution.split()
 
 J = det(grad(u_solution)+I)
@@ -99,5 +103,3 @@ V_new = assemble(J*mesh_data_class.dx)
 
 print("The ratio of the new volume by the volume of the reference conf"+
 "iguration is "+str(float(inv_V0)*V_new)+"\n")
-
-write_field_to_xdmf(functional_data_class)

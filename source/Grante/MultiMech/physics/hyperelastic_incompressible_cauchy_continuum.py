@@ -131,7 +131,7 @@ False):
 
     factor = 0.0
 
-    internal_VarForm = ((inner(constitutive_model.first_piolaStress(
+    """internal_VarForm = ((inner(constitutive_model.first_piolaStress(
     solution_fields["Displacement"])+(solution_fields["Pressure"]*
     inv_V0*J*F_invT), grad(variation_fields["Displacement"]))*mesh_dataClass.dx)+(
     inv_V0*(((J-1)*variation_fields["Pressure"])*mesh_dataClass.dx)))
@@ -144,7 +144,21 @@ False):
 
     internal_VarForm = ((inner(P+(factor*inv_V0*solution_fields["Pressure"]*J*
     F_invT), grad(variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*variation_fields["Pressure"])*mesh_dataClass.dx)))
+    inv_V0*(((J-1)*variation_fields["Pressure"])*mesh_dataClass.dx)))"""
+
+    flag_1 = False
+
+    flag_2 = False
+
+    if flag_1:
+
+        internal_VarForm += ((inner(inv_V0*solution_fields["Pressure"]*J*
+        F_invT, grad(variation_fields["Displacement"]))*mesh_dataClass.dx))
+
+    if flag_2:
+
+        internal_VarForm += ((inv_V0*((J-1.0)*variation_fields["Pressure"])*
+        mesh_dataClass.dx))
 
     # Adds the contribution of the incompressibility constraint
 

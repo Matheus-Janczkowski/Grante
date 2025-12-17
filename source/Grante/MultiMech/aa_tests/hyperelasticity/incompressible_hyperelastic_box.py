@@ -105,7 +105,7 @@ maximum_loadingSteps = 5
 
 # Defines a load expression
 
-maximum_load = 2E1
+maximum_load = 2E6
 
 # Assemble the traction vector using this load expression
 

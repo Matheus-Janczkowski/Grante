@@ -2,17 +2,17 @@
 
 from dolfin import *
 
-from ....PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
 
-from ....MultiMech.tool_box.mesh_handling_tools import read_mshMesh
+from .....Grante.MultiMech.tool_box.mesh_handling_tools import read_mshMesh
 
-from ....MultiMech.constitutive_models.hyperelasticity.isotropic_hyperelasticity import Neo_Hookean
+from .....Grante.MultiMech.constitutive_models.hyperelasticity.isotropic_hyperelasticity import Neo_Hookean
 
-from ....MultiMech.tool_box import functional_tools
+from .....Grante.MultiMech.tool_box import functional_tools
 
-from ....MultiMech.tool_box import variational_tools
+from .....Grante.MultiMech.tool_box import variational_tools
 
-from ....MultiMech.tool_box.read_write_tools import write_field_to_xdmf
+from .....Grante.MultiMech.tool_box.read_write_tools import write_field_to_xdmf
 
 # Creates a box mesh using gmsh
 
@@ -98,6 +98,6 @@ J = det(grad(u_solution)+I)
 V_new = assemble(J*mesh_data_class.dx)
 
 print("The ratio of the new volume by the volume of the reference conf"+
-"iguration is "+str(inv_V0*V_new)+"\n")
+"iguration is "+str(float(inv_V0)*V_new)+"\n")
 
 write_field_to_xdmf(functional_data_class)

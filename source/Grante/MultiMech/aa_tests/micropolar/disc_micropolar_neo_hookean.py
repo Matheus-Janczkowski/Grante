@@ -6,6 +6,8 @@ from ...constitutive_models.hyperelasticity import micropolar_hyperelasticity as
 
 from ...physics import hyperelastic_micropolar_continuum as variational_framework
 
+from ....PythonicUtilities.path_tools import get_parent_path_of_file
+
 ########################################################################
 ########################################################################
 ##                      User defined parameters                       ##
@@ -113,7 +115,8 @@ material_properties)
 # le termination, e.g. .msh or .xdmf; both options will be saved automa-
 # tically
 
-file_directory = os.getcwd()+"//tests//test_meshes"
+file_directory = (get_parent_path_of_file(path_bits_to_be_excluded=2)+
+"//test_meshes")
 
 mesh_fileName = "intervertebral_disc"
 
@@ -129,7 +132,7 @@ volume_physGroupsSubmesh = []
 
 polynomial_degreeDisplacement = 2
 
-polynomial_degreeMicrorotation = 2
+polynomial_degreeMicrorotation = 1
 
 ########################################################################
 #                           Solver parameters                          #

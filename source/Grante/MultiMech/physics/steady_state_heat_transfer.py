@@ -58,9 +58,7 @@ heat_generation_dict=None):
     # functions, solution function. Everything is split and named by ac-
     # cording to the element's name
 
-    (solution_functionSpace, solution_new, fields_names, solution_fields, 
-    variation_fields, delta_solution, fields_namesDict
-    ) = functional_tools.construct_monolithicFunctionSpace(
+    functional_data_class = functional_tools.construct_monolithicFunctionSpace(
     elements_dictionary, mesh_dataClass, verbose=verbose)
 
     ####################################################################
@@ -70,14 +68,10 @@ heat_generation_dict=None):
     # Defines the boundary conditions and the list of temperature loads
     # using the dictionary of boundary conditions
 
-    print("Constructs boundary conditions")
-
     bc, dirichlet_loads = functional_tools.construct_DirichletBCs(
-    dirichlet_boundaryConditions, fields_namesDict, 
-    solution_functionSpace, mesh_dataClass, dirichlet_loads=
-    dirichlet_loads)
-
-    print("Constructs boundary conditions")
+    dirichlet_boundaryConditions, functional_data_class.fields_names_dict, 
+    functional_data_class.monolithic_function_space, mesh_dataClass, 
+    dirichlet_loads=dirichlet_loads)
 
     ####################################################################
     #                         Variational forms                        #
@@ -86,21 +80,28 @@ heat_generation_dict=None):
     # Constructs the variational form for the inner work
 
     internal_VarForm = variational_tools.steady_state_heat_internal_work(
-    "Temperature", solution_fields, variation_fields, 
-    constitutive_model, mesh_dataClass)
+    "Temperature", functional_data_class.solution_fields, 
+    functional_data_class.variation_fields, constitutive_model, 
+    mesh_dataClass)
 
     # Constructs the variational forms for the traction work
 
     out_heat_flux_variational_form, neumann_loads = variational_tools.boundary_heat_flux_work(
-    heat_flux_dictionary, "Temperature", solution_fields, 
-    variation_fields, solution_new, fields_namesDict, mesh_dataClass, 
+    heat_flux_dictionary, "Temperature", 
+    functional_data_class.solution_fields, 
+    functional_data_class.variation_fields, 
+    functional_data_class.monolithic_solution, 
+    functional_data_class.fields_names_dict, mesh_dataClass, 
     neumann_loads)
 
     # Constructs the variational form for the work of heat generation
 
     heat_generation_variational_form, neumann_loads = variational_tools.heat_generation_work(
-    heat_generation_dict, "Temperature", solution_fields, 
-    variation_fields, solution_new, fields_namesDict, mesh_dataClass, 
+    heat_generation_dict, "Temperature", 
+    functional_data_class.solution_fields, 
+    functional_data_class.variation_fields, 
+    functional_data_class.monolithic_solution, 
+    functional_data_class.fields_names_dict, mesh_dataClass, 
     neumann_loads)
 
     ####################################################################
@@ -114,7 +115,8 @@ heat_generation_dict=None):
     heat_generation_variational_form)
     
     solver = functional_tools.set_nonlinearProblem(residual_form, 
-    solution_new, delta_solution, bc, solver_parameters=
+    functional_data_class.monolithic_solution, 
+    functional_data_class.trial_functions, bc, solver_parameters=
     solver_parameters)
 
     ####################################################################
@@ -123,10 +125,11 @@ heat_generation_dict=None):
 
     # Iterates through the pseudotime stepping algorithm
 
-    newton_raphson_tools.newton_raphsonSingleField(solver, solution_new, 
-    fields_namesDict, mesh_dataClass, constitutive_model, 
-    post_processesDict=post_processes, post_processesSubmeshDict=
-    post_processesSubmesh, neumann_loads=neumann_loads, dirichlet_loads=
-    dirichlet_loads, solution_name=solution_name, 
-    volume_physGroupsSubmesh=volume_physGroupsSubmesh, t=t, t_final=
-    t_final, maximum_loadingSteps=maximum_loadingSteps)
+    newton_raphson_tools.newton_raphsonSingleField(solver, 
+    functional_data_class.monolithic_solution, 
+    functional_data_class.fields_names_dict, mesh_dataClass, 
+    constitutive_model, post_processesDict=post_processes, 
+    post_processesSubmeshDict=post_processesSubmesh, neumann_loads=
+    neumann_loads, dirichlet_loads=dirichlet_loads, solution_name=
+    solution_name, volume_physGroupsSubmesh=volume_physGroupsSubmesh, 
+    t=t, t_final=t_final, maximum_loadingSteps=maximum_loadingSteps)

@@ -14,6 +14,8 @@ from ...PythonicUtilities import file_handling_tools as file_tools
 
 from ...PythonicUtilities import programming_tools
 
+from ...PythonicUtilities import recursion_tools
+
 # Defines a function to homogenize a generic field
 
 def homogenize_genericField(field, homogenized_fieldList, time, 
@@ -62,7 +64,7 @@ inverse_volume, dx, subdomain, file_name):
 
         # Get the possible combinations of indexes
 
-        indexes_combinations = file_tools.get_indexesCombinations(
+        indexes_combinations = recursion_tools.get_indexesCombinations(
         dimensionality)
 
         if isinstance(subdomain, int):

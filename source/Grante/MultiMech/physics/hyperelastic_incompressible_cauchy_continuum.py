@@ -61,9 +61,7 @@ False):
     # functions, solution function. Everything is split and named by ac-
     # cording to the element's name
 
-    (monolithic_functionSpace, solution_new, fields_names, 
-    solution_fields, variation_fields, delta_solution, fields_namesDict
-    ) = functional_tools.construct_monolithicFunctionSpace(
+    functional_data_class = functional_tools.construct_monolithicFunctionSpace(
     elements_dictionary, mesh_dataClass, verbose=verbose)
 
     ####################################################################
@@ -90,9 +88,9 @@ False):
     # using the dictionary of boundary conditions
 
     bc, dirichlet_loads = functional_tools.construct_DirichletBCs(
-    dirichlet_boundaryConditions, fields_namesDict, 
-    monolithic_functionSpace, mesh_dataClass, dirichlet_loads=
-    dirichlet_loads)
+    dirichlet_boundaryConditions, functional_data_class.fields_names_dict, 
+    functional_data_class.monolithic_function_space, mesh_dataClass, 
+    dirichlet_loads=dirichlet_loads)
 
     ####################################################################
     #                         Variational forms                        #
@@ -101,15 +99,16 @@ False):
     # Constructs the variational form for the inner work
 
     internal_VarForm = variational_tools.hyperelastic_internalWorkFirstPiola(
-    "Displacement", solution_fields, variation_fields, 
-    constitutive_model, mesh_dataClass)
+    "Displacement", functional_data_class.solution_fields, 
+    functional_data_class.variation_fields, constitutive_model, 
+    mesh_dataClass)
 
     # Evaluates the entities necessary for the incompressibility cons-
     # traint
 
     I = Identity(3)
 
-    F = grad(solution_fields["Displacement"])+I 
+    F = grad(functional_data_class.solution_fields["Displacement"])+I 
 
     C = (F.T)*F
 
@@ -132,19 +131,19 @@ False):
     factor = 0.0
 
     """internal_VarForm = ((inner(constitutive_model.first_piolaStress(
-    solution_fields["Displacement"])+(solution_fields["Pressure"]*
-    inv_V0*J*F_invT), grad(variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*variation_fields["Pressure"])*mesh_dataClass.dx)))
+    functional_data_class.solution_fields["Displacement"])+(functional_data_class.solution_fields["Pressure"]*
+    inv_V0*J*F_invT), grad(functional_data_class.variation_fields["Displacement"]))*mesh_dataClass.dx)+(
+    inv_V0*(((J-1)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx)))
 
     internal_VarForm = ((inner(constitutive_model.first_piolaStress(
-    solution_fields["Displacement"])+(solution_fields["Pressure"]*
-    inv_V0*J*F_invT), grad(variation_fields["Displacement"
+    functional_data_class.solution_fields["Displacement"])+(functional_data_class.solution_fields["Pressure"]*
+    inv_V0*J*F_invT), grad(functional_data_class.variation_fields["Displacement"
     ]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*variation_fields["Pressure"])*mesh_dataClass.dx)))
+    inv_V0*(((J-1)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx)))
 
-    internal_VarForm = ((inner(P+(factor*inv_V0*solution_fields["Pressure"]*J*
-    F_invT), grad(variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*(((J-1)*variation_fields["Pressure"])*mesh_dataClass.dx)))"""
+    internal_VarForm = ((inner(P+(factor*inv_V0*functional_data_class.solution_fields["Pressure"]*J*
+    F_invT), grad(functional_data_class.variation_fields["Displacement"]))*mesh_dataClass.dx)+(
+    inv_V0*(((J-1)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx)))"""
 
     flag_1 = False
 
@@ -152,32 +151,42 @@ False):
 
     if flag_1:
 
-        internal_VarForm += ((inner(inv_V0*solution_fields["Pressure"]*J*
-        F_invT, grad(variation_fields["Displacement"]))*mesh_dataClass.dx))
+        internal_VarForm += ((inner(inv_V0*
+        functional_data_class.solution_fields["Pressure"]*J*F_invT, grad(
+        functional_data_class.variation_fields["Displacement"]))*
+        mesh_dataClass.dx))
 
     if flag_2:
 
-        internal_VarForm += ((inv_V0*((J-1.0)*variation_fields["Pressure"])*
+        internal_VarForm += ((inv_V0*((J-1.0)*
+        functional_data_class.variation_fields["Pressure"])*
         mesh_dataClass.dx))
 
     # Adds the contribution of the incompressibility constraint
 
-    """internal_VarForm += ((inner(inv_V0*solution_fields["Pressure"]*J*
-    F_invT, grad(variation_fields["Displacement"]))*mesh_dataClass.dx)+(
-    inv_V0*((J-1.0)*variation_fields["Pressure"])*mesh_dataClass.dx))"""
+    """internal_VarForm += ((inner(inv_V0*functional_data_class.solution_fields["Pressure"]*J*
+    F_invT, grad(functional_data_class.variation_fields["Displacement"]))*mesh_dataClass.dx)+(
+    inv_V0*((J-1.0)*functional_data_class.variation_fields["Pressure"])*mesh_dataClass.dx))"""
 
     # Constructs the variational forms for the traction work
 
     traction_VarForm, neumann_loads = variational_tools.traction_work(
-    traction_dictionary, "Displacement", solution_fields, 
-    variation_fields, solution_new, fields_namesDict, mesh_dataClass, 
+    traction_dictionary, "Displacement", 
+    functional_data_class.solution_fields, 
+    functional_data_class.variation_fields, 
+    functional_data_class.monolithic_solution, 
+    functional_data_class.fields_names_dict, mesh_dataClass, 
     neumann_loads)
 
     # Constructs the variational form for the work of the body forces
 
     body_forcesVarForm, neumann_loads = variational_tools.body_forcesWork(
-    body_forcesDict, "Displacement", solution_fields, variation_fields, 
-    solution_new, fields_namesDict, mesh_dataClass, neumann_loads)
+    body_forcesDict, "Displacement", 
+    functional_data_class.solution_fields, 
+    functional_data_class.variation_fields, 
+    functional_data_class.monolithic_solution, 
+    functional_data_class.fields_names_dict, mesh_dataClass, 
+    neumann_loads)
 
     ####################################################################
     #              Problem and solver parameters setting               #
@@ -189,7 +198,8 @@ False):
     residual_form = internal_VarForm-traction_VarForm-body_forcesVarForm
 
     solver = functional_tools.set_nonlinearProblem(residual_form, 
-    solution_new, delta_solution, bc, solver_parameters=
+    functional_data_class.monolithic_solution, 
+    functional_data_class.trial_functions, bc, solver_parameters=
     solver_parameters)
 
     ####################################################################
@@ -219,14 +229,16 @@ False):
 
     if len(solution_name)==0:
 
-        for field_name in fields_namesDict:
+        for field_name in functional_data_class.fields_names_dict:
 
             solution_name.append([field_name, "DNS"])
 
     newton_raphson_tools.newton_raphsonMultipleFields(solver, 
-    solution_new, fields_namesDict, mesh_dataClass, constitutive_model, 
-    post_processesList=post_processes, post_processesSubmeshList=
-    post_processesSubmesh, dirichlet_loads=dirichlet_loads, neumann_loads
-    =neumann_loads, volume_physGroupsSubmesh=volume_physGroupsSubmesh, 
-    solution_name=solution_name, t=t, t_final=t_final, 
-    maximum_loadingSteps=maximum_loadingSteps)
+    functional_data_class.monolithic_solution, 
+    functional_data_class.fields_names_dict, mesh_dataClass, 
+    constitutive_model, post_processesList=post_processes, 
+    post_processesSubmeshList=post_processesSubmesh, dirichlet_loads=
+    dirichlet_loads, neumann_loads=neumann_loads, 
+    volume_physGroupsSubmesh=volume_physGroupsSubmesh, solution_name=
+    solution_name, t=t, t_final=t_final, maximum_loadingSteps=
+    maximum_loadingSteps)

@@ -629,6 +629,32 @@ def set_solverParameters(solver, solver_parameters):
 #                       Finite element creation                        #
 ########################################################################
 
+# Defines a class for the functional data
+
+class FunctionalData:
+
+    def __init__(self, monolithic_functionSpace, monolithic_solution, 
+    fields_names, solution_fields, variation_fields, trial_functions, 
+    fields_namesDict, mixed_element):
+        
+        # Saves the parameters of finite elements and function spaces
+
+        self.monolithic_function_space = monolithic_functionSpace
+        
+        self.monolithic_solution = monolithic_solution
+        
+        self.fields_names = fields_names
+        
+        self.solution_fields = solution_fields
+
+        self.variation_fields = variation_fields
+        
+        self.trial_functions = trial_functions 
+
+        self.fields_names_dict = fields_namesDict
+        
+        self.mixed_element = mixed_element
+
 # Defines a function to select a field from a list of fields
 
 def select_fields(split_fieldsList, required_fieldsNames, 
@@ -753,8 +779,9 @@ mesh_dataClass, verbose=False):
 
         print("Finishes creating the function spaces\n")
 
-    return (monolithic_functionSpace, monolithic_solution, fields_names, 
-    solution_fields, variation_fields, trial_functions, fields_namesDict)
+    return FunctionalData(monolithic_functionSpace, monolithic_solution, 
+    fields_names, solution_fields, variation_fields, trial_functions, 
+    fields_namesDict, mixed_element)
 
 # Defines a function to construct a dictionary of elements from a dic-
 # tionary of finite elements' instructions

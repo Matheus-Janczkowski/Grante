@@ -8,11 +8,11 @@ from ....PythonicUtilities.path_tools import get_parent_path_of_file
 
 from ....MultiMech.tool_box.mesh_handling_tools import read_mshMesh
 
+from ....MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity
+
 # Geometry information
 
 L, H, W = 1.0, 0.2, 0.3
-
-mesh = BoxMesh(Point(0,0,0), Point(W,H,L), 5,5,25)
 
 # Creates a box mesh using gmsh
 
@@ -21,103 +21,9 @@ mesh_data_class = read_mshMesh({"length x": W, "length y": H, "length "+
 "number of divisions in z": 25, "verbose": False, "mesh file name": "b"+
 "ox_mesh", "mesh file directory": get_parent_path_of_file()})
 
-"""# Sets the surface domains
-
-lower_facet = CompiledSubDomain("near(x[1], 0)")
-
-left_facet = CompiledSubDomain("near(x[2], 0)")
-
-right_facet = CompiledSubDomain("near(x[2], L)", L=L)
-
-# Sets the volumetric domains
-
-volume_1 = CompiledSubDomain("x[2]<=L*0.5", L=L)
-
-volume_2 = CompiledSubDomain("x[2]>L*0.5", L=L)
-
-# Sets the boundaries
-
-boundary_markers = MeshFunction("size_t", mesh, mesh.topology().dim()-1)
-
-boundary_markers.set_all(0)
-
-lower_facet.mark(boundary_markers, 2)
-
-left_facet.mark(boundary_markers, 3)
-
-right_facet.mark(boundary_markers, 6)
-
-# Sets the integration measures
-
-dx = Measure("dx", domain=mesh, metadata={"quadrature_degree": 2})
-
-ds = Measure("ds", domain=mesh, subdomain_data=boundary_markers)"""
-
 # Neumann boundary conditions
 
 traction_vectors = {"top": Constant([0.0, 0.0, 5E5])}
-
-# Constitutive model
-
-class Neo_Hookean:
-
-    def __init__(self, E, v):
-
-        self.E = E
-
-        self.v = v
-
-        self.mu = Constant(self.E/(2*(1+self.v)))
-
-        self.lmbda = Constant(self.v*self.E/((1+self.v)*(1-2*self.v)))
-
-    def strain_energy(self, C):
-
-        I1_C = ufl.tr(C)
-
-        I2_C = ufl.det(C)
-
-        J = ufl.sqrt(I2_C)
-        
-        psi_1 = (self.mu/2)*(I1_C - 3)
-
-        ln_J = ufl.ln(J)
-
-        psi_2 = -(self.mu*ln_J)+((self.lmbda*0.5)*((ln_J)**2))
-
-        return psi_1+psi_2
-
-    def first_piolaStress(self, u):
-
-        I = Identity(3)
-
-        F = grad(u)+I
-
-        C = (F.T)*F
-
-        C = variable(C)
-        
-        W = self.strain_energy(C)
-
-        S = 2*diff(W,C)
-
-        return F*S
-
-    def second_piolaStress(self, u):
-
-        I = Identity(3)
-
-        F = grad(u)+I
-
-        C = (F.T)*F
-
-        C = variable(C)
-        
-        W = self.strain_energy(C)
-
-        S = 2*diff(W,C)
-
-        return S
 
 # Evaluates the geometry volume
 
@@ -125,7 +31,12 @@ inv_V0 = 1/assemble(1.0*mesh_data_class.dx)
 
 # Sets the constitutive model
 
-constitutive_model = Neo_Hookean(1E6,0.3)
+E = 1E6
+
+poisson = 0.3
+
+constitutive_model = isotropic_hyperelasticity.Neo_Hookean({"E": E, "nu":
+poisson})
 
 # Sets the function space
 

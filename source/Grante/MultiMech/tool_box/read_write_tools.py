@@ -17,6 +17,19 @@ from ...PythonicUtilities.path_tools import get_parent_path_of_file, decapitaliz
 def write_field_to_xdmf(functional_data_class, time=0.0, field_name=None,
 directory_path=None):
     
+    """
+    Function for writing a FEniCS function to xdmf files.
+    
+    functional_data_class: Instance of the FunctionalData class, it 
+    constains function spaces, finite elements, and so forth
+    
+    time: time value, when the function was evaluated
+    
+    field_name: name of the field
+    
+    directory_path: path to the directory where the file must be saved
+    """
+    
     # If the directory path was not provided
 
     if directory_path is None:

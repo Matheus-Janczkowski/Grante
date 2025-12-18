@@ -108,7 +108,8 @@ def check_materialDictionary(dictionary, required_keys):
             "y path"])
 
             dictionary[key] = read_field_from_xdmf(field_file, mesh_file,
-            function_space_info, directory_path=directory_path)
+            function_space_info, directory_path=directory_path, 
+            code_given_field_name=key)
 
         # If the value is a float, gets it into a Constant
 

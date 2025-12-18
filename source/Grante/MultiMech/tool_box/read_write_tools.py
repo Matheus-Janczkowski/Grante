@@ -234,7 +234,7 @@ directory_path=None):
 # back into FEniCS functions
 
 def read_field_from_xdmf(field_file, mesh_file, function_space_info,
-directory_path=None):
+directory_path=None, code_given_field_name=None):
     
     # If the directory path is given, joins them
 
@@ -277,7 +277,7 @@ directory_path=None):
 
         if necessary_key in function_space_info:
 
-            # As the dictionary has a necessary keys, it means the dic-
+            # As the dictionary has a necessary key, it means the dic-
             # tionary is not discriminated by field. Thus, it must have
             # the field name as key
 
@@ -289,6 +289,18 @@ directory_path=None):
 
                 function_space_info = {function_space_info["field name"
                 ]: function_space_info}
+
+            # If no field name was provided by the user, but the code 
+            # did
+
+            elif code_given_field_name is not None:
+
+                # Turns the field name as key to a new dictionary compa-
+                # tible to the syntax used for creating finite elemen
+                # spaces
+
+                function_space_info = {code_given_field_name: 
+                function_space_info}
 
             # Otherwise, throws an error
 

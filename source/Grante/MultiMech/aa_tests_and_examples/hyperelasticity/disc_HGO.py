@@ -41,30 +41,6 @@ post_processes["SaveField"] = {"directory path":results_path,
 post_processes["SaveCauchyStressField"] = {"directory path":results_path,
 "file name":stress_fileName[0], "polynomial degree":1}
 
-# Put "" in the subdomain to integrate over the entire domain
-
-post_processes["HomogenizeField"] = {"directory path":results_path,
-"file name":homogenized_displacementFileName, "subdomain":[2]}
-
-# Put "" in the subdomain to integrate over the entire domain
-
-post_processes["HomogenizeFieldsGradient"] = {"directory path":
-results_path, "file name":homogenized_gradDisplacementFileName, 
-"subdomain":""}
-
-# Sets the post processes of the submesh
-
-post_processesSubmesh = dict()
-
-# THe subdomain variable must be "" for a submesh, for there isn't sub-
-# domains in a submesh
-
-post_processesSubmesh["HomogenizeField"] = {"directory path":
-results_path, "file name":homogenized_dispRVEFileName, "subdomain":""}
-
-post_processesSubmesh["SaveCauchyStressField"] = {"directory path":
-results_path, "file name": stress_fileName[1], "polynomial degree":1}
-
 ########################################################################
 #                         Material properties                          #
 ########################################################################

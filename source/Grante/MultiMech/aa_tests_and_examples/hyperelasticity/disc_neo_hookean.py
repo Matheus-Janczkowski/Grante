@@ -70,7 +70,8 @@ constitutive_model = constitutive_models.Neo_Hookean(material_properties)
 # le termination, e.g. .msh or .xdmf; both options will be saved automa-
 # tically
 
-mesh_fileName = get_parent_path_of_file(path_bits_to_be_excluded=2)+"//test_meshes//intervertebral_disc_mesh"
+mesh_fileName = (get_parent_path_of_file(path_bits_to_be_excluded=2)+
+"//test_meshes//intervertebral_disc_mesh")
 
 ########################################################################
 #                            Function space                            #

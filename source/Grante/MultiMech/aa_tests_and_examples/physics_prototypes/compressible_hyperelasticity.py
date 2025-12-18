@@ -21,12 +21,9 @@ mesh_data_class = read_mshMesh({"length x": 0.3, "length y": 0.2, "len"+
 5, "number of divisions in z": 25, "verbose": False, "mesh file name": 
 "box_mesh", "mesh file directory": get_parent_path_of_file()})
 
-mesh_data_class = read_mshMesh(get_parent_path_of_file(
-path_bits_to_be_excluded=2)+"//test_meshes//intervertebral_disc_mesh")
-
 # Neumann boundary conditions
 
-maximum_load = 5E2
+maximum_load = 5E5
 
 # Sets the constitutive model
 
@@ -34,7 +31,7 @@ E = 1E6
 
 poisson = 0.3
 
-constitutive_model = Neo_Hookean({"E": E, "nu": poisson})
+constitutive_models = {"volume 1": Neo_Hookean({"E": E, "nu": poisson})}
 
 # Sets the function space
 
@@ -64,26 +61,15 @@ neumann_loads[0].update_load(1.0)
 
 # Gets the variational form of the inner work
 
-internal_work = variational_tools.hyperelastic_internalWorkFirstPiola(
-"Displacement", functional_data_class, constitutive_model, 
-mesh_data_class)
+internal_work = 0.0
 
-# Adds the contribution of the volume constraint
+for physical_group, constitutive_model in constitutive_models.items():
 
-I = Identity(3)
-
-F = grad(functional_data_class.solution_fields["Displacement"])+I
-
-F_invT = inv(F).T
-
-J = det(F)
-
-inv_V0 = Constant(1/assemble(1.0*mesh_data_class.dx))
-
-internal_work += ((inner(functional_data_class.solution_fields["Pressu"+
-"re"]*inv_V0*J*F_invT, grad(functional_data_class.variation_fields["Di"+
-"splacement"]))*mesh_data_class.dx)+(inv_V0*(((J-1)*
-functional_data_class.variation_fields["Pressure"])*mesh_data_class.dx)))
+    internal_work += (inner(constitutive_model.first_piolaStress(
+    functional_data_class.solution_fields["Displacement"]), grad(
+    functional_data_class.variation_fields["Displacement"]))*
+    mesh_data_class.dx(mesh_data_class.domain_physicalGroupsNameToTag[
+    physical_group]))
 
 # Solver
 
@@ -95,14 +81,3 @@ solver.solve()
 # Solution saving
 
 write_field_to_xdmf(functional_data_class)
-
-# Verifies the volume after the deformation
-
-u_solution, lambda_solution = functional_data_class.monolithic_solution.split()
-
-J = det(grad(u_solution)+I)
-
-V_new = assemble(J*mesh_data_class.dx)
-
-print("The ratio of the new volume by the volume of the reference conf"+
-"iguration is "+str(float(inv_V0)*V_new)+"\n")

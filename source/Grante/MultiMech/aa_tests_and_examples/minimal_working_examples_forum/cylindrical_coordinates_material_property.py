@@ -1,8 +1,6 @@
 # Routine to turn an expression in cylindrical coordinates into a field
 # projected onto a finite element space 
 
-from dolfin import *
-
 import numpy as np
 
 from .....Grante.MultiMech.tool_box import mesh_handling_tools

@@ -39,6 +39,17 @@ i, j, k, l = ufl.indices(4)
 
 def check_materialDictionary(dictionary, required_keys):
 
+    """
+    Function to verify if a dictionary of material parameters has all 
+    the required keys (strings with the names of the material parameters).
+    
+    dictionary: dictionary with key-value pairs, where the keys are 
+    strings with the names of material parameters, and the values are 
+    their values or further information to construct or find them.
+
+    required_keys: list of string keys that this dictionary must have
+    """
+
     for key in required_keys:
 
         if not (key in dictionary):
@@ -118,6 +129,17 @@ def check_materialDictionary(dictionary, required_keys):
         np.ndarray) or isinstance(corresponding_value, list)):
             
             dictionary[key] = Constant(corresponding_value)
+
+    # Checks if there is any key in the dictionary that is not in the 
+    # list of required keys
+
+    for key in dictionary:
+
+        if not (key in required_keys):
+
+            raise KeyError("The key '"+str(key)+"' is not in the list "+
+            "of required keys of the constitutive model. Check out the"+
+            " list of required keys: "+str(required_keys))
 
     # Returns the dictionary
 

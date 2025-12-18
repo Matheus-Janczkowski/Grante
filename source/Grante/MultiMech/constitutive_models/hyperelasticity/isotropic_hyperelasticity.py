@@ -1,4 +1,4 @@
-# Routine to store anisotropic constitutive models
+# Routine to store isotropic hyperelastic constitutive models
 # 
 # The list of implemented isotropic hyperelastic models is:
 # 

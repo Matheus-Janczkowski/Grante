@@ -1,6 +1,6 @@
-# Routine to store anisotropic constitutive models
+# Routine to store isotropic micropolar hyperelastic constitutive models
 # 
-# The list of implemented isotropic hyperelastic models is:
+# The list of implemented isotropic micropolar hyperelastic models is:
 # 
 # 1. Neo-Hookean
 

@@ -138,6 +138,6 @@ bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
 
 variational_framework.hyperelasticity_displacementBased(
 constitutive_model, traction_dictionary, maximum_loadingSteps, t_final, 
-post_processes, mesh_fileName, solver_parameters, 
-polynomial_degree=polynomial_degree, t=t, 
-dirichlet_boundaryConditions=bcs_dictionary, verbose=True)
+post_processes, mesh_fileName, solver_parameters, polynomial_degree=
+polynomial_degree, t=t, dirichlet_boundaryConditions=bcs_dictionary, 
+verbose=True)

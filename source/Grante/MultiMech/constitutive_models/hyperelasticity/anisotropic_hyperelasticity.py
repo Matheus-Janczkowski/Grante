@@ -52,7 +52,7 @@ class HyperelasticMaterialModel(ABC):
 # https://help.febio.org/docs/FEBioUser-3-6/UM36-4.1.4.11.html, where it
 # is called unconstrained Holzapfel-Gasser-Ogden
 
-class Holzapfel_Gasser_Ogden_Unconstrained(HyperelasticMaterialModel):
+class HolzapfelGasserOgdenUnconstrained(HyperelasticMaterialModel):
 
     # Initializes the properties
 
@@ -70,20 +70,19 @@ class Holzapfel_Gasser_Ogden_Unconstrained(HyperelasticMaterialModel):
         "dinates: a direction", "local system of coordinates: d direct"+
         "ion"])
         
-        self.c = Constant(material_properties["c"])
+        self.c = material_properties["c"]
 
-        self.k1 = Constant(material_properties["k1"])
+        self.k1 = material_properties["k1"]
 
-        self.k2 = Constant(material_properties["k2"])
+        self.k2 = material_properties["k2"]
 
         # Converts the angle from degrees to radians
 
-        self.gamma = Constant(material_properties["gamma"]*(ufl.pi/180.0
-        ))
+        self.gamma = material_properties["gamma"]*(ufl.pi/180.0)
 
-        self.kappa = Constant(material_properties["kappa"])
+        self.kappa = material_properties["kappa"]
 
-        self.k = Constant(material_properties["k"])
+        self.k = material_properties["k"]
 
         vector_e1 = material_properties["local system of coordinates: "+
         "a direction"]
@@ -95,17 +94,17 @@ class Holzapfel_Gasser_Ogden_Unconstrained(HyperelasticMaterialModel):
 
         # Normalizes these vectors
 
-        norm_e1 = Constant(tensor_tools.L2_normVector(vector_e1))
+        norm_e1 = tensor_tools.L2_normVector(vector_e1)
 
-        norm_e2 = Constant(tensor_tools.L2_normVector(vector_e2))
+        norm_e2 = tensor_tools.L2_normVector(vector_e2)
 
-        norm_e3 = Constant(tensor_tools.L2_normVector(vector_e3))
+        norm_e3 = tensor_tools.L2_normVector(vector_e3)
 
-        self.e1 = Constant((1/norm_e1)*vector_e1)
+        self.e1 = (1/norm_e1)*vector_e1
 
-        self.e2 = Constant((1/norm_e2)*vector_e2)
+        self.e2 = (1/norm_e2)*vector_e2
 
-        self.e3 = Constant((1/norm_e3)*vector_e3)
+        self.e3 = (1/norm_e3)*vector_e3
 
     # Defines the strain energy
 

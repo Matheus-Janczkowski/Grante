@@ -136,7 +136,7 @@ bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
 bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
 "mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
 "nslation": [0.0, 0.0, 0.05], "in_planeSpinDirection": [1.0, 0.0, 0.0], 
-"in_planeSpin": 15, "normal_toPlaneSpin": 45.0}}
+"in_planeSpin": 45, "normal_toPlaneSpin": 45.0}}
 
 ########################################################################
 ########################################################################

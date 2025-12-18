@@ -75,3 +75,25 @@ must_have_all_keys=False, fill_in_keys=False):
                 raise KeyError("The dictionary "+str(dictionary_location
                 )+" has the key '"+str(current_key)+"', but it is not "+
                 "in the list of master keys")
+
+########################################################################
+#                             Key deletion                             #
+########################################################################
+
+# Defines a function to delete keys off of a dictionary
+
+def delete_dictionary_keys(dictionary, keys):
+
+    if isinstance(keys, list):
+
+        for key in keys:
+
+            # Deletes the key
+
+            dictionary.pop(key, None)
+
+    else:
+
+        dictionary.pop(keys, None)
+
+    return dictionary

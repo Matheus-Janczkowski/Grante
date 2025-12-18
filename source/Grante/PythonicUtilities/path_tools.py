@@ -14,7 +14,43 @@ import unicodedata
 
 # Defines a function to verify if a file exists
 
-def verify_file_existence(file_path, saving_function=None):
+def verify_file_existence(file_path, saving_function=None, termination=
+None):
+
+    # Verifies is the file path is a string
+
+    if not isinstance(file_path, str):
+
+        raise TypeError("The 'file_path'='"+str(file_path)+"' is not a"+
+        " string, so the existence of this file cannot be asserted")
+    
+    # Verifies if the file has a particular termination
+
+    if termination is not None:
+
+        # Makes sure termination is a string
+
+        if not isinstance(termination, str):
+
+            raise TypeError("The 'termination' must be a string to ver"+
+            "ify a file existence. However, it is: "+str(termination))
+        
+        # Verify if the length of the file path is greater than the ter-
+        # mination
+
+        if len(termination)>len(file_path):
+
+            raise IndexError("The 'termination'="+str(termination)+" h"+
+            "as more characters than the 'file_path' itself. Thus, the"+
+            " file existence cannot be asserted")
+        
+        # Verifies if the termination is equal to that of the file
+
+        if file_path[-len(termination):len(file_path)]!=termination:
+
+            raise NameError("The termination="+str(termination)+" is n"+
+            "ot the same as the 'file_path' "+str(file_path)+". Thus, "+
+            "the file existence cannot be asserted")
 
     if not os.path.exists(file_path):
 

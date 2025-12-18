@@ -80,24 +80,24 @@ class Micropolar_Neo_Hookean(HyperelasticMaterialModel):
 
         # Gets the parameters
 
-        self.mu = Constant(young_modulus/(2*(1+poisson_ratio)))
+        self.mu = young_modulus/(2*(1+poisson_ratio))
 
-        self.lmbda = Constant((poisson_ratio*young_modulus)/((1+
-        poisson_ratio)*(1-(2*poisson_ratio))))
+        self.lmbda = (poisson_ratio*young_modulus)/((1+poisson_ratio)*(
+        1-(2*poisson_ratio)))
 
-        self.alpha = Constant(material_properties["alpha"])
+        self.alpha = material_properties["alpha"]
 
-        self.gamma = Constant(material_properties["gamma"])
+        self.gamma = material_properties["gamma"]
 
         # Selects the beta parameter using the characteristic length
 
         if flag_bending:
 
-            self.beta = Constant((4*self.mu)*(characteristic_length**2))
+            self.beta = (4*self.mu)*(characteristic_length**2)
 
         else:
 
-            self.beta = Constant((2*self.mu*(characteristic_length**2))-
+            self.beta = ((2*self.mu*(characteristic_length**2))-
             self.gamma)
 
         # Gets the micropolar number, which varies between 0 and 1. If
@@ -105,18 +105,18 @@ class Micropolar_Neo_Hookean(HyperelasticMaterialModel):
 
         N_micropolar = material_properties["N"]
 
-        if N_micropolar<0 or N_micropolar>1:
+        if float(N_micropolar)<0 or float(N_micropolar)>1:
 
             raise ValueError("The micropolar number must be bound by ["+
             "0,1]. The given N is: "+str(N_micropolar))
         
-        elif abs(N_micropolar-1.0)<1E-5:
+        elif abs(float(N_micropolar)-1.0)<1E-5:
 
-            self.kappa = Constant(2*self.mu)
+            self.kappa = 2*self.mu
 
         else:
 
-            self.kappa = Constant(2*self.mu*((N_micropolar**2)/(1-(
+            self.kappa = (2*self.mu*((N_micropolar**2)/(1-(
             N_micropolar**2))))
 
         # Precomputes the Helmholtz free potential differentiation

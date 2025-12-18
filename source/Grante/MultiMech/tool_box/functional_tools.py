@@ -713,7 +713,7 @@ fields_namesDict):
 # instructions to create finite elements
 
 def construct_monolithicFunctionSpace(elements_dictionary, 
-mesh_dataClass, verbose=False):
+mesh_dataClass, verbose=False, function_only=False):
     
     # Transforms the dictionary of instructions into real finite elements
     # and get the names of the fields
@@ -746,7 +746,11 @@ mesh_dataClass, verbose=False):
     # the individual fields following this order. Does the same for the
     # variations
 
-    trial_functions = TrialFunction(monolithic_functionSpace)
+    trial_functions = None 
+
+    if not function_only:
+
+        trial_functions = TrialFunction(monolithic_functionSpace)
 
     monolithic_solution = Function(monolithic_functionSpace)
 
@@ -758,14 +762,19 @@ mesh_dataClass, verbose=False):
 
         solution_functions = split(monolithic_solution)
 
-        variation_functions = split(TestFunction(monolithic_functionSpace
-        ))
+        if not function_only:
+
+            variation_functions = split(TestFunction(
+            monolithic_functionSpace))
 
     else:
 
         solution_functions = [monolithic_solution]
 
-        variation_functions = [TestFunction(monolithic_functionSpace)]
+        if not function_only:
+
+            variation_functions = [TestFunction(monolithic_functionSpace
+            )]
 
     # Organizes them into dictionaries
 
@@ -783,7 +792,9 @@ mesh_dataClass, verbose=False):
 
         solution_fields[field_name] = solution_functions[i]
 
-        variation_fields[field_name] = variation_functions[i]
+        if not function_only:
+
+            variation_fields[field_name] = variation_functions[i]
 
         fields_namesDict[field_name] = i
 

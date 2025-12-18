@@ -16,11 +16,15 @@ from ..tool_box import functional_tools
 
 from ..tool_box import variational_tools
 
+from ..tool_box.read_write_tools import read_field_from_xdmf
+
 from ...PythonicUtilities import file_handling_tools as file_tools
 
 from ...PythonicUtilities import plotting_tools
 
 from ...PythonicUtilities import programming_tools
+
+from ...PythonicUtilities.dictionary_tools import delete_dictionary_keys
 
 # Defines the indices for Einstein summation notation
 
@@ -42,6 +46,81 @@ def check_materialDictionary(dictionary, required_keys):
             raise KeyError("The key '"+str(key)+"' was not found in th"+
             "e dictionary of material parameters. See: "+str(
             dictionary.keys()))
+        
+        # Recovers the dictionary corresponding value
+
+        corresponding_value = dictionary[key]
+        
+        # Checks if the value is a dictionary itself, what indicates a 
+        # field that must be read
+
+        if isinstance(corresponding_value, dict):
+
+            # Initializes the path information
+
+            field_file = None 
+
+            mesh_file = None 
+
+            directory_path = None
+
+            # Verifies if the corresponding value has the key 'field fi-
+            # le'
+
+            if "field file" in corresponding_value:
+
+                field_file = corresponding_value["field file"]
+
+            else:
+
+                raise KeyError("The value to the key '"+str(key)+"' in"+
+                " the dictionary of material parameters is a dictionar"+
+                "y, "+str(corresponding_value)+". But the key 'field f"+
+                "ile' with the path to the field .xdmf file is missing")
+
+            # Verifies if the corresponding value has the key 'mesh fi-
+            # le'
+
+            if "mesh file" in corresponding_value:
+
+                mesh_file = corresponding_value["mesh file"]
+
+            else:
+
+                raise KeyError("The value to the key '"+str(key)+"' in"+
+                " the dictionary of material parameters is a dictionar"+
+                "y, "+str(corresponding_value)+". But the key 'mesh fi"+
+                "le' with the path to the mesh .msh file is missing")
+
+            # Verifies if the corresponding value has the key 'directory
+            # path'
+
+            if "directory path" in corresponding_value:
+
+                directory_path = corresponding_value["directory path"]
+            
+            # Deletes the keys and reads the file using the remainder of
+            # the dictionary as information for creation of the function
+            # space
+
+            function_space_info = delete_dictionary_keys(
+            corresponding_value, ["field file", "mesh file", "director"+
+            "y path"])
+
+            dictionary[key] = read_field_from_xdmf(field_file, mesh_file,
+            function_space_info, directory_path=directory_path)
+
+        # If the value is a float, gets it into a Constant
+
+        elif (isinstance(corresponding_value, float) or isinstance(
+        corresponding_value, int) or isinstance(corresponding_value, 
+        np.ndarray) or isinstance(corresponding_value, list)):
+            
+            dictionary[key] = Constant(corresponding_value)
+
+    # Returns the dictionary
+
+    return dictionary
 
 # Defines a function to retrieve from the constitutive tools the neces-
 # sary fields' names

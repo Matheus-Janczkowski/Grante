@@ -112,15 +112,13 @@ False):
 
     J = det(F)
 
-    inv_V0 = Constant(1/assemble(1.0*mesh_data_class.dx))
-
     # Adds the contribution of the incompressibility constraint
 
     internal_VarForm += ((inner(functional_data_class.solution_fields[
-    "Pressure"]*inv_V0*J*F_invT, grad(functional_data_class.variation_fields[
-    "Displacement"]))*mesh_data_class.dx)+(inv_V0*(((J-1)*
+    "Pressure"]*J*F_invT, grad(functional_data_class.variation_fields[
+    "Displacement"]))*mesh_data_class.dx)+(((J-1)*
     functional_data_class.variation_fields["Pressure"])*
-    mesh_data_class.dx)))
+    mesh_data_class.dx))
 
     # Constructs the variational forms for the traction work
 

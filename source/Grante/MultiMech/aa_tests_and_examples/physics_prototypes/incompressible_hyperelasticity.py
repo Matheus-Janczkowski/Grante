@@ -78,9 +78,9 @@ J = det(F)
 inv_V0 = Constant(1/assemble(1.0*mesh_data_class.dx))
 
 internal_work += ((inner(functional_data_class.solution_fields["Pressu"+
-"re"]*inv_V0*J*F_invT, grad(functional_data_class.variation_fields["Di"+
-"splacement"]))*mesh_data_class.dx)+(inv_V0*(((J-1)*
-functional_data_class.variation_fields["Pressure"])*mesh_data_class.dx)))
+"re"]*J*F_invT, grad(functional_data_class.variation_fields["Displacem"+
+"ent"]))*mesh_data_class.dx)+(((J-1)*
+functional_data_class.variation_fields["Pressure"])*mesh_data_class.dx))
 
 # Solver
 

@@ -59,10 +59,10 @@ poisson_2 = 0.3
 
 constitutive_model = dict()
 
-constitutive_model["volume 1"] = constitutive_models.Neo_Hookean({"E": 
+constitutive_model["volume 1"] = constitutive_models.NeoHookean({"E": 
 E_1, "nu": poisson_1})
 
-constitutive_model["volume 2"] = constitutive_models.Neo_Hookean({"E": 
+constitutive_model["volume 2"] = constitutive_models.NeoHookean({"E": 
 E_2, "nu": poisson_2})
 
 ########################################################################

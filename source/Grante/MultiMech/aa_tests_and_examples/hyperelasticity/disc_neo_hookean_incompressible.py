@@ -48,7 +48,7 @@ material_properties["nu"] = v
 # Sets the material as a neo-hookean material using the corresponding
 # class
 
-constitutive_model = constitutive_models.Neo_Hookean(material_properties)
+constitutive_model = constitutive_models.NeoHookean(material_properties)
 
 ########################################################################
 #                                 Mesh                                 #

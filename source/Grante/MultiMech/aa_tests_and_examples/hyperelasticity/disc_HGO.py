@@ -99,10 +99,10 @@ constitutive_model = dict()
 constitutive_model["volume 1"] = anisotropic_constitutiveModels.HolzapfelGasserOgdenUnconstrained(
 material_properties1)
 
-constitutive_model["volume 2"] = isotropic_constitutiveModels.Neo_Hookean(
+constitutive_model["volume 2"] = isotropic_constitutiveModels.NeoHookean(
 material_properties2)
 
-constitutive_model["volume 3"] = isotropic_constitutiveModels.Neo_Hookean(
+constitutive_model["volume 3"] = isotropic_constitutiveModels.NeoHookean(
 material_properties3)
 
 ########################################################################

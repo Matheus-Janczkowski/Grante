@@ -366,10 +366,17 @@ directory_path=None, code_given_field_name=None):
 
     # Finally reads the xdmf file with the field
 
-    with XDMFFile(mesh_data_class.mesh.mpi_comm(), field_file) as xdmf_file:
+    try:
 
-        xdmf_file.read_checkpoint(
-        function_data_class.monolithic_solution, field_name, 0)
+        with XDMFFile(mesh_data_class.mesh.mpi_comm(), field_file) as xdmf_file:
+
+            xdmf_file.read_checkpoint(
+            function_data_class.monolithic_solution, field_name, 0)
+
+    except Exception as e:
+
+        raise ValueError("An error ocurred while reading file '"+str(
+        field_file)+"'. The original error message is: "+str(e))
 
     # Returns the function
 

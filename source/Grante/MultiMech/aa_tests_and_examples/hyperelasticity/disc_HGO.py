@@ -92,7 +92,7 @@ material_properties3["c1"] = 1E6
 
 material_properties3["c2"] = 2E6
 
-material_properties3["bulk modulus"] = 3E6
+material_properties3["bulk modulu"] = 3E6
 
 # Sets the material as a HGO material
 

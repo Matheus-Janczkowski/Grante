@@ -34,10 +34,59 @@ i, j, k, l = ufl.indices(4)
 #                     Field checking and retrieving                    #
 ########################################################################
 
+# Defines a function for checking constitutive model objects
+
+def check_constitutive_models(constitutive_model, code_given_information
+):
+    
+    """
+    Function to verify if the parameters given by the user are suitable 
+    for the model. This function uses the check method defined in the 
+    model class itself, but feeds code given information, such as the
+    class of mesh data, so that the same mesh can be reused"""
+
+    # If it is a dictionary
+
+    if isinstance(constitutive_model, dict):
+
+        # Iterates through the values
+
+        for physical_group, constitutive_class in constitutive_model.items():
+
+            # Verifies if it has the attribute 'check_model':
+
+            if hasattr(constitutive_class, "check_model"):
+
+                constitutive_class.check_model(code_given_information)
+
+            else:
+
+                raise AttributeError("The constitutive model '"+str(
+                constitutive_class)+"' in physical group '"+str(
+                physical_group)+"' does not have the method 'check_mod"+
+                "el'. It must have this method")
+            
+    # If it is a class alone
+
+    else:
+
+        # Verifies if it has the attribute 'check_model':
+
+        if hasattr(constitutive_model, "check_model"):
+
+            constitutive_model.check_model(code_given_information)
+
+        else:
+
+            raise AttributeError("The constitutive model '"+str(
+            constitutive_model)+" does not have the method 'check_mode"+
+            "l'. It must have this method")
+
 # Defines a function to check if the dictionary of material parameters 
 # has all the keys
 
-def check_materialDictionary(dictionary, required_keys):
+def check_materialDictionary(dictionary, required_keys,
+code_given_information=None):
 
     """
     Function to verify if a dictionary of material parameters has all 
@@ -125,7 +174,8 @@ def check_materialDictionary(dictionary, required_keys):
 
             dictionary[key] = read_field_from_xdmf(field_file, mesh_file,
             function_space_info, directory_path=directory_path, 
-            code_given_field_name=key)
+            code_given_field_name=key, code_given_mesh_data_class=
+            code_given_information)
 
         # If the value is a float, gets it into a Constant
 

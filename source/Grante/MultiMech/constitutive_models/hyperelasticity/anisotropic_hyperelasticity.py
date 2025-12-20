@@ -30,6 +30,10 @@ class HyperelasticMaterialModel(ABC):
     # The following methods have the pass argument only because they 
     # will be defined in the child classes
 
+    def check_model(self, code_given_information):
+
+        pass
+
     def strain_energy(self, strain_tensor):
 
         pass
@@ -85,32 +89,40 @@ class HolzapfelGasserOgdenUnconstrained(HyperelasticMaterialModel):
 
         self.required_fieldsNames = ["Displacement"]
 
+        self.material_properties = material_properties
+
+    # Defines a method to check the validity of the user-given informa-
+    # tion
+
+    def check_model(self, code_given_information):
+
         # Checks the keys of the dictionary of material parameters
 
-        material_properties = constitutive_tools.check_materialDictionary(
-        material_properties, ["c", "k1", "k2", "gamma", "kappa", "k", 
-        "local system of coordinates: a direction", "local system of c"+
-        "oordinates: d direction"])
+        self.material_properties = constitutive_tools.check_materialDictionary(
+        self.material_properties, ["c", "k1", "k2", "gamma", "kappa", 
+        "k", "local system of coordinates: a direction", "local system"+
+        " of coordinates: d direction"], code_given_information=
+        code_given_information)
         
-        self.c = material_properties["c"]
+        self.c = self.material_properties["c"]
 
-        self.k1 = material_properties["k1"]
+        self.k1 = self.material_properties["k1"]
 
-        self.k2 = material_properties["k2"]
+        self.k2 = self.material_properties["k2"]
 
         # Converts the angle from degrees to radians
 
-        self.gamma = material_properties["gamma"]*(ufl.pi/180.0)
+        self.gamma = self.material_properties["gamma"]*(ufl.pi/180.0)
 
-        self.kappa = material_properties["kappa"]
+        self.kappa = self.material_properties["kappa"]
 
-        self.k = material_properties["k"]
+        self.k = self.material_properties["k"]
 
-        vector_e1 = material_properties["local system of coordinates: "+
-        "a direction"]
+        vector_e1 = self.material_properties["local system of coordina"+
+        "tes: a direction"]
 
-        vector_e2 = material_properties["local system of coordinates: "+
-        "d direction"]
+        vector_e2 = self.material_properties["local system of coordina"+
+        "tes: d direction"]
 
         vector_e3 = ufl.cross(vector_e1, vector_e2)
 
@@ -127,6 +139,10 @@ class HolzapfelGasserOgdenUnconstrained(HyperelasticMaterialModel):
         self.e2 = (1/norm_e2)*vector_e2
 
         self.e3 = (1/norm_e3)*vector_e3
+
+        # Empties the material properties dictionary
+
+        self.material_properties = None
 
     # Defines the strain energy
 

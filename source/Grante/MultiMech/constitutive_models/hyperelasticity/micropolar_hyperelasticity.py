@@ -28,6 +28,10 @@ class HyperelasticMaterialModel(ABC):
     # The following methods have the pass argument only because they 
     # will be defined in the child classes
 
+    def check_model(self, code_given_information):
+
+        pass
+
     def strain_energy(self, strain_tensor, curvature_tensor):
 
         pass
@@ -59,24 +63,32 @@ class Micropolar_Neo_Hookean(HyperelasticMaterialModel):
 
         self.required_fieldsNames = ["Displacement", "Microrotation"]
 
+        self.material_properties = material_properties
+
+    # Defines a method to check the validity of the user-given informa-
+    # tion
+
+    def check_model(self, code_given_information):
+
         # Checks the keys of the dictionary of material parameters
 
-        material_properties = constitutive_tools.check_materialDictionary(
-        material_properties, ["E", "nu", "flag bending", "characterist"+
-        "ic length", "alpha", "gamma", "N"])
+        self.material_properties = constitutive_tools.check_materialDictionary(
+        self.material_properties, ["E", "nu", "flag bending", "characterist"+
+        "ic length", "alpha", "gamma", "N"], code_given_information=
+        code_given_information)
 
         # Gets the Young modulus and the Poisson ratio
 
-        young_modulus = material_properties["E"]
+        young_modulus = self.material_properties["E"]
 
-        poisson_ratio = material_properties["nu"]
+        poisson_ratio = self.material_properties["nu"]
 
         # Gets the flag for bending and the characteristic length
 
-        flag_bending = material_properties["flag bending"]
+        flag_bending = self.material_properties["flag bending"]
 
-        characteristic_length = material_properties["characteristic le"+
-        "ngth"]
+        characteristic_length = self.material_properties["characterist"+
+        "ic length"]
 
         # Gets the parameters
 
@@ -85,9 +97,9 @@ class Micropolar_Neo_Hookean(HyperelasticMaterialModel):
         self.lmbda = (poisson_ratio*young_modulus)/((1+poisson_ratio)*(
         1-(2*poisson_ratio)))
 
-        self.alpha = material_properties["alpha"]
+        self.alpha = self.material_properties["alpha"]
 
-        self.gamma = material_properties["gamma"]
+        self.gamma = self.material_properties["gamma"]
 
         # Selects the beta parameter using the characteristic length
 
@@ -103,7 +115,7 @@ class Micropolar_Neo_Hookean(HyperelasticMaterialModel):
         # Gets the micropolar number, which varies between 0 and 1. If
         # null, it is Cauchy continuum; if 1, it is couple stress theory
 
-        N_micropolar = material_properties["N"]
+        N_micropolar = self.material_properties["N"]
 
         if float(N_micropolar)<0 or float(N_micropolar)>1:
 
@@ -130,6 +142,10 @@ class Micropolar_Neo_Hookean(HyperelasticMaterialModel):
         self.dpsi_dVt = diff(pre_psi, V_transposed)
 
         self.dpsi_dkt = diff(pre_psi, k_transposed)
+
+        # Empties the material properties dictionary
+
+        self.material_properties = None
 
     # Defines a function to evaluate the Helmholtz free energy density
 

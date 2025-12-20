@@ -268,7 +268,8 @@ directory_path=None, visualization_copy=False):
 # back into FEniCS functions
 
 def read_field_from_xdmf(field_file, mesh_file, function_space_info,
-directory_path=None, code_given_field_name=None):
+directory_path=None, code_given_field_name=None, 
+code_given_mesh_data_class=None):
     
     # If the directory path is given, joins them
 
@@ -294,15 +295,44 @@ directory_path=None, code_given_field_name=None):
 
     mesh_data_class = None
 
-    try:
+    # Verifies if there is a mesh data class that was given by the code
 
-        mesh_data_class = read_mshMesh(mesh_file)
+    if code_given_mesh_data_class is not None:
 
-    except Exception as e:
+        # Verifies if its is a dictionary
 
-        raise ValueError("An error occurred while reading the mesh fil"+
-        "e '"+str(mesh_file)+"' that is used to read the field in file"+
-        " '"+str(field_file)+"'")
+        if isinstance(code_given_mesh_data_class, dict):
+
+            if "mesh_data_class" in code_given_mesh_data_class:
+
+                code_given_mesh_data_class = code_given_mesh_data_class[
+                "mesh_data_class"]
+
+            else:
+
+                raise ValueError("The code given information to reuse "+
+                "the mesh does not have the key 'mesh_data_class'. Che"+
+                "ck the source.")
+
+        # Verifies if the file of the mesh is the same as the asked now
+
+        if mesh_file==code_given_mesh_data_class.mesh_file:
+
+            mesh_data_class = code_given_mesh_data_class
+
+    # If still no mesh was given, tries to read one
+
+    if mesh_data_class is None:
+
+        try:
+
+            mesh_data_class = read_mshMesh(mesh_file)
+
+        except Exception as e:
+
+            raise ValueError("An error occurred while reading the mesh"+
+            " file '"+str(mesh_file)+"' that is used to read the field"+
+            " in file '"+str(field_file)+"'")
     
     # Verifies if function_space_info is an instance of the Functional-
     # Data class
@@ -418,7 +448,14 @@ directory_path=None, code_given_field_name=None):
     except Exception as e:
 
         raise ValueError("An error ocurred while reading file '"+str(
-        field_file)+"'. The original error message is: "+str(e))
+        field_file)+"'.\n\nTwo main causes for this problem:\n1. The o"+
+        "riginal field was not saved using function 'write_field_to_xd"+
+        "mf';\n2. If 'write_field_to_xdmf' was indeed used, you might "+
+        "be trying to read the visualization copy file, which is not m"+
+        "ade for this purpose, rather for visualization only;\n3. The "+
+        "name to the function you are trying to impose now is not the "+
+        "same as the one used when it was saved.\n\nThe original error"+
+        " message is: "+str(e))
 
     # Returns the function
 

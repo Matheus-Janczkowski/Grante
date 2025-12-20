@@ -21,6 +21,10 @@ class HeatMaterialModel(ABC):
     # The following methods have the pass argument only because they 
     # will be defined in the child classes
 
+    def check_model(self, code_given_information):
+
+        pass
+
     def heat_energy(self, temperature_gradient):
 
         pass
@@ -47,18 +51,30 @@ class Fourier(HeatMaterialModel):
 
         self.required_fieldsNames = ["Displacement"]
 
+        self.material_properties = material_properties
+
+    # Defines a method to check the validity of the user-given informa-
+    # tion
+
+    def check_model(self, code_given_information):
+
         # Checks the keys of the dictionary of material parameters
 
-        material_properties = check_materialDictionary(
-        material_properties, ["k"])
+        self.material_properties = check_materialDictionary(
+        self.material_properties, ["k"], code_given_information=
+        code_given_information)
 
-        self.k = material_properties["k"]
+        self.k = self.material_properties["k"]
 
         # Evaluates the conductivity tensor
 
         I = Identity(3)
 
         self.kappa = self.k*I
+
+        # Empties the material properties dictionary
+
+        self.material_properties = None
 
     # Defines a function to evaluate the conduction energy
 

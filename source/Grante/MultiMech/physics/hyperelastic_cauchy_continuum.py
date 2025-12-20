@@ -7,6 +7,8 @@ from ..tool_box import variational_tools
 
 from ..tool_box import functional_tools
 
+from ..tool_box import constitutive_tools
+
 from ..tool_box import pseudotime_stepping_tools as newton_raphson_tools
 
 from ...PythonicUtilities import programming_tools
@@ -58,6 +60,13 @@ body_forcesDict=None):
 
     functional_data_class = functional_tools.construct_monolithicFunctionSpace(
     elements_dictionary, mesh_dataClass, verbose=verbose)
+
+    ####################################################################
+    #                   Constitutive model validation                  #
+    ####################################################################
+
+    constitutive_tools.check_constitutive_models(constitutive_model, {
+    "mesh_data_class": mesh_dataClass})
 
     ####################################################################
     #                        Boundary conditions                       #

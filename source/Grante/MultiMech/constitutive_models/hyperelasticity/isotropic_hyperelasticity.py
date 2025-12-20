@@ -27,6 +27,10 @@ class HyperelasticMaterialModel(ABC):
     # The following methods have the pass argument only because they 
     # will be defined in the child classes
 
+    def check_model(self, code_given_information):
+
+        pass
+
     def strain_energy(self, strain_tensor):
 
         pass
@@ -66,22 +70,34 @@ class NeoHookean(HyperelasticMaterialModel):
 
         self.required_fieldsNames = ["Displacement"]
 
+        self.material_properties = material_properties
+
+    # Defines a method to check the validity of the user-given informa-
+    # tion
+
+    def check_model(self, code_given_information):
+
         # Checks the keys of the dictionary of material parameters
 
-        material_properties = constitutive_tools.check_materialDictionary(
-        material_properties, ["E", "nu"])
+        self.material_properties = constitutive_tools.check_materialDictionary(
+        self.material_properties, ["E", "nu"], code_given_information=
+        code_given_information)
 
-        self.E = material_properties["E"]
+        self.E = self.material_properties["E"]
 
         #print("Maximum value of the Young Modulus: "+str(self.E.vector().max()))
 
-        self.v = material_properties["nu"]
+        self.v = self.material_properties["nu"]
 
         # Evaluates the Lamé parameters
 
         self.mu = self.E/(2*(1+self.v))
 
         self.lmbda = self.v*self.E/((1+self.v)*(1-2*self.v))
+
+        # Empties the material properties dictionary
+
+        self.material_properties = None
 
     # Defines a function to evaluate the Helmholtz free energy density
 
@@ -296,16 +312,28 @@ class MooneyRivlin(HyperelasticMaterialModel):
 
         self.required_fieldsNames = ["Displacement"]
 
+        self.material_properties = material_properties
+
+    # Defines a method to check the validity of the user-given informa-
+    # tion
+
+    def check_model(self, code_given_information):
+
         # Checks the keys of the dictionary of material parameters
 
-        material_properties = constitutive_tools.check_materialDictionary(
-        material_properties, ["c1", "c2", "bulk modulus"])
+        self.material_properties = constitutive_tools.check_materialDictionary(
+        self.material_properties, ["c1", "c2", "bulk modulus"], 
+        code_given_information=code_given_information)
 
-        self.c1 = material_properties["c1"]
+        self.c1 = self.material_properties["c1"]
 
-        self.c2 = material_properties["c2"]
+        self.c2 = self.material_properties["c2"]
 
-        self.bulk_modulus = material_properties["bulk modulus"]
+        self.bulk_modulus = self.material_properties["bulk modulus"]
+
+        # Empties the material properties dictionary
+
+        self.material_properties = None
 
     # Defines a function to evaluate the Helmholtz free energy density
 

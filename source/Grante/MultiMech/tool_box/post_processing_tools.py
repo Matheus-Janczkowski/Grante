@@ -33,10 +33,27 @@ def post_processingSelectionSingleField(post_processes, context_class):
     
     for process_name, additional_informationDict in post_processes.items():
 
-        # Initializes a list of names of additional informations for this
-        # post process
+        # Initializes a string of names of additional informations for 
+        # this post process. The first string is dedicated to obligatory 
+        # additional information, whereas the second string is concerned 
+        # with optional information
 
-        additional_info_names = []
+        additional_info_names = ["", ""]
+
+        # Gets the names of the additional information
+
+        for name in available_processes[process_name].additional_information:
+
+            # If the name is a list, it has a default value, thus it must
+            # be saved into the sublist of optional information
+
+            if isinstance(name, list):
+
+                additional_info_names[1] += str(name)+"\n"
+
+            else:
+
+                additional_info_names[0] += str(name)+"\n"
         
         # Iterates through the possible additional information names
 
@@ -47,8 +64,6 @@ def post_processingSelectionSingleField(post_processes, context_class):
 
             additional_infoName = available_processes[process_name
             ].additional_information[i]
-
-            additional_info_names.append(additional_infoName)
 
             # If it is a list, i.e. there's a default value, takes the 
             # name only
@@ -112,17 +127,25 @@ def post_processingSelectionSingleField(post_processes, context_class):
 
                     raise NameError("The additional information '"+str(
                     additional_infoName)+"' has not been found for the"+
-                    " "+str(process_name)+" process.")
+                    " "+str(process_name)+" process. Check out the who"+
+                    "le list of necessary and optional additional info"+
+                    "rmation.\nThe obligatory additional information n"+
+                    "ames (keys) are:\n"+additional_info_names[0]+"\nT"+
+                    "he optional additional information keys and their"+
+                    " default values are:\n"+additional_info_names[1])
             
         # Verifies if any keys have been left out in the original dic-
         # tionary of additional information
 
         if len(list(additional_informationDict.keys()))>0:
 
-            raise KeyError("The additional infos "+str(list(
+            raise NameError("The additional infos "+str(list(
             additional_informationDict.keys()))+" are not valid additi"+
             "onal information keys for the '"+str(process_name)+"' pro"+
-            "cess. Check available options: "+str(additional_info_names))
+            "cess. Check available options for obligatory additional i"+
+            "nformation:\n"+str(additional_info_names[0])+"\nand optio"+
+            "nal additional information:\n"+str(additional_info_names[1]
+            ))
 
     # Returns the new and complete dictionary of processes
 

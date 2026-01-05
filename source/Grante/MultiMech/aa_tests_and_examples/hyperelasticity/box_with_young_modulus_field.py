@@ -25,7 +25,7 @@ displacement_fileName = "displacement_young_modulus_field.xdmf"
 post_processes = dict()
 
 post_processes["SaveField"] = {"directory path":results_path, 
-"file name":displacement_fileName}
+"file name":displacement_fileName, "readable xdmf file": True}
 
 ########################################################################
 #                         Material properties                          #

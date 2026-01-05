@@ -77,8 +77,20 @@ must_have_all_keys=False, fill_in_keys=False):
                 "in the list of master keys")
 
 ########################################################################
-#                             Key deletion                             #
+#                           Key manipulation                           #
 ########################################################################
+
+# Defines a function to get the first key from a value
+
+def get_first_key_from_value(dictionary, given_value):
+
+    for key, value in dictionary.items():
+
+        if value==given_value:
+
+            return key 
+
+    return None 
 
 # Defines a function to delete keys off of a dictionary
 

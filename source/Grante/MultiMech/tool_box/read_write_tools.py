@@ -6,7 +6,7 @@ from ...MultiMech.tool_box.functional_tools import FunctionalData, construct_mon
 
 from ...MultiMech.tool_box.mesh_handling_tools import read_mshMesh
 
-from ...PythonicUtilities.path_tools import get_parent_path_of_file, decapitalize_and_insert_underline, verify_file_existence, take_outFileNameTermination
+from ...PythonicUtilities.path_tools import get_parent_path_of_file, decapitalize_and_insert_underline, verify_file_existence, take_outFileNameTermination, verify_path
 
 ########################################################################
 ########################################################################
@@ -17,7 +17,8 @@ from ...PythonicUtilities.path_tools import get_parent_path_of_file, decapitaliz
 # Defines a function to write FEniCS fields (functions) into xdmf files
 
 def write_field_to_xdmf(functional_data_class, time=0.0, field_name=None,
-directory_path=None, visualization_copy=False):
+directory_path=None, visualization_copy=False, close_file=True, file=
+None, visualization_copy_file=None, time_step=0, explicit_file_name=None):
     
     """
     Function for writing a FEniCS function to xdmf files.
@@ -30,6 +31,24 @@ directory_path=None, visualization_copy=False):
     field_name: name of the field
     
     directory_path: path to the directory where the file must be saved
+
+    visualization_copy: flag to write a conventional xdmf copy for
+    visualization, since write_checkpoint method may fail to be 
+    visualized on ParaView
+
+    close_file: flag to close a xdmf file after modifying it. It must be
+    false if this file is meant to store a time series
+
+    file: receives a xdmf file object from past iterations if a time 
+    series is to be saved
+
+    visualization_copy_file: receives a xdmf file object from past 
+    iterations if a time series of the visualization copy is to be saved
+
+    time_step: integer number with the index of this time step
+
+    explicit_file_name: explicit file name to create the xdmf file 
+    without using the automatic creator of this function
     """
     
     # If the directory path was not provided
@@ -41,9 +60,24 @@ directory_path=None, visualization_copy=False):
 
         directory_path = get_parent_path_of_file(
         function_calls_to_retrocede=2)
+
+    # If an explicit file name was provided
+
+    if explicit_file_name is not None:
+
+        # Takes out the termination of the file name
+
+        explicit_file_name = (take_outFileNameTermination(
+        explicit_file_name)+".xdmf")
     
     # Verifies if functional_data_class is indeed an instance of the 
     # functional data class
+
+    fields_names_dict = None
+
+    monolithic_solution = None
+
+    mesh_file = None
 
     if isinstance(functional_data_class, FunctionalData):
 
@@ -52,185 +86,277 @@ directory_path=None, visualization_copy=False):
 
         fields_names_dict = functional_data_class.fields_names_dict
 
-        # Verifies if there are multiple fields
+        monolithic_solution = functional_data_class.monolithic_solution
 
-        if len(fields_names_dict.keys())>1:
+        mesh_file = functional_data_class.mesh_file
 
-            # Splits the fields
+    elif isinstance(functional_data_class, dict):
 
-            split_fields = list(functional_data_class.monolithic_solution.split(
-            deepcopy=True))
+        fields_names_dict = functional_data_class["dictionary of field"+
+        " names"]
 
-            # Verifies if a particular field has been asked for
+        monolithic_solution = functional_data_class["monolithic soluti"+
+        "on"]
 
-            if field_name is not None:
+        mesh_file = functional_data_class["mesh file"]
 
-                # Verifies if this field is in the available fields
+    else:
 
-                if field_name in fields_names_dict:
+        raise TypeError("'functional_data_class' is not an instance of"+
+        " the FunctionalData class nor a dictionary with keys 'diction"+
+        "ary of field names', 'monolithic solution', and 'mesh file'. "+
+        "Thus, the fields cannot be written into a xdmf file using the"+
+        " function 'write_field_to_xdmf'")
 
-                    # Gets the automatic file name
+    # Verifies if there are multiple fields
 
-                    file_name = (directory_path+"//"+
-                    decapitalize_and_insert_underline(str(field_name))+
-                    ".xdmf")
+    if len(fields_names_dict.keys())>1:
 
-                    print("Saves the field '"+str(field_name)+"' at "+
-                    file_name)
+        # Splits the fields
 
-                    print("")
+        split_fields = list(monolithic_solution.split(
+        deepcopy=True))
 
-                    # Gets the individual field and renames it
+        # Verifies if a particular field has been asked for
 
-                    individual_field = split_fields[fields_names_dict[
-                    field_name]]
+        if field_name is not None:
 
-                    individual_field.rename(field_name, "DNS")
+            # Verifies if this field is in the available fields
 
-                    # Writes the function
-
-                    file = XDMFFile(individual_field.function_space(
-                    ).mesh().mpi_comm(), file_name)
-
-                    file.write_checkpoint(individual_field, 
-                    individual_field.name(), time)
-
-                    # Closes the file
-
-                    file.close()
-
-                else:
-
-                    raise NameError("'field_name' is '"+str(field_name)+
-                    "', but it is not a name of proper field. See the "+
-                    "available fields' names: "+str(
-                    list(fields_names_dict.keys())))
-                
-            # Otherwise, writes all fields
-
-            else:
-
-                for field_name, field_number in fields_names_dict.items(
-                ):
-
-                    # Gets the automatic file name
-
-                    file_name = (directory_path+"//"+
-                    decapitalize_and_insert_underline(str(field_name))+
-                    ".xdmf")
-
-                    print("Saves the field '"+str(field_name)+"' at "+
-                    file_name)
-
-                    print("")
-
-                    # Gets the individual field and renames it
-
-                    individual_field = split_fields[fields_names_dict[
-                    field_name]]
-
-                    individual_field.rename(field_name, "DNS")
-                    
-                    # Writes the field
-
-                    file = XDMFFile(individual_field.function_space(
-                    ).mesh().mpi_comm(), file_name)
-
-                    file.write_checkpoint(individual_field, 
-                    individual_field.name(), time)
-
-                    # Closes the file
-
-                    file.close()
-
-        # For single field problems
-
-        else:
-
-            if field_name is not None:
-
-                # Verifies if this field is in the available fields
-
-                if field_name in fields_names_dict:
-
-                    # Gets the automatic file name
-
-                    file_name = (directory_path+"//"+
-                    decapitalize_and_insert_underline(str(field_name))+
-                    ".xdmf")
-
-                    print("Saves the field '"+str(field_name)+"' at "+
-                    file_name)
-
-                    print("")
-
-                    # Gets the individual field and renames it
-
-                    individual_field = functional_data_class.monolithic_solution
-
-                    individual_field.rename(field_name, "DNS")
-
-                    # Writes the function
-
-                    file = XDMFFile(individual_field.function_space(
-                    ).mesh().mpi_comm(), file_name)
-
-                    file.write_checkpoint(individual_field, 
-                    individual_field.name(), time)
-
-                    # Closes the file
-
-                    file.close()
-
-                else:
-
-                    raise NameError("'field_name' is '"+str(field_name)+
-                    "', but it is not a name of proper field. See the "+
-                    "available fields' names: "+str(
-                    list(fields_names_dict.keys())))
-                
-            # Otherwise, writes as a generic solution
-
-            else:
-
-                # Gets the name of the field
-
-                field_name = list(fields_names_dict.keys())[0]
+            if field_name in fields_names_dict:
 
                 # Gets the automatic file name
 
-                file_name = (directory_path+"//"+
-                decapitalize_and_insert_underline(str(field_name))+".x"+
-                "dmf")
+                if explicit_file_name is None:
+
+                    explicit_file_name = (directory_path+"//"+
+                    decapitalize_and_insert_underline(str(field_name))+
+                    ".xdmf")
 
                 print("Saves the field '"+str(field_name)+"' at "+
-                file_name)
+                explicit_file_name)
 
                 print("")
 
                 # Gets the individual field and renames it
 
-                individual_field = functional_data_class.monolithic_solution
+                individual_field = split_fields[fields_names_dict[
+                field_name]]
 
                 individual_field.rename(field_name, "DNS")
-                
-                # Writes the field
 
-                file = XDMFFile(individual_field.function_space().mesh(
-                ).mpi_comm(), file_name)
+                # Verifies if this file has already been created. If 
+                # not, creates it
+
+                append_flag = True
+
+                if not isinstance(file, XDMFFile):
+
+                    print("Creates a new XDMFFile instance")
+
+                    file = XDMFFile(individual_field.function_space(
+                    ).mesh().mpi_comm(), explicit_file_name)
+
+                    # If the file was not provided, the append flag
+                    # must be false to not append a new checkpoint
+                    # if no previous structure had been saved
+
+                    append_flag = False
+
+                # Writes the function
 
                 file.write_checkpoint(individual_field, 
-                individual_field.name(), time)
+                individual_field.name(), time, append=append_flag)
 
                 # Closes the file
 
-                file.close()
+                if close_file:
+
+                    file.close()
+
+            else:
+
+                raise NameError("'field_name' is '"+str(field_name)+
+                "', but it is not a name of proper field. See the "+
+                "available fields' names: "+str(
+                list(fields_names_dict.keys())))
+            
+        # Otherwise, writes all fields
+
+        else:
+
+            for field_name, field_number in fields_names_dict.items(
+            ):
+
+                # Gets the automatic file name
+
+                if explicit_file_name is None:
+
+                    explicit_file_name = (directory_path+"//"+
+                    decapitalize_and_insert_underline(str(field_name
+                    ))+".xdmf")
+
+                print("Saves the field '"+str(field_name)+"' at "+
+                explicit_file_name)
+
+                print("")
+
+                # Gets the individual field and renames it
+
+                individual_field = split_fields[fields_names_dict[
+                field_name]]
+
+                individual_field.rename(field_name, "DNS")
+                
+                # Verifies if this file has already been created. If 
+                # not, creates it
+
+                append_flag = True
+
+                if not isinstance(file, XDMFFile):
+
+                    print("Creates a new XDMFFile instance")
+
+                    file = XDMFFile(individual_field.function_space(
+                    ).mesh().mpi_comm(), explicit_file_name)
+
+                    # If the file was not provided, the append flag
+                    # must be false to not append a new checkpoint
+                    # if no previous structure had been saved
+
+                    append_flag = False
+                
+                # Writes the field
+
+                file.write_checkpoint(individual_field, 
+                individual_field.name(), time, append=append_flag)
+
+                # Closes the file
+
+                if close_file:
+
+                    file.close()
+
+    # For single field problems
 
     else:
 
-        raise TypeError("'functional_data_class' is not an instance of"+
-        " the FunctionalData class, thus, the fields cannot be written"+
-        " into a xdmf file using the function 'write_field_to_xdmf'")
+        if field_name is not None:
+
+            # Verifies if this field is in the available fields
+
+            if field_name in fields_names_dict:
+
+                # Gets the automatic file name
+
+                if explicit_file_name is None:
+
+                    explicit_file_name = (directory_path+"//"+
+                    decapitalize_and_insert_underline(str(field_name
+                    ))+".xdmf")
+
+                print("Saves the field '"+str(field_name)+"' at "+
+                explicit_file_name)
+
+                print("")
+
+                # Gets the individual field and renames it
+
+                individual_field = monolithic_solution
+
+                individual_field.rename(field_name, "DNS")
+
+                # Verifies if this file has already been created. If 
+                # not, creates it
+
+                append_flag = True
+
+                if not isinstance(file, XDMFFile):
+
+                    print("Creates a new XDMFFile instance")
+
+                    file = XDMFFile(individual_field.function_space(
+                    ).mesh().mpi_comm(), explicit_file_name)
+
+                    # If the file was not provided, the append flag
+                    # must be false to not append a new checkpoint
+                    # if no previous structure had been saved
+
+                    append_flag = False
+
+                # Writes the function
+
+                file.write_checkpoint(individual_field, 
+                individual_field.name(), time, append=append_flag)
+
+                # Closes the file
+
+                if close_file:
+
+                    file.close()
+
+            else:
+
+                raise NameError("'field_name' is '"+str(field_name)+
+                "', but it is not a name of proper field. See the "+
+                "available fields' names: "+str(
+                list(fields_names_dict.keys())))
+            
+        # Otherwise, writes as a generic solution
+
+        else:
+
+            # Gets the name of the field
+
+            field_name = list(fields_names_dict.keys())[0]
+
+            # Gets the automatic file name
+
+            if explicit_file_name is None:
+
+                explicit_file_name = (directory_path+"//"+
+                decapitalize_and_insert_underline(str(field_name))+
+                ".xdmf")
+
+            print("Saves the field '"+str(field_name)+"' at "+
+            explicit_file_name)
+
+            print("")
+
+            # Gets the individual field and renames it
+
+            individual_field = monolithic_solution
+
+            individual_field.rename(field_name, "DNS")
+
+            # Verifies if this file has already been created. If not,
+            # creates it
+
+            append_flag = True
+
+            if not isinstance(file, XDMFFile):
+
+                print("Creates a new XDMFFile instance")
+
+                file = XDMFFile(individual_field.function_space(
+                ).mesh().mpi_comm(), explicit_file_name)
+
+                # If the file was not provided, the append flag must
+                # be false to not append a new checkpoint if no pre-
+                # vious structure had been saved
+
+                append_flag = False
+            
+            # Writes the field
+
+            file.write_checkpoint(individual_field, 
+            individual_field.name(), time, append=append_flag)
+
+            # Closes the file
+
+            if close_file:
+
+                file.close()
     
     # Verifies if a visualization copy must be made
 
@@ -238,25 +364,40 @@ directory_path=None, visualization_copy=False):
 
         # Reads the file back
 
-        read_function = read_field_from_xdmf(file_name, 
-        functional_data_class.mesh_file, functional_data_class)
+        read_function = read_field_from_xdmf(explicit_file_name, 
+        mesh_file, functional_data_class, time_step=time_step)
 
         # Writes it using simple write
 
-        copy_file_name = (take_outFileNameTermination(file_name)+"_vis"+
-        "ualization_copy.xdmf")
+        copy_file_name = (take_outFileNameTermination(explicit_file_name
+        )+"_visualization_copy.xdmf")
 
         print("Saves the visualization copy at file '"+str(
         copy_file_name)+"'\n")
 
-        file = XDMFFile(individual_field.function_space().mesh(
-        ).mpi_comm(), copy_file_name)
+        # Verifies if this file has already been created. If not, creates
+        # t
 
-        file.write(read_function, time)
+        if not isinstance(visualization_copy_file, XDMFFile):
+
+            print("Creates a new XDMFFile instance for the visualizati"+
+            "on copy file")
+
+            visualization_copy_file = XDMFFile(
+            individual_field.function_space().mesh().mpi_comm(), 
+            copy_file_name)
+
+        visualization_copy_file.write(read_function, time)
 
         # Closes the file
 
-        file.close()
+        if close_file:
+
+            file.close()
+
+    # Returns the file
+
+    return file
 
 ########################################################################
 ########################################################################
@@ -269,7 +410,7 @@ directory_path=None, visualization_copy=False):
 
 def read_field_from_xdmf(field_file, mesh_file, function_space_info,
 directory_path=None, code_given_field_name=None, 
-code_given_mesh_data_class=None):
+code_given_mesh_data_class=None, time_step=0):
     
     # If the directory path is given, joins them
 
@@ -443,7 +584,8 @@ code_given_mesh_data_class=None):
         with XDMFFile(mesh_data_class.mesh.mpi_comm(), field_file) as xdmf_file:
 
             xdmf_file.read_checkpoint(
-            function_space_info.monolithic_solution, field_name, 0)
+            function_space_info.monolithic_solution, field_name, 
+            time_step)
 
     except Exception as e:
 

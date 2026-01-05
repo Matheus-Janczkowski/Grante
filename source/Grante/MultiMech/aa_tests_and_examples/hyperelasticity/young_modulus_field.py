@@ -40,4 +40,4 @@ E_field, functional_data_class = interpolate_scalar_function(E_function,
 # Saves this field into a xdmf file
 
 write_field_to_xdmf(functional_data_class, directory_path=
-get_parent_path_of_file())
+get_parent_path_of_file(), visualization_copy=True)

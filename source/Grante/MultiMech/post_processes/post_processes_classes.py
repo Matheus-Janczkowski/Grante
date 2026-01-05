@@ -99,7 +99,8 @@ class SaveField(PostProcessMethod):
 
         super().__init__(post_functions.initialize_fieldSaving, 
         post_functions.update_fieldSaving, ["directory path", 
-        "file name", ["intermediate saving flag", False]], [])
+        "file name", ["intermediate saving flag", False], ["readable x"+
+        "dmf file", False]], [])
 
 # Sets a class for the method to save the Cauchy stress field
 

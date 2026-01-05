@@ -12,6 +12,43 @@ import unicodedata
 #                              Path tools                              #
 ########################################################################
 
+# Defines a function to get a list of directories within a path
+
+def get_list_of_directories(whole_path):
+
+    # Initializes a list of directories to create
+
+    directories = [""]
+
+    # Iterates through the path
+
+    for i in range(len(whole_path)):
+
+        # If the character is a bar, this means the last directory name
+        # has been finished
+
+        if whole_path[-(i+1)]=="/":
+
+            # Verifies if the last directory is not empty
+
+            if directories[-1]!="":
+
+                directories.append("")
+
+        # Otherwise, saves the characters
+
+        else:
+
+            directories[-1] = whole_path[-(i+1)]+directories[-1]
+
+    # Checks if the last saved directory is empty
+
+    if directories[-1]=="":
+
+        directories = directories[0:-1]
+
+    return directories
+
 # Defines a function to verify if a file exists
 
 def verify_file_existence(file_path, saving_function=None, termination=
@@ -79,7 +116,7 @@ None):
 
 def verify_path(parent_path, file_name):
 
-    if parent_path is None:
+    if (parent_path is None) or parent_path=="":
 
         return file_name
 
@@ -87,36 +124,9 @@ def verify_path(parent_path, file_name):
 
     if not os.path.exists(parent_path):
 
-        # Initializes a list of directories to create
+        # Gets a list of the individual bits of path
 
-        directories = [""]
-
-        # Iterates through the path
-
-        for i in range(len(parent_path)):
-
-            # If the character is a bar, this means the last directory
-            # name has been finished
-
-            if parent_path[-(i+1)]=="/":
-
-                # Verifies if the last directory is not empty
-
-                if directories[-1]!="":
-
-                    directories.append("")
-
-            # Otherwise, saves the characters
-
-            else:
-
-                directories[-1] = parent_path[-(i+1)]+directories[-1]
-
-        # Checks if the last saved directory is empty
-
-        if directories[-1]=="":
-
-            directories = directories[0:-1]
+        directories = get_list_of_directories(parent_path)
 
         # Initializes the path
 

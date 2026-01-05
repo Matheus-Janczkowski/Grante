@@ -13,9 +13,13 @@ from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import numerical_tools
 
+from ..tool_box import read_write_tools
+
 from ...PythonicUtilities import path_tools
 
 from ...PythonicUtilities import file_handling_tools as file_tools
+
+from ...PythonicUtilities.dictionary_tools import get_first_key_from_value
 
 ########################################################################
 #                      Post-processing tools list                      #
@@ -39,6 +43,8 @@ def initialize_fieldSaving(data, direct_codeData, submesh_flag):
 
     intermediate_saving = data[2]
 
+    readable_xdmf_flag = data[3]
+
     # Takes out the termination of the file name
 
     file_name = path_tools.take_outFileNameTermination(
@@ -60,13 +66,36 @@ def initialize_fieldSaving(data, direct_codeData, submesh_flag):
 
             self.intermediate_saving = intermediate_saving 
 
+            # Defines a flag to save the xdmf file as a readable file. 
+            # This allows the saved file to be read afterwards as a 
+            # function in fenics
+
+            self.readable_xdmf_flag = readable_xdmf_flag
+
             # Sets a counter of solution steps
 
             self.solution_steps = 0
 
-            # Creates the file to have all the time steps
+            # Creates the file to have all the time steps. If a readable
+            # xdmf file is to be use, creates a None object first, as the
+            # write_field_to_xdmf will take control of everything
+
+            if self.readable_xdmf_flag:
+
+                self.result = None 
+
+                # Creates a dictionary of field information
+
+                self.functional_data_dict = {"dictionary of field names":
+                None, "monolithic solution": None, "mesh file": None}
+
+            else:
             
-            self.result = XDMFFile(file_name+".xdmf")
+                self.result = XDMFFile(file_name+".xdmf")
+
+                # Createa a dummy functional data class
+
+                self.functional_data_dict = None
 
             # Sets the result. It can be either a single file or a set 
             # of files when the solution is to be independently saved
@@ -110,9 +139,20 @@ fields_namesDict):
 
         if field_number==-1:
 
-            # Writes the field to the main file
+            # Verifies if the a readable xdmf is to be used
 
-            output_object.result.write(field, time)
+            if output_object.readable_xdmf_flag:
+
+                # Writes the field to the main file using
+
+                output_object.result = read_write_tools.write_field_to_xdmf(
+                output_object.functional_data_dict, time=time,)
+
+            else:
+
+                # Writes the field to the main file
+
+                output_object.result.write(field, time)
 
             # Writes the field to the extra file
 
@@ -869,18 +909,13 @@ fields_namesDict):
     
     # Verifies if the field is the displacement field
 
-    for field_name, field_number_dict in fields_namesDict.items():
+    field_name = get_first_key_from_value(fields_namesDict, field_number)
 
-        if field_number_dict==field_number:
+    if field_name!="Displacement":
 
-            if field_name!="Displacement":
-
-                raise NameError("The field name is '"+str(field_name)+
-                "', but the field required to evaluate the 'SaveMeshVo"+
-                "lumeRatioToReferenceVolume' post-process must be 'Dis"+
-                "placement'")
-            
-            break
+        raise NameError("The field name is '"+str(field_name)+"', but "+
+        "the field required to evaluate the 'SaveMeshVolumeRatioToRefe"+
+        "renceVolume' post-process must be 'Displacement'")
     
     print("Updates the saving of the ratio of the meshe's volume to th"+
     "e initial volume of the mesh\n")

@@ -72,6 +72,12 @@
 \RequirePackage{setspace}
 \RequirePackage{ifthen}
 \RequirePackage{xfrac}
+\RequirePackage{framed}
+\RequirePackage{xparse}
+\RequirePackage{datatool}
+\RequirePackage{etoolbox}
+\RequirePackage{caption}
+\RequirePackage{makecell}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -336,7 +342,9 @@ $\displaystyle\left\{\begin{aligned}
 % Command for defining the code block style    
 
 \definecolor{CodeLightGray}{gray}{0.95}
-\definecolor{CodeBarColor}{rgb}{0.8,0.8,0.8}     
+\definecolor{CodeBarColor}{rgb}{0.8,0.8,0.8}  
+
+\renewcommand{\lstlistingname}{Code}
 
 \lstdefinestyle{ffcode}{
   backgroundcolor=\color{CodeLightGray},
@@ -350,29 +358,35 @@ $\displaystyle\left\{\begin{aligned}
   numbersep=0.5em,
   breaklines=true,
   tabsize=2,
-  columns=fullflexible
+  columns=fullflexible,
+  name=Code,
+  captionpos=b
 }
 
 % Command for creating a code block
 
-\lstnewenvironment{ffcodeMimic}[1][]{
-  \lstset{style=ffcode,#1}
+\lstnewenvironment{CodeBlock}[1][]{
+\lstset{style=ffcode,#1}
 }{}
 
-% Another command for code block
+% Command for creating a block of code with caption and, optionally, a
+% label
+%
+% Example with label
+% \begin{CodeBlockWithCaption}[lst:code]{Caption}
+% bla bla bla
+% \end{CodeBlockWithCaption}
+%
+% Example without label
+% \begin{CodeBlockWithCaption}{Caption}
+% bla bla bla
+% \end{CodeBlockWithCaption}
 
-\newenvironment{ffcodeMimicRef}[2][]{%
-  \noindent
-  \ifstrempty{#2}{}{%
-    \captionof{command}{#2}%
-  }%
-  \ifstrempty{#1}{}{%
-    \label{#1}%
-  }%
-  \begin{ffcodeMimic}
-}{%
-  \end{ffcodeMimic}
-}
+\lstnewenvironment{CodeBlockWithCaption}[2][]{
+\ifstrempty{#1}
+{\lstset{style=ffcode,caption={#2}}}
+{\lstset{style=ffcode,caption={#2},label={#1}}}
+}{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -416,6 +430,40 @@ $\displaystyle\left\{\begin{aligned}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               Colors                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecolor{LightGray}{gray}{0.7}
+
+\definecolor{DarkGray}{gray}{0.4}
+
+% Defines a set of environments with three shades of shadows
+
+\newenvironment{LightShade}{\definecolor{shadecolor}{rgb}{0.8,0.8,0.8}\begin{snugshade}}{\end{snugshade}}
+
+\newenvironment{MediumShade}{\definecolor{shadecolor}{rgb}{0.675,0.675,0.675}\begin{snugshade}}{\end{snugshade}}
+
+\newenvironment{DarkShade}{\definecolor{shadecolor}{rgb}{0.55,0.55,0.55}\begin{snugshade}}{\end{snugshade}}
+
+% Defines a command to write something inside the shadded environments
+
+\NewDocumentCommand{\LightShadeText}{m}{\begin{LightShade}#1\end{LightShade}}
+
+\NewDocumentCommand{\MediumShadeText}{m}{\begin{MediumShade}#1\end{MediumShade}}
+
+\NewDocumentCommand{\DarkShadeText}{m}{\begin{DarkShade}#1\end{DarkShade}}
+
+% Defines a set of commands to write sections, subsections and subsubsections with shade
+
+\NewDocumentCommand{\ShadedSection}{m}{\DarkShadeText{\section{#1}}}
+
+\NewDocumentCommand{\ShadedSubsection}{m}{\MediumShadeText{\subsection{#1}}}
+
+\NewDocumentCommand{\ShadedSubsubsection}{m}{\LightShadeText{\subsubsection{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                           Textual commands                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -442,16 +490,41 @@ elsarticle-num-names}\bibliography{#1}}
 \let\@oddhead\@empty\let\@evenhead\@empty\def\@oddfoot{\reset@font\hfil%
 \thepage\hfil}\let\@evenfoot\@oddfoot}\makeatother}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                               Colors                               %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Command to set some textual bits in Portuguese
 
-\definecolor{LightGray}{gray}{0.7}
+\newcommand{\SetTextualBitsInPortuguese}{\renewcommand{\refname}{Referências}%
+\renewcommand{\figurename}{Figura}%
+\renewcommand{\tablename}{Tabela}%
+\renewcommand{\appendixname}{Apêndice}%
+\abstracttitle{Resumo}%
+\renewcommand{\contentsname}{Sumário}%
+\renewcommand{\lstlistingname}{Código}
+}
 
-\definecolor{DarkGray}{gray}{0.4}
+% Commands to build an enumerating environment where the items are alpha-
+% betically sorted.
+%
+% Usage example:
+% \begin{AlphabeticalEnumerate}
+% \sortitem{Banana}
+% \sortitem{Apple}
+% \sortitem{Cherry}
+% \end{AlphabeticalEnumerate}
 
+\newcommand{\sortitem}[1]{%
+  \DTLnewrow{list}% Create a new entry
+  \DTLnewdbentry{list}{description}{#1}% Add entry as description
+}
+
+\newenvironment{AlphabeticalEnumerate}{%
+  \DTLifdbexists{list}{\DTLcleardb{list}}{\DTLnewdb{list}}% Create new/discard old list
+}{%
+  \DTLsort{description}{list}% Sort list
+  \begin{enumerate}%
+    \DTLforeach*{list}{\theDesc=description}{%
+      \item \theDesc}% Print each item
+  \end{enumerate}%
+}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                               Charts                               %%

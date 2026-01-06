@@ -1,7 +1,11 @@
 # Grante
 Repository to store the Grante's Wonderland.
 
-Booklet link: https://www.overleaf.com/read/wbxhncmtnmkm#0eb73b
+Link to the booklet on installation of a miscelaneous of software: https://www.overleaf.com/read/wbxhncmtnmkm#0eb73b
+
+Link to the booklet on python programming: https://www.overleaf.com/read/hcmfzzsrhndj#00fdb1
+
+Link to the booklet on writing in LaTeX: https://www.overleaf.com/read/sdrvfrpdjhft#66d6f9
 
 # Installation
 Download the repository, unzip the file, put it in a suitable place for you.

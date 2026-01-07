@@ -655,9 +655,10 @@ code_given_mesh_data_class=None, time_step=0):
         "mf';\n2. If 'write_field_to_xdmf' was indeed used, you might "+
         "be trying to read the visualization copy file, which is not m"+
         "ade for this purpose, rather for visualization only;\n3. The "+
-        "name to the function you are trying to impose now is not the "+
-        "same as the one used when it was saved.\n\nThe original error"+
-        " message is: "+str(e))
+        "name to the function (FEniCS function) you are trying to impo"+
+        "se now is, '"+str(field_name)+"', and it may not be the same "+
+        "as the one used when then function was saved.\n\nThe original"+
+        " error message is: "+str(e))
 
     # Returns the function
 

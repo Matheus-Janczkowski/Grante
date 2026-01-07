@@ -1,4 +1,7 @@
 # Routine to store some tests to evaluate convex input neural networks
+#
+# source bin/activate
+# python3 -m source.Grante.DeepMech.aa_tests.tests_tool_box.test_convex_and_partially_convex_input_NNs
 
 import unittest
 

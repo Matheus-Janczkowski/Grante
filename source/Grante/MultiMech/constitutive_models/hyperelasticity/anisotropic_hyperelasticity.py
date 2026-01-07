@@ -100,8 +100,7 @@ class HolzapfelGasserOgdenUnconstrained(HyperelasticMaterialModel):
 
         self.material_properties = constitutive_tools.check_materialDictionary(
         self.material_properties, ["c", "k1", "k2", "gamma", "kappa", 
-        "k", "local system of coordinates: a direction", "local system"+
-        " of coordinates: d direction"], code_given_information=
+        "k", "a direction", "d direction"], code_given_information=
         code_given_information)
         
         self.c = self.material_properties["c"]
@@ -118,11 +117,9 @@ class HolzapfelGasserOgdenUnconstrained(HyperelasticMaterialModel):
 
         self.k = self.material_properties["k"]
 
-        vector_e1 = self.material_properties["local system of coordina"+
-        "tes: a direction"]
+        vector_e1 = self.material_properties["a direction"]
 
-        vector_e2 = self.material_properties["local system of coordina"+
-        "tes: d direction"]
+        vector_e2 = self.material_properties["d direction"]
 
         vector_e3 = ufl.cross(vector_e1, vector_e2)
 

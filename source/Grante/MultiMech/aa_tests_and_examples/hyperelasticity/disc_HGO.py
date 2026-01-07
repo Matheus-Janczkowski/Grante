@@ -74,11 +74,9 @@ material_properties1["k"] = 15E6
 
 # The vectors ahead form a plane where the fiber is locally present
 
-material_properties1["local system of coordinates: a direction"] = (
-[1.0, 0.0, 0.0])
+material_properties1["a direction"] = ([1.0, 0.0, 0.0])
 
-material_properties1["local system of coordinates: d direction"] = (
-[0.0, 0.0, 1.0])
+material_properties1["d direction"] = ([0.0, 0.0, 1.0])
 
 material_properties2 = dict()
 
@@ -92,7 +90,7 @@ material_properties3["c1"] = 1E6
 
 material_properties3["c2"] = 2E6
 
-material_properties3["bulk modulu"] = 3E6
+material_properties3["bulk modulus"] = 3E6
 
 # Sets the material as a HGO material
 

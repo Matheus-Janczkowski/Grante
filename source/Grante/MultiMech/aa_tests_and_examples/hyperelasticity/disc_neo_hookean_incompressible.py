@@ -25,13 +25,15 @@ displacement_fileName = "displacement.xdmf"
 post_processes = [["Displacement", dict()], ["Pressure", dict()]]
 
 post_processes[0][1]["SaveField"] = {"directory path": results_path, 
-"file name": "displacement.xdmf"}
+"file name": "displacement.xdmf", "readable xdmf file": True, "visuali"+
+"zation copy for readable xdmf": True}
 
 post_processes[0][1]["SaveMeshVolumeRatioToReferenceVolume"] = {"director"+
 "y path": results_path, "file name": "volume_ratio.txt"}
 
 post_processes[1][1]["SaveField"] = {"directory path": results_path, 
-"file name": "pressure.xdmf"}
+"file name": "pressure.xdmf", "visualization copy for readable xdmf": 
+True}
 
 ########################################################################
 #                         Material properties                          #
@@ -132,7 +134,7 @@ t_final}
 
 traction_dictionary = dict()
 
-traction_dictionary["top"] = traction_boundary
+#traction_dictionary["top"] = traction_boundary
 
 # Defines a dictionary of boundary conditions. Each key is a physical
 # group and each value is another dictionary or a list of dictionaries 
@@ -143,6 +145,11 @@ traction_dictionary["top"] = traction_boundary
 bcs_dictionary = dict()
 
 bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
+
+bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
+"mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
+"nslation": [0.0, 0.0, 4.0], "in_planeSpinDirection": [1.0, 0.0, 0.0], 
+"in_planeSpin": 15.0, "normal_toPlaneSpin": 10.0}}
 
 ########################################################################
 ########################################################################

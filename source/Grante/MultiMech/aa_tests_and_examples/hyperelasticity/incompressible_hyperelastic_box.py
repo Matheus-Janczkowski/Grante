@@ -108,6 +108,19 @@ solver_parameters["newton_absolute_tolerance"] = 1e-4
 
 solver_parameters["newton_maximum_iterations"] = 15
 
+"""
+solver_parameters["linear_solver"] = "gmres"
+
+solver_parameters["preconditioner"] = "hypre_amg"
+
+solver_parameters["krylov_absolute_tolerance"] = 1e-5
+
+solver_parameters["krylov_relative_tolerance"] = 1e-6
+
+solver_parameters["krylov_maximum_iterations"] = 15000
+
+solver_parameters["krylov_monitor_convergence"] = True#"""
+
 # Sets the initial time
 
 t = 0.0

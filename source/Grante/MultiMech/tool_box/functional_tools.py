@@ -21,6 +21,8 @@ from ...PythonicUtilities import file_handling_tools as file_tools
 
 from ...PythonicUtilities import programming_tools
 
+from ...PythonicUtilities.dictionary_tools import delete_dictionary_keys
+
 ########################################################################
 #                     Boundary conditions selector                     #
 ########################################################################
@@ -282,20 +284,14 @@ boundary_conditions, solver_parameters=None):
 
     # Sets the solver to this problem
 
-    """solver = NonlinearVariationalSolver(Res)
-
-    if not (solver_parameters is None):
-
-        solver = set_solverParameters(solver, solver_parameters)
-
-    return solver"""
-
-    return create_solverClass(Res, solver_parameters)
+    return create_solverClass(Res, solver_parameters, 
+    functional_data_class.fields_names_dict)
 
 # Defines a function to create a class of NonlinearVariationalSolver 
 # with extra features taken from the solver_parameters dictionary
 
-def create_solverClass(non_linearProblem, solver_parameters):
+def create_solverClass(non_linearProblem, solver_parameters, 
+fields_names_dict):
 
     if solver_parameters is None:
 
@@ -327,6 +323,20 @@ def create_solverClass(non_linearProblem, solver_parameters):
     # If there is no non native parameters, creates the solver
 
     if len(non_nativeParameters.keys())==0:
+
+        # Verifies if the solver parameters dictionary asks for PETSc options
+        # to be used
+
+        if "solver framework" in solver_parameters:
+
+            # If the value is PETSc, sets the options before creating the
+            # solver object
+
+            if solver_parameters["solver framework"]=="PETSc":
+
+                set_petsc_options(solver_parameters, fields_names_dict)
+
+                return NonlinearVariationalSolver(non_linearProblem)
 
         return set_solverParameters(NonlinearVariationalSolver(
         non_linearProblem), solver_parameters)
@@ -576,68 +586,403 @@ def set_solverParameters(solver, solver_parameters):
         solver.parameters['newton_solver']['krylov_solver']['monitor_c'+
         'onvergence'] = solver_parameters["krylov_monitor_convergence"]
 
-    if "petsc_options" in parameter_types:
-
-        opts = PETSc.Options()
-
-        # If the snes solver is set, prescribe the tolerances differently
-
-        if "nonlinear_solver" in solver_parameters:
-            
-            if solver_parameters["nonlinear_solver"]=="snes":
-
-                if "newton_relative_tolerance" in parameter_types:
-
-                    opts["snes_rtol"] = solver_parameters["newton_rela"+
-                    "tive_tolerance"]
-
-                if "newton_absolute_tolerance" in parameter_types:
-
-                    opts["snes_atol"] = solver_parameters["newton_abso"+
-                    "lute_tolerance"]
-
-                if "newton_maximum_iterations" in parameter_types:
-
-                    opts["snes_max_it"] = solver_parameters["newton_ma"+
-                    "ximum_iterations"]
-
-                if "linear_solver" in parameter_types:
-
-                    opts["pc_factor_mat_solver_type"] = solver_parameters[
-                    "linear_solver"]
-
-                if "krylov_absolute_tolerance" in parameter_types:
-
-                    opts["ksp_atol"] = solver_parameters["krylov_absol"+
-                    "ute_tolerance"]
-
-                if "krylov_relative_tolerance" in parameter_types:
-
-                    opts["ksp_rtol"] = solver_parameters["krylov_relat"+
-                    "ive_tolerance"]
-
-                if "krylov_maximum_iterations" in parameter_types:
-
-                    opts["ksp_max_it"] = solver_parameters["krylov_max"+
-                    "imum_iterations"]
-
-        if solver_parameters["petsc_options"]:
-
-            # Defines options to check and avoid NaN/Inf in the solution
-
-            opts["snes_check_jacobian_domain_error"] = None
-
-            opts["snes_check_function_norm"] = ""  
-
-            opts["snes_check_function_value"] = ""
-
-            opts["snes_check_jacobian_norm"] = ""
-
-            opts["snes_check_jacobian_largest"] = ""
-
     # Returns the updated solver
 
     return solver
+
+# Defines a function to set PTSC options
+
+def set_petsc_options(solver_parameters, fields_names_dict):
+
+    opts = PETSc.Options()
+
+    # Sets the obligatory and optional keys of the dictionary
+
+    obligatory_keys = ["snes_type", "snes_rtol", "snes_atol", "ksp_type",
+    "ksp_rtol", "ksp_atol", "ksp_max_it", "pc_type"]
+
+    optional_keys = ["snes_linesearch_type", "snes_monitor", "ksp_moni"+
+    "tor", "pc_fieldsplit_type", "pc_fieldsplit_schur_factorization_ty"+
+    "pe", "pc_fieldsplit_schur_precondition", "solver per field", "sne"+
+    "s_view", "ksp_view"]
+
+    # Verifies if the nonlinear solver was selected
+
+    if obligatory_keys[0] in solver_parameters:
+
+        opts["snes_type"] = solver_parameters["snes_type"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "snes_type")
+
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'snes_type' was provided. One value option f"+
+        "or such key 'newtonls', which means Newton-Raphson solver wit"+
+        "h line-search.\n\nThe obligatory keys are:\n"+str(obligatory_keys
+        )+"\n\nThe optional keys are:\n"+str(optional_keys))
+    
+    # Verifies if a line search option was given
+
+    if optional_keys[0] in solver_parameters:
+
+        opts["snes_linesearch_type"] = solver_parameters["snes_linesea"+
+        "rch_type"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "snes_linesearch_type")
+
+    # Verifies if the tolerances for the nonlinear solver were given
+
+    if obligatory_keys[1] in solver_parameters:
+
+        opts["snes_rtol"] = solver_parameters["snes_rtol"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "snes_rtol")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'snes_rtol' was provided. This key is respon"+
+        "sible for the relative tolerance of the nonlinear solver\n\nT"+
+        "he obligatory keys are:\n"+str(obligatory_keys)+"\n\nThe option"+
+        "al keys are:\n"+str(optional_keys))
+    
+    if obligatory_keys[2] in solver_parameters:
+
+        opts["snes_atol"] = solver_parameters["snes_atol"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "snes_atol")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'snes_atol' was provided. This key is respon"+
+        "sible for the absolute tolerance of the nonlinear solver\n\nT"+
+        "he obligatory keys are:\n"+str(obligatory_keys)+"\n\nThe option"+
+        "al keys are:\n"+str(optional_keys))
+    
+    # Verifies if a convergence monitor is to be plotted
+
+    if optional_keys[1] in solver_parameters:
+
+        opts["snes_monitor"] = solver_parameters["snes_monitor"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "snes_monitor")
+
+    else:
+
+        # Defaults to True
+
+        opts["snes_monitor"] = None
+
+    # Verifies the method for the linear system
+
+    if obligatory_keys[3] in solver_parameters:
+
+        opts["ksp_type"] = solver_parameters["ksp_type"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "ksp_type")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'ksp_type' was provided. This key is respons"+
+        "ible for the method to solving the linear sistem of algebraic"+
+        "equations\n\nThe obligatory keys are:\n"+str(obligatory_keys)+
+        "\n\nThe optional keys are:\n"+str(optional_keys))
+    
+    # Verifies the tolerances of the linear system
+    
+    if obligatory_keys[4] in solver_parameters:
+
+        opts["ksp_rtol"] = solver_parameters["ksp_rtol"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "ksp_rtol")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'ksp_rtol' was provided. This key is respons"+
+        "ible for the relative tolerance for the residual of the linea"+
+        "r sistem of algebraic equations\n\nThe obligatory keys are:\n"+
+        str(obligatory_keys)+"\n\nThe optional keys are:\n"+str(
+        optional_keys))
+    
+    if obligatory_keys[5] in solver_parameters:
+
+        opts["ksp_atol"] = solver_parameters["ksp_atol"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "ksp_atol")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'ksp_atol' was provided. This key is respons"+
+        "ible for the relative tolerance for the residual of the linea"+
+        "r sistem of algebraic equations\n\nThe obligatory keys are:\n"+
+        str(obligatory_keys)+"\n\nThe optional keys are:\n"+str(
+        optional_keys))
+    
+    # Verifies the maximum number of iterations of the linear solver
+
+    if obligatory_keys[6] in solver_parameters:
+
+        opts["ksp_max_it"] = solver_parameters["ksp_max_it"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "ksp_max_it")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'ksp_max_it' was provided. This key is respo"+
+        "nsible for the maximum number of iterations of the method to "+
+        "solving the linear system of algebraic equations\n\nThe oblig"+
+        "atory keys are:\n"+str(obligatory_keys)+"\n\nThe optional keys "+
+        "are:"+str(optional_keys))
+    
+     # Verifies if a convergence monitor for the linear solver is to be 
+     # plotted
+
+    if optional_keys[2] in solver_parameters:
+
+        opts["ksp_monitor"] = solver_parameters["ksp_monitor"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "ksp_monitor")
+
+    # Verifies the preconditioner options
+
+    if obligatory_keys[7] in solver_parameters:
+
+        opts["pc_type"] = solver_parameters["pc_type"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "pc_type")
+        
+    else:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters, but no key 'pc_type' was provided. This key is responsi"+
+        "ble for selecting the preconditioner\n\nThe obligatory keys a"+
+        "re:"+str(obligatory_keys)+"\n\nThe optional keys are:\n"+str(
+        optional_keys))
+    
+    # Verifies options concerning field split
+
+    if optional_keys[3] in solver_parameters:
+
+        opts["pc_fieldsplit_type"] = solver_parameters["pc_fieldsplit_"+
+        "type"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "pc_fieldsplit_type")
+        
+    if optional_keys[4] in solver_parameters:
+
+        opts["pc_fieldsplit_schur_factorization_type"] = solver_parameters[
+        "pc_fieldsplit_schur_factorization_type"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "pc_fieldsplit_schur_factorization_type")
+
+    if optional_keys[5] in solver_parameters:
+
+        opts["pc_fieldsplit_schur_precondition"] = solver_parameters[
+        "pc_fieldsplit_schur_precondition"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "pc_fieldsplit_schur_precondition")
+        
+    # Verifies if there is a dictionary to select preconditioners per
+    # field
+
+    if optional_keys[6] in solver_parameters:
+
+        # Verifies if the value is another dictionary
+
+        solvers_dict = solver_parameters["solver per field"]
+
+        if isinstance(solvers_dict, dict):
+
+            for field_name, solver_field in solvers_dict.items():
+
+                if not isinstance(solver_field, list):
+
+                    raise ValueError("PETSc options were selected as s"+
+                    "olver parameters. The key 'solvers per field' was"+
+                    " provided by the user. The corresponding value, a"+
+                    " dictionary, has a key '"+str(field_name)+"', and"+
+                    " the corresponding value is not a list. It must b"+
+                    "e a list ['linear solver name', 'preconditioner']")
+
+                if field_name in fields_names_dict:
+
+                    opts["fieldsplit_"+str(fields_names_dict[field_name]
+                    )+"_ksp_type"] = solver_field[0]
+
+                    opts["fieldsplit_"+str(fields_names_dict[field_name]
+                    )+"_pc_type"] = solver_field[1]
+
+                else:
+
+                    raise ValueError("PETSc options were selected as s"+
+                    "olver parameters. The key 'solvers per field' was"+
+                    " provided by the user, but the corresponding valu"+
+                    "e, a dictionary, has a key '"+str(field_name)+"',"+
+                    " and it is not a field of the problem. Check the "+
+                    "available fields: "+str(list(fields_names_dict.keys(
+                    ))))
+
+        else:
+
+            raise ValueError("PETSc options were selected as solver pa"+
+            "rameters. The key 'preconditioners per field' was provide"+
+            "d by the user, but the corresponding value is not a dicti"+
+            "onary. It must be a dictionary where the keys are the nam"+
+            "es of the fields and the values are the preconditioners")
+        
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "solver per field")
+
+    # Verifies if snes is to be viewed
+
+    if optional_keys[7] in solver_parameters:
+
+        opts["snes_view"] = solver_parameters["snes_view"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "snes_view")
+
+    else:
+
+        opts["snes_view"] = None
+
+    # Verifies if ksp is to be viewed
+
+    if optional_keys[8] in solver_parameters:
+
+        opts["ksp_view"] = solver_parameters["ksp_view"]
+
+        # Deletes this key to make sure the dictionary of parameters get
+        # empty at the end of this function
+
+        solver_parameters = delete_dictionary_keys(solver_parameters,
+        "ksp_view")
+
+    else:
+
+        opts["ksp_view"] = None
+
+    # Deletes the key that asks for PETSc framework
+
+    solver_parameters = delete_dictionary_keys(solver_parameters, "sol"+
+    "ver framework")
+        
+    # Verifies if the dictionary of solver parameters is empty, otherwi-
+    # se the user defined keys that are meaningless or were not imple-
+    # mented yet
+
+    if len(solver_parameters.keys())>0:
+
+        obligatory_keys = "\n".join(key for key in obligatory_keys)
+
+        optional_keys = "\n".join(key for key in optional_keys)
+
+        raise ValueError("PETSc options were selected as solver parame"+
+        "ters. The following keys were not used. These keys are either"+
+        " meaningless for PETSc, or they were not implemented in Multi"+
+        "Mech yet. The list of unused keys is: "+str(list(
+        solver_parameters.keys()))+"\n\nThe obligatory keys are:\n"+str(
+        obligatory_keys)+"\n\nThe optional keys are:\n"+str(optional_keys))
 
 ########################################################################
 #                       Finite element creation                        #

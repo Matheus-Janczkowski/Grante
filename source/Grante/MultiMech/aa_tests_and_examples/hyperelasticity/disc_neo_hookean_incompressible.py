@@ -23,15 +23,15 @@ results_path = get_parent_path_of_file()
 post_processes = [["Displacement", dict()], ["Pressure", dict()]]
 
 post_processes[0][1]["SaveField"] = {"directory path": results_path, 
-"file name": "displacement.xdmf", "readable xdmf file": True, "visuali"+
-"zation copy for readable xdmf": True}
+"file name": "displacement.xdmf", "readable xdmf file": False, "visuali"+
+"zation copy for readable xdmf": False}
 
 post_processes[0][1]["SaveMeshVolumeRatioToReferenceVolume"] = {"director"+
 "y path": results_path, "file name": "volume_ratio.txt"}
 
 post_processes[1][1]["SaveField"] = {"directory path": results_path, 
 "file name": "pressure.xdmf", "visualization copy for readable xdmf": 
-True}
+False}
 
 ########################################################################
 #                         Material properties                          #
@@ -51,8 +51,22 @@ material_properties["E"] = E
 
 material_properties["nu"] = v
 
+material_properties_nucleus = dict()
+
+material_properties_nucleus["c1"] = 1E6
+
+material_properties_nucleus["c2"] = 1E5
+
+material_properties_nucleus["bulk modulus"] = 1E8
+
 # Sets the material as a neo-hookean material using the corresponding
 # class
+
+constitutive_model = dict()
+
+constitutive_model["annulus"] = constitutive_models.NeoHookean(material_properties)
+
+constitutive_model["nucleus"] = constitutive_models.MooneyRivlin(material_properties_nucleus)
 
 constitutive_model = constitutive_models.NeoHookean(material_properties)
 
@@ -87,19 +101,45 @@ solver_parameters["newton_relative_tolerance"] = 1e-4
 
 solver_parameters["newton_absolute_tolerance"] = 1e-4
 
-solver_parameters["newton_maximum_iterations"] = 10
+solver_parameters["newton_maximum_iterations"] = 15
 
-solver_parameters["linear_solver"] = "gmres"
+solver_parameters["linear_solver"] = "mumps"
 
-solver_parameters["preconditioner"] = "hypre_amg"
+"""solver_parameters["solver framework"] = "PETSc"
 
-solver_parameters["krylov_absolute_tolerance"] = 1e-6
+solver_parameters["snes_type"] = "newtonls"
 
-solver_parameters["krylov_relative_tolerance"] = 1e-6
+solver_parameters["snes_rtol"] = 1E-5
 
-solver_parameters["krylov_maximum_iterations"] = 15000
+solver_parameters["snes_atol"] = 1E1
 
-solver_parameters["krylov_monitor_convergence"] = True
+solver_parameters["ksp_type"] = "gmres"
+
+solver_parameters["ksp_rtol"] = 1E-7
+
+solver_parameters["ksp_atol"] = 1E-1
+
+solver_parameters["ksp_max_it"] = 15000
+
+solver_parameters["pc_type"] = "hypre"#"fieldsplit"
+
+solver_parameters["snes_linesearch_type"] = "bt"
+
+solver_parameters["snes_monitor"] = None 
+
+solver_parameters["ksp_monitor"] = None 
+
+solver_parameters["ksp_view"] = None"
+"""
+
+"""solver_parameters["pc_fieldsplit_type"] = "schur"
+
+solver_parameters["pc_fieldsplit_schur_factorization_type"] = "lower"
+
+solver_parameters["pc_fieldsplit_schur_precondition"] = "selfp"
+
+solver_parameters["solver per field"] = {"Displacement": ["cg", "hypre"],
+"Pressure": ["preonly", "jacobi"]}"""
 
 # Sets the initial time
 
@@ -119,7 +159,7 @@ maximum_loadingSteps = 5
 
 # Defines a load expression
 
-maximum_load = 2E4
+maximum_load = 2E5
 
 # Assemble the traction vector using this load expression
 
@@ -144,10 +184,11 @@ bcs_dictionary = dict()
 
 bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
 
+#"""
 bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
 "mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
-"nslation": [0.0, 0.0, 4.0], "in_planeSpinDirection": [1.0, 0.0, 0.0], 
-"in_planeSpin": 15.0, "normal_toPlaneSpin": 10.0}}
+"nslation": [0.0, 0.0, 5.0], "in_planeSpinDirection": [1.0, 0.0, 0.0], 
+"in_planeSpin": 10.0, "normal_toPlaneSpin": 10.0}}#"""
 
 ########################################################################
 ########################################################################

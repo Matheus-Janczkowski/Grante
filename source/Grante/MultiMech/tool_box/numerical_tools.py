@@ -7,6 +7,8 @@ import ufl_legacy as ufl
 
 import numpy as np
 
+import scipy as sp
+
 from ...PythonicUtilities import programming_tools
 
 ########################################################################
@@ -171,12 +173,16 @@ def closest_numberInList(number, list_ofNumbers):
 # Defines a function to construct the rotation matrix numerically (with-
 # out any ufl function)
 
-def rotation_tensorEulerRodrigues(phi):
+def rotation_tensorEulerRodrigues(phi, return_numpy_array=False):
 
     if not isinstance(phi, list):
 
         raise TypeError("The numerical rotation_tensorEulerRodrigues w"+
         "as chosen and the vector 'phi' is not a list")
+    
+    elif isinstance(phi, np.ndarray):
+
+        phi = phi.tolist()
 
     # Evaluates the rotation angle
 
@@ -216,4 +222,34 @@ def rotation_tensorEulerRodrigues(phi):
 
             R_bar[i][j] += (c2*W[i][j])+(c3*axial_tensorAxial[i][j])
 
-    return R_bar
+    # If it is asked to return a numpy array
+
+    if return_numpy_array:
+
+        return np.array(R_bar)
+    
+    else:
+
+        return R_bar
+
+# Defines a function to get the axial vector corresponding to a rotation
+# tensor 
+
+def get_axle_from_rotation_tensor(R, return_numpy_array=False):
+
+    # As the rotation tensor is the exponential of a skew-symmetric ten-
+    # sor whose axial vector is the rotation axle, we take the logarithm
+
+    W = sp.linalg.logm(R)
+
+    # Gets the axial vector
+
+    axial_vector = [W[2,1], W[0,2], W[1,0]]
+
+    if return_numpy_array:
+
+        return np.array(axial_vector)
+    
+    else:
+
+        return axial_vector

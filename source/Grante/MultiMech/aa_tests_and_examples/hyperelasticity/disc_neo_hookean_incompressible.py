@@ -1,4 +1,7 @@
 # Routine to test a hyperelastic disc
+#
+# Parallel execution:
+# mpirun -np 2 python3 -m source.Grante.MultiMech.aa_tests_and_examples.hyperelasticity.disc_neo_hookean_incompressible
 
 from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
 
@@ -202,4 +205,4 @@ variational_framework.hyperelasticity_two_fields(
 constitutive_model, traction_dictionary, maximum_loadingSteps, t_final, 
 post_processes, mesh_fileName, solver_parameters, 
 polynomial_degree_displacement=polynomial_degree, t=t, 
-dirichlet_boundaryConditions=bcs_dictionary, verbose=True)
+dirichlet_boundaryConditions=bcs_dictionary, verbose=True, run_in_parallel=True)

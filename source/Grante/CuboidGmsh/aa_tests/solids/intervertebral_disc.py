@@ -1,4 +1,5 @@
 # Routine to mesh the intervertebral disc given points
+# python3 -m source.Grante.CuboidGmsh.aa_tests.solids.intervertebral_disc
 
 import numpy as np
 
@@ -21,6 +22,10 @@ def mesh_disc():
     outer_radius = 5.0
 
     cube_radius = 0.5*inner_radius
+
+    bias_axial = ["Bump", 0.5]
+
+    transfinite_directions = [5, 7, 9]
 
     # Square curve
 
@@ -107,8 +112,6 @@ def mesh_disc():
     "erior outer": inferior_curve_outer, "superior outer":
     superior_curve_outer}
 
-    transfinite_directions = [10, 10, 20]
-
     ####################################################################
     #                     Boundary surfaces setting                    #
     ####################################################################
@@ -145,7 +148,8 @@ def mesh_disc():
     transfinite_directions=transfinite_directions, geometric_data=
     geometric_data, explicit_volume_physical_group_name="nucleus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper"},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # First nucleus flare
 
@@ -167,7 +171,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="nucleus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper"},
     edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Second nucleus flare
 
@@ -189,7 +194,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="nucleus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper"},
     edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Third nucleus flare
 
@@ -211,7 +217,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="nucleus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper"},
     edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Fourth nucleus flare
 
@@ -233,7 +240,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="nucleus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper"},
     edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # First annulus flare
 
@@ -255,7 +263,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="annulus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper", 2:
     "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Second annulus flare
 
@@ -277,7 +286,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="annulus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper", 2:
     "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Third annulus flare
 
@@ -299,7 +309,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="annulus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper", 2:
     "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Fourth annulus flare
 
@@ -321,7 +332,8 @@ def mesh_disc():
     geometric_data, explicit_volume_physical_group_name="annulus",
     explicit_surface_physical_group_name={1: "lower", 6: "upper", 2:
     "outer side"}, edges_points={1: edge_points_1, 5: edge_points_5},
-    parametric_curves=parametric_curves)
+    parametric_curves=parametric_curves, bias_directions={"z": 
+    bias_axial})
 
     # Creates the geometry and meshes it
 

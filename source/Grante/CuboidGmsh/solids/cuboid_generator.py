@@ -1113,9 +1113,58 @@ bias_directions):
 
     if bias_axis in bias_directions.keys():
 
-        gmsh.model.geo.mesh.setTransfiniteCurve(line, 
-        transfinite_nDivisions, "Progression", bias_directions[bias_axis
-        ])
+        # Verifies if the bias values is a float, then the default bias
+        # method is progression
+
+        bias_value = bias_directions[bias_axis]
+
+        if isinstance(bias_value, float) or isinstance(bias_value, int):
+
+            gmsh.model.geo.mesh.setTransfiniteCurve(line, 
+            transfinite_nDivisions, "Progression", bias_value)
+
+        # If it is a list, the method is passed
+
+        elif isinstance(bias_value, list):
+
+            # Verifies if it has a length of 2
+
+            if len(bias_value)!=2:
+
+                raise IndexError("The bias value is a list, but it mus"+
+                "t have a length of two: the first element is the name"+
+                " of the method, either 'Progression' or 'Bump'; and t"+
+                "he second element is the bias factor, a float. The cu"+
+                "rrent bias value is: "+str(bias_value))
+
+            # Verifies if the first value is either 'Progression' or 
+            # 'Bump'
+
+            elif not (bias_value[0]=="Progression" or (bias_value[0]==
+            "Bump")):
+
+                raise NameError("The bias value is a list, the first v"+
+                "alue must be the name of the method, either 'Progress"+
+                "ion' or 'Bump'. Currently, it is: "+str(bias_value[0]))
+            
+            elif not (isinstance(bias_value[1], float) or isinstance(
+            bias_value[1], int)):
+                
+                raise TypeError("The bias value is a list, the second "+
+                "value of this list must be the bias factor, either a "+
+                "float or an integer. Currently, it is: "+str(
+                bias_value[1]))
+            
+            gmsh.model.geo.mesh.setTransfiniteCurve(line, 
+            transfinite_nDivisions, bias_value[0], bias_value[1])
+
+        else:
+
+            raise TypeError("The bias value can be either a float or i"+
+            "nteger to tell the bias factor directly; or it can be a l"+
+            "ist with the name of the bias method ('Progression' or 'B"+
+            "ump'), and the value of the bias factor. Currently, it is"+
+            ": "+str(bias_value))
 
     else:
 

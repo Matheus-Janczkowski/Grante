@@ -1,6 +1,33 @@
 # Routine to store methods to help with parallelized tasks
 
-from dolfin import *
+from dolfin import *  
+
+########################################################################
+#                             Communicator                             #
+########################################################################                             
+
+# Defines a function to create the communicator object, comm, to commu-
+# nicate between processors
+
+def mpi_create_comm(automatic_comm_generation, comm=None):
+
+    if automatic_comm_generation and (comm is None):
+
+        comm = MPI.comm_world
+
+    return comm
+
+########################################################################
+#                               Barrier                                #
+########################################################################
+
+# Defines a function to create a barrier to synchronize all processors
+
+def mpi_barrier(comm):
+
+    if comm is not None:
+
+        MPI.barrier(comm)
 
 ########################################################################
 #                               Printing                               #
@@ -41,9 +68,32 @@ def mpi_xdmf_file(comm, filename):
 def mpi_execute_function(comm, function, *positional_arguments, 
 **keyword_arguments):
     
-    if (comm is None) or MPI.rank(comm) == 0:
+    # If no parallel execution is required, the comm object is None. 
+    # Then, the execution is as normal
+    
+    if comm is None:
 
         return function(*positional_arguments, **keyword_arguments)
+    
+    # Otherwise, the processor must be evaluated
+
+    rank = MPI.rank(comm)
+
+    # Initializes a result object and computes it only if the first pro-
+    # cessor is asking for it
+
+    result = None
+
+    if rank==0:
+
+        result = function(*positional_arguments, **keyword_arguments)
+
+    # Broadcasts result to all processors, so all of them have the same
+    # result
+
+    result = comm.bcast(result, root=0)
+
+    return result
     
 ########################################################################
 #                              FEM fields                              #

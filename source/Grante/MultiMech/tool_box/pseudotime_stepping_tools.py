@@ -10,9 +10,11 @@ from ..tool_box import mesh_handling_tools as mesh_tools
 
 from ..tool_box import post_processing_tools
 
-from ..post_processes import post_processes_classes as post_classes
-
 from ..tool_box import functional_tools
+
+from ..tool_box.parallelization_tools import mpi_print
+
+from ..post_processes import post_processes_classes as post_classes
 
 from ...PythonicUtilities import programming_tools
 
@@ -52,12 +54,12 @@ None, field_correction=None):
     
     fields_namesDict = functional_data_class.fields_names_dict
     
-    print("\n#########################################################"+
+    mpi_print(mesh_dataClass.comm, "\n#########################################################"+
     "###############\n#              The Newton-Raphson scheme will be"+
     " initiated             #\n#######################################"+
     "#################################\n")
 
-    print("There are "+str(len(solution_field.vector()))+" degrees of "+
+    mpi_print(mesh_dataClass.comm, "There are "+str(len(solution_field.vector()))+" degrees of "+
     "freedom in the mesh\n")
 
     # Verifies if the classes of macroscale quantities are indeed clas-
@@ -176,7 +178,7 @@ None, field_correction=None):
 
     if len(dirichlet_loads)==0 and len(neumann_loads)==0:
 
-        print("\nWARNING: there are no Dirichlet boundary conditions n"+
+        mpi_print(mesh_dataClass.comm, "\nWARNING: there are no Dirichlet boundary conditions n"+
         "or Neumann boundary conditions\n")
 
     # Initializes the pseudotime counter
@@ -234,7 +236,7 @@ None, field_correction=None):
 
         # Prints step information
 
-        print_stepInfo(time_counter, t)
+        print_stepInfo(time_counter, t, mesh_dataClass.comm)
 
         # Updates the Dirichlet boundary conditions 
 
@@ -306,7 +308,7 @@ None, field_correction=None):
 
         end_time = time.time()
 
-        print("The solution of this pseudotime took "+str(end_time-
+        mpi_print(mesh_dataClass.comm, "The solution of this pseudotime took "+str(end_time-
         start_time)+" seconds\n\n")
 
         # If the field has to be corrected, like in multiscale analysis, 
@@ -461,12 +463,12 @@ None, field_correction=None):
 
         end_postProcessingTime = time.time()
 
-        print("\n\nThe post-processing phase took "+str(
+        mpi_print(mesh_dataClass.comm, "\n\nThe post-processing phase took "+str(
         end_postProcessingTime-end_time)+" seconds\n\n")
 
     final_time_simulation = time.time()
 
-    print("\n#########################################################"+
+    mpi_print(mesh_dataClass.comm, "\n#########################################################"+
     "###############\nThe whole simulation took: "+str(
     final_time_simulation-start_time_simulation)+" seconds\n##########"+
     "##############################################################\n")
@@ -621,7 +623,7 @@ None, fields_corrections=None):
         t_final, maximum_loadingSteps=maximum_loadingSteps,
         field_correction=fields_corrections)
     
-    print("\n#########################################################"+
+    mpi_print(mesh_dataClass.comm, "\n#########################################################"+
     "###############\n#              The Newton-Raphson scheme will be"+
     " initiated             #\n#######################################"+
     "#################################\n")
@@ -632,7 +634,7 @@ None, fields_corrections=None):
 
     for i in range(n_fields):
 
-        print("There are "+str(len(split_solution[i].vector()))+" degrees "+
+        mpi_print(mesh_dataClass.comm, "There are "+str(len(split_solution[i].vector()))+" degrees "+
         "of freedom in the "+str(i+1)+"-th field of the mesh\n")
 
     # Constructs the class of code-provided information for the post-
@@ -760,7 +762,7 @@ None, fields_corrections=None):
 
     if len(dirichlet_loads)==0 and len(neumann_loads)==0:
 
-        print("\nWARNING: there are no Dirichlet boundary conditions n"+
+        mpi_print(mesh_dataClass.comm, "\nWARNING: there are no Dirichlet boundary conditions n"+
         "or Neumann boundary conditions\n")
 
     # Initializes the pseudotime counter
@@ -810,7 +812,7 @@ None, fields_corrections=None):
 
         # Prints step information
 
-        print_stepInfo(time_counter, t)
+        print_stepInfo(time_counter, t, mesh_dataClass.comm)
 
         # Updates the Dirichlet boundary conditions 
 
@@ -882,7 +884,7 @@ None, fields_corrections=None):
 
         end_time = time.time()
 
-        print("The solution of this pseudotime took "+str(end_time-
+        mpi_print(mesh_dataClass.comm, "The solution of this pseudotime took "+str(end_time-
         start_time)+" seconds\n\n")
 
         # Splits the solution and appends each field to a list. Adds the
@@ -1056,12 +1058,12 @@ None, fields_corrections=None):
 
         end_postProcessingTime = time.time()
 
-        print("\n\nThe post-processing phase took "+str(
+        mpi_print(mesh_dataClass.comm, "\n\nThe post-processing phase took "+str(
         end_postProcessingTime-end_time)+" seconds\n\n")
 
     final_time_simulation = time.time()
 
-    print("\n#########################################################"+
+    mpi_print(mesh_dataClass.comm, "\n#########################################################"+
     "###############\nThe whole simulation took: "+str(
     final_time_simulation-start_time_simulation)+" seconds\n##########"+
     "##############################################################\n")
@@ -1072,7 +1074,7 @@ None, fields_corrections=None):
 
 # Defines a function to print the stepping information
 
-def print_stepInfo(step, time):
+def print_stepInfo(step, time, comm):
 
     # Transforms the time and the step into strings
 
@@ -1108,11 +1110,11 @@ def print_stepInfo(step, time):
 
             clearance_spaceRight += " "
 
-        print("\n#####################################################"+
-        "###################\n#"+clearance_spaceLeft+"Incremental step"+
-        ": "+step+"; current time: "+time+clearance_spaceRight+"#\n###"+
-        "#############################################################"+
-        "########\n")
+        mpi_print(comm, "\n###########################################"+
+        "#############################\n#"+clearance_spaceLeft+"Increm"+
+        "ental step: "+step+"; current time: "+time+
+        clearance_spaceRight+"#\n#####################################"+
+        "###################################\n")
 
     else:
 
@@ -1136,9 +1138,9 @@ def print_stepInfo(step, time):
 
             clearance_spaceRight += " "
 
-        print("\n#####################################################"+
-        "###################\n#"+clearance_spaceLeft+"Incremental step"+
-        ": "+step+clearance_spaceRight+"#")
+        mpi_print(comm, "\n###########################################"+
+        "#############################\n#"+clearance_spaceLeft+"Increm"+
+        "ental step: "+step+clearance_spaceRight+"#")
 
         # Calculates the clearance to each side
 
@@ -1160,6 +1162,6 @@ def print_stepInfo(step, time):
 
             clearance_spaceRight += " "
 
-        print("#"+clearance_spaceLeft+"current time: "+time+
+        mpi_print(comm, "#"+clearance_spaceLeft+"current time: "+time+
         clearance_spaceRight+"#\n#####################################"+
         "###################################\n")

@@ -745,7 +745,7 @@ stress_method, fields_namesDict, comm, digits=3):
 
     mpi_execute_function(comm, file_tools.list_toTxt, 
     output_object.result, output_object.file_name, add_extension=True, 
-    arent_path=output_object.parent_path)
+    parent_path=output_object.parent_path)
 
     # If it is to plot the data
 

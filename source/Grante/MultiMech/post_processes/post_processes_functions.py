@@ -1129,15 +1129,25 @@ def initialize_mesh_volume(data, direct_codeData, submesh_flag):
 def update_mesh_volume(output_object, field, field_number, time, 
 fields_namesDict):
     
-    # Verifies if the field is the displacement field
+    # Verifies if the field is the displacement field. Uses the max 
+    # function since in single field simulations, the field number is -1
 
-    field_name = get_first_key_from_value(fields_namesDict, field_number)
+    field_name = get_first_key_from_value(fields_namesDict, max(
+    field_number, 0))
 
     if field_name!="Displacement":
 
+        message = "Field name <-> Field number"
+
+        for key, value in fields_namesDict.items():
+
+            message += "\n"+str(key)+" <-> "+str(value)
+
         raise NameError("The field name is '"+str(field_name)+"', but "+
         "the field required to evaluate the 'SaveMeshVolumeRatioToRefe"+
-        "renceVolume' post-process must be 'Displacement'")
+        "renceVolume' post-process must be 'Displacement'. The diction"+
+        "ary of fields names has the following keys:\n"+message+"\n\nT"+
+        "he asked number was "+str(field_number))
     
     mpi_print(output_object.comm_object, "Updates the saving of the ra"+
     "tio of the meshe's volume to the initial volume of the mesh\n")
@@ -1146,7 +1156,17 @@ fields_namesDict):
 
     I = Identity(3)
 
-    F = grad(field[field_number])+I 
+    F = None
+
+    # If there is a single field, field number will be -1
+
+    if field_number==-1:
+
+        F = grad(field)+I 
+
+    else:
+
+        F = grad(field[field_number])+I 
 
     J = det(F)
     

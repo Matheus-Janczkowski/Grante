@@ -261,7 +261,7 @@ comm):
         # Gets the stress tensor field
 
         stress_field = programming_tools.get_result(getattr(
-        local_constitutiveModel, stress_method)(retrieved_fields), 
+        constitutive_model, stress_method)(retrieved_fields), 
         stress_name)
 
         # Adds the contribution of this domain

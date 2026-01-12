@@ -24,8 +24,38 @@ displacement_fileName = "displacement_parallel.xdmf"
 
 post_processes = dict()
 
-post_processes["SaveField"] = {"directory path":results_path, 
-"file name":displacement_fileName}
+post_processes["SaveField"] = {"directory path": results_path, "file n"+
+"ame": displacement_fileName}
+
+post_processes["SaveMeshVolumeRatioToReferenceVolume"] = {"directory p"+
+"ath": results_path, "file name": "volume_ratio.txt"}
+
+post_processes["SaveCauchyStressField"] = {"directory path":results_path,
+"file name": "cauchy_stress_field.xdmf", "polynomial degree":1}
+
+post_processes["SaveFirstPiolaStressField"] = {"directory path":
+results_path, "file name": "first_piola_stress_field.xdmf", "polynomial deg"+
+"ree":1}
+
+post_processes["SaveReferentialTractionField"] = {"directory path":
+results_path, "file name": "referential_traction.xdmf", "polynomial deg"+
+"ree":1}
+
+post_processes["SavePressureAtPoint"] = {"directory path": results_path, 
+"file name": "pressure_point", "polynomial degree":1, "poin"+
+"t coordinates": [0.15, 0.1, 5.0]}
+
+post_processes["HomogenizeField"] = {"directory path": results_path, 
+"file name": "homogenized_displacement.txt", "subdomain": "volume 1"}
+
+post_processes["HomogenizeFieldsGradient"] = {"directory path": results_path, 
+"file name": "homogenized_displacement_gradient.txt", "subdomain": "volume 1"}
+
+post_processes["HomogenizeFirstPiola"] = {"directory path": results_path, 
+"file name": "homogenized_first_piola.txt", "subdomain": "volume 1"}
+
+post_processes["HomogenizeCauchy"] = {"directory path": results_path, 
+"file name": "homogenized_cauchy.txt", "subdomain": "volume 1"}
 
 ########################################################################
 #                         Material properties                          #

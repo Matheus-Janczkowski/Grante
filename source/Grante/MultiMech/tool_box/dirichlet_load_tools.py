@@ -300,6 +300,15 @@ rotation_z=None):
 def correct_spin_direction_and_get_norm(in_planeSpinDirection, 
 in_planeSpin, normal_toPlaneSpin, center_point, mesh_dataClass,
 boundary_physicalGroups, original_physicalGroup, original_translation):
+    
+    # If parallelization is chosen, raises an error
+
+    if mesh_dataClass.comm is not None:
+
+        raise NotImplementedError("'SurfaceTranslationAndRotation' is "+
+        "selected with parallelization. This is available only if 'rot"+
+        "ation_x', 'rotation_y', and 'rotation_z' are selected, instea"+
+        "d of in_planeSpin and normal_toPlaneSpin")
 
     # Checks whether the in plane spin direction is a list
     

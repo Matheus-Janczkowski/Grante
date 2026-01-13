@@ -175,7 +175,7 @@ t_final}
 
 traction_dictionary = dict()
 
-traction_dictionary["top"] = traction_boundary
+#traction_dictionary["top"] = traction_boundary
 
 # Defines a dictionary of boundary conditions. Each key is a physical
 # group and each value is another dictionary or a list of dictionaries 
@@ -192,6 +192,11 @@ bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
 "mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
 "nslation": [0.0, 0.0, 5.0], "in_planeSpinDirection": [1.0, 0.0, 0.0], 
 "in_planeSpin": 10.0, "normal_toPlaneSpin": 10.0}}#"""
+
+bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
+"mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
+"nslation": [0.0, 0.0, 0.05], "rotation_x": 10.0, "rotation_y": 0.0,
+"rotation_z": 0.0}}
 
 ########################################################################
 ########################################################################

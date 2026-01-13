@@ -170,6 +170,12 @@ def closest_numberInList(number, list_ofNumbers):
 
     return min(list_ofNumbers, key=lambda x: abs(x-number))
 
+# Defines a function to convert degrees to radians
+
+def degrees_to_radians(number):
+
+    return (number/180.0)*np.pi
+
 # Defines a function to construct the rotation matrix numerically (with-
 # out any ufl function)
 

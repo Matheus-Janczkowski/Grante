@@ -19,7 +19,8 @@ from ..tool_box import mesh_handling_tools as mesh_tools
 def SurfaceTranslationAndRotation(mesh_dataClass, boundary_physicalGroups, 
 in_planeSpin=0.0, normal_toPlaneSpin=0.0, translation=[0.0, 0.0, 0.0], 
 in_planeSpinDirection=[0.0, 0.0, 0.0], center_point=None, t=0.0, t_final=
-1.0, parametric_load_curve="linear"):
+1.0, parametric_load_curve="linear", rotation_x=None, rotation_y=None, 
+rotation_z=None):
     
     original_translation = copy(translation)
 
@@ -58,6 +59,248 @@ in_planeSpinDirection=[0.0, 0.0, 0.0], center_point=None, t=0.0, t_final=
         "er torsion must be a list. The following was given though: "+
         str(center_point))
 
+    # Checks whether the translation direction is a list
+    
+    if not isinstance(translation, list):
+
+        raise TypeError("The 'translation' in SurfaceTranslationAndRot"+
+        "ation is not a list. It must be a list with 3 elements, i.e. "+
+        "a vector")   
+
+    elif len(translation)!=3:
+
+        raise ValueError("The 'translation' in SurfaceTranslationAndRo"+
+        "tation is a list that has "+str(len(translation))+" elements."+
+        " This list must have 3 elements, i.e. a vector in 3D space")
+    
+    else:
+
+        # Creates the constant
+
+        translation = Constant(translation)
+
+    # Initializes the average normal vector
+
+    average_normal = None
+
+    # If the three rotation are to be used
+
+    if (rotation_x is not None) or (rotation_y is not None) or (
+    rotation_z is not None):
+        
+        # Verifies if all of them are not None
+
+        if rotation_x is None:
+
+            raise ValueError("'rotation_x' is None in 'SurfaceTranslat"+
+            "ionAndRotation', but 'rotation_y' and 'rotation_z' aren't"+
+            ". All rotations must be given if any is given.")
+
+        elif rotation_y is None:
+
+            raise ValueError("'rotation_y' is None in 'SurfaceTranslat"+
+            "ionAndRotation', but 'rotation_x' and 'rotation_z' aren't"+
+            ". All rotations must be given if any is given.")
+
+        elif rotation_z is None:
+
+            raise ValueError("'rotation_z' is None in 'SurfaceTranslat"+
+            "ionAndRotation', but 'rotation_y' and 'rotation_x' aren't"+
+            ". All rotations must be given if any is given.")
+        
+        # Populates the average vector with the rotation components. 
+        # But converts first to radians
+
+        average_normal = [numerical_tools.degrees_to_radians(rotation_x), 
+        numerical_tools.degrees_to_radians(rotation_y), 
+        numerical_tools.degrees_to_radians(rotation_z)]
+
+        # Makes sure the in plane spin is null and that the normal to 
+        # plane spin is equal to 1 to make the multiplication inside the
+        # class consistent
+
+        in_planeSpin = 0.0
+
+        normal_toPlaneSpin = 1.0
+
+        # Annuntiates the corrections
+
+        print("\nTranslated and rotated surface Dirichlet BC:\nApplied"+
+        " to the surface '"+str(original_physicalGroup)+"' with a tran"+
+        "slation of "+str(original_translation)+"\nA rotation vector o"+
+        "phi = "+str(average_normal)+"\n")
+
+    # If the in plane spin direction and the normal to plane spin are to
+    # be used
+
+    else:
+
+        (in_planeSpinDirection, in_planeSpin, normal_toPlaneSpin, 
+        average_normal) = correct_spin_direction_and_get_norm(
+        in_planeSpinDirection, in_planeSpin, normal_toPlaneSpin, 
+        center_point, mesh_dataClass, boundary_physicalGroups, 
+        original_physicalGroup, original_translation)
+
+    # Defines a class to update the time constant and the traction am-
+    # plitude
+
+    R00 = Constant(0.0)
+
+    R01 = Constant(0.0)
+
+    R02 = Constant(0.0)
+
+    R10 = Constant(0.0)
+
+    R11 = Constant(0.0)
+
+    R12 = Constant(0.0)
+
+    R20 = Constant(0.0)
+
+    R21 = Constant(0.0)
+
+    R22 = Constant(0.0)
+
+    t0 = Constant(0.0)
+
+    t1 = Constant(0.0)
+
+    t2 = Constant(0.0)
+
+    class TimeUpdate:
+
+        def __init__(self):
+            
+            self.t = time_constant
+
+            self.R00 = R00
+
+            self.R01 = R01
+
+            self.R02 = R02
+
+            self.R10 = R10
+
+            self.R11 = R11
+
+            self.R12 = R12
+
+            self.R20 = R20
+
+            self.R21 = R21
+
+            self.R22 = R22
+
+            self.t0 = t0
+
+            self.t1 = t1
+
+            self.t2 = t2
+
+        # This class must have the update_load method to be called in 
+        # the stepping algorithm
+
+        def update_load(self, t):
+
+            # Updates the time constant
+
+            self.t.assign(Constant(t))
+
+            # Evaluates the load using the parametric curve
+
+            load_value = float(parametric_load_curve(self.t/maximum_time
+            ))
+
+            # Updates the translation vector
+
+            new_translation = [load_value*component for component in (
+            original_translation)]
+
+            # Updates the vectors
+
+            new_inPlaneVector = [(in_planeSpin*load_value*component
+            ) for component in in_planeSpinDirection]
+
+            new_normalVector = [(normal_toPlaneSpin*load_value*component
+            ) for component in average_normal]
+
+            # Evaluates the rotation matrices
+
+            rotation_normalAxis = numerical_tools.rotation_tensorEulerRodrigues(
+            new_normalVector)
+
+            # Then, the matrix about the inplane direction
+
+            rotation_inPlane = numerical_tools.rotation_tensorEulerRodrigues(
+            new_inPlaneVector)
+
+            # Multiplies the two matrices into one and substracts the 
+            # identity matrix because what we really want is the displa-
+            # cement
+
+            total_matrix = (np.dot(rotation_inPlane, rotation_normalAxis
+            )-np.eye(3))
+
+            # Constructs the displacement field and interpolates it
+
+            self.R00.assign(Constant(total_matrix[0,0]))
+
+            self.R01.assign(Constant(total_matrix[0,1]))
+
+            self.R02.assign(Constant(total_matrix[0,2]))
+
+            self.R10.assign(Constant(total_matrix[1,0]))
+
+            self.R11.assign(Constant(total_matrix[1,1]))
+
+            self.R12.assign(Constant(total_matrix[1,2]))
+
+            self.R20.assign(Constant(total_matrix[2,0]))
+
+            self.R21.assign(Constant(total_matrix[2,1]))
+
+            self.R22.assign(Constant(total_matrix[2,2]))
+
+            self.t0.assign(Constant(new_translation[0]))
+
+            self.t1.assign(Constant(new_translation[1]))
+
+            self.t2.assign(Constant(new_translation[2]))
+
+            # Annuntiates the corrections
+
+            print("\nTranslation and rotation of surface Dirichlet BC "+
+            "at physical group '"+str(original_physicalGroup)+"':\n"+
+            str(load_value*100)+"% of the final boundary condition's v"+
+            "alue is applied using the parametric load curve\nRotates "+
+            "and evaluates the displacement by using a transformation "+
+            "matrix of\n"+str(total_matrix)+"\nand translates by a vec"+
+            "tor of "+str(new_translation)+"\n")
+
+    # Instantiates the loading class that was built and returns it as 
+    # well as the traction vector object
+
+    time_class = TimeUpdate()
+
+    # Uses Expression instead of UserExpression to avoid bugs
+
+    translated_rotatedDisplacement = Expression(("(R00*(x[0]-xc0))+(R0"+
+    "1*(x[1]-xc1))+(R02*(x[2]-xc2))+t0", "(R10*(x[0]-xc0))+(R11*(x[1]-"+
+    "xc1))+(R12*(x[2]-xc2))+t1", "(R20*(x[0]-xc0))+(R21*(x[1]-xc1))+(R"+
+    "22*(x[2]-xc2))+t2"), R00=R00, R01=R01, R02=R02, R10=R10, R11=R11, 
+    R12=R12, R20=R20, R21=R21, R22=R22, t0=t0, t1=t1, t2=t2, xc0=
+    center_point[0], xc1=center_point[1], xc2=center_point[2], degree=1)
+
+    return translated_rotatedDisplacement, time_class
+
+# Defines a function to compute the corrected in plane spin direction 
+# and the average normal vector
+
+def correct_spin_direction_and_get_norm(in_planeSpinDirection, 
+in_planeSpin, normal_toPlaneSpin, center_point, mesh_dataClass,
+boundary_physicalGroups, original_physicalGroup, original_translation):
+
     # Checks whether the in plane spin direction is a list
     
     if not isinstance(in_planeSpinDirection, list):
@@ -85,26 +328,6 @@ in_planeSpinDirection=[0.0, 0.0, 0.0], center_point=None, t=0.0, t_final=
         in_planeSpinDirection[1]**2)+(in_planeSpinDirection[2]**2))
 
         in_planeSpinDirection = [in_planeNorm*a for a in in_planeSpinDirection]
-
-    # Checks whether the translation direction is a list
-    
-    if not isinstance(translation, list):
-
-        raise TypeError("The 'translation' in SurfaceTranslationAndRot"+
-        "ation is not a list. It must be a list with 3 elements, i.e. "+
-        "a vector")   
-
-    elif len(translation)!=3:
-
-        raise ValueError("The 'translation' in SurfaceTranslationAndRo"+
-        "tation is a list that has "+str(len(translation))+" elements."+
-        " This list must have 3 elements, i.e. a vector in 3D space")
-    
-    else:
-
-        # Creates the constant
-
-        translation = Constant(translation)
     
     # Checks whether in_plane spin is a float
 
@@ -263,155 +486,5 @@ in_planeSpinDirection=[0.0, 0.0, 0.0], center_point=None, t=0.0, t_final=
     in_planeSpinDirection)+"\nA normal-to-plane spin of "+str(
     normal_toPlaneSpin)+" degrees\n")
 
-    # Defines a class to update the time constant and the traction am-
-    # plitude
-
-    R00 = Constant(0.0)
-
-    R01 = Constant(0.0)
-
-    R02 = Constant(0.0)
-
-    R10 = Constant(0.0)
-
-    R11 = Constant(0.0)
-
-    R12 = Constant(0.0)
-
-    R20 = Constant(0.0)
-
-    R21 = Constant(0.0)
-
-    R22 = Constant(0.0)
-
-    t0 = Constant(0.0)
-
-    t1 = Constant(0.0)
-
-    t2 = Constant(0.0)
-
-    class TimeUpdate:
-
-        def __init__(self):
-            
-            self.t = time_constant
-
-            self.R00 = R00
-
-            self.R01 = R01
-
-            self.R02 = R02
-
-            self.R10 = R10
-
-            self.R11 = R11
-
-            self.R12 = R12
-
-            self.R20 = R20
-
-            self.R21 = R21
-
-            self.R22 = R22
-
-            self.t0 = t0
-
-            self.t1 = t1
-
-            self.t2 = t2
-
-        # This class must have the update_load method to be called in 
-        # the stepping algorithm
-
-        def update_load(self, t):
-
-            # Updates the time constant
-
-            self.t.assign(Constant(t))
-
-            # Evaluates the load using the parametric curve
-
-            load_value = float(parametric_load_curve(self.t/maximum_time
-            ))
-
-            # Updates the translation vector
-
-            new_translation = [load_value*component for component in (
-            original_translation)]
-
-            # Updates the vectors
-
-            new_inPlaneVector = [(in_planeSpin*load_value*component
-            ) for component in in_planeSpinDirection]
-
-            new_normalVector = [(normal_toPlaneSpin*load_value*component
-            ) for component in average_normal]
-
-            # Evaluates the rotation matrices
-
-            rotation_normalAxis = numerical_tools.rotation_tensorEulerRodrigues(
-            new_normalVector)
-
-            # Then, the matrix about the inplane direction
-
-            rotation_inPlane = numerical_tools.rotation_tensorEulerRodrigues(
-            new_inPlaneVector)
-
-            # Multiplies the two matrices into one and substracts the 
-            # identity matrix because what we really want is the displa-
-            # cement
-
-            total_matrix = (np.dot(rotation_inPlane, rotation_normalAxis
-            )-np.eye(3))
-
-            # Constructs the displacement field and interpolates it
-
-            self.R00.assign(Constant(total_matrix[0,0]))
-
-            self.R01.assign(Constant(total_matrix[0,1]))
-
-            self.R02.assign(Constant(total_matrix[0,2]))
-
-            self.R10.assign(Constant(total_matrix[1,0]))
-
-            self.R11.assign(Constant(total_matrix[1,1]))
-
-            self.R12.assign(Constant(total_matrix[1,2]))
-
-            self.R20.assign(Constant(total_matrix[2,0]))
-
-            self.R21.assign(Constant(total_matrix[2,1]))
-
-            self.R22.assign(Constant(total_matrix[2,2]))
-
-            self.t0.assign(Constant(new_translation[0]))
-
-            self.t1.assign(Constant(new_translation[1]))
-
-            self.t2.assign(Constant(new_translation[2]))
-
-            # Annuntiates the corrections
-
-            print("\nTranslation and rotation of surface Dirichlet BC "+
-            "at physical group '"+str(original_physicalGroup)+"':\n"+
-            str(load_value*100)+"% of the final boundary condition's v"+
-            "alue is applied using the parametric load curve\nRotates "+
-            "and evaluates the displacement by using a transformation "+
-            "matrix of\n"+str(total_matrix)+"\nand translates by a vec"+
-            "tor of "+str(new_translation)+"\n")
-
-    # Instantiates the loading class that was built and returns it as 
-    # well as the traction vector object
-
-    time_class = TimeUpdate()
-
-    # Uses Expression instead of UserExpression to avoid bugs
-
-    translated_rotatedDisplacement = Expression(("(R00*(x[0]-xc0))+(R0"+
-    "1*(x[1]-xc1))+(R02*(x[2]-xc2))+t0", "(R10*(x[0]-xc0))+(R11*(x[1]-"+
-    "xc1))+(R12*(x[2]-xc2))+t1", "(R20*(x[0]-xc0))+(R21*(x[1]-xc1))+(R"+
-    "22*(x[2]-xc2))+t2"), R00=R00, R01=R01, R02=R02, R10=R10, R11=R11, 
-    R12=R12, R20=R20, R21=R21, R22=R22, t0=t0, t1=t1, t2=t2, xc0=
-    center_point[0], xc1=center_point[1], xc2=center_point[2], degree=1)
-
-    return translated_rotatedDisplacement, time_class
+    return (in_planeSpinDirection, in_planeSpin, normal_toPlaneSpin, 
+    average_normal)

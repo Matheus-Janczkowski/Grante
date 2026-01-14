@@ -39,6 +39,9 @@ post_processes[0][1]["SaveField"] = {"directory path": results_path,
 post_processes[0][1]["SaveMeshVolumeRatioToReferenceVolume"] = {"director"+
 "y path": results_path, "file name": "volume_ratio.txt"}
 
+post_processes[0][1]["SaveStrainEnergy"] = {"directory path": 
+results_path, "file name": "strain_energy.txt"}
+
 post_processes[1][1]["SaveField"] = {"directory path": results_path, 
 "file name": "pressure.xdmf", "readable xdmf file": True, "visualizati"+
 "on copy for readable xdmf": True}

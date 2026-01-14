@@ -1084,6 +1084,197 @@ fields_namesDict):
     time, "cauchy", "cauchy_stress", fields_namesDict, 
     output_object.comm_object, digits=output_object.digits)
 
+# Defines a function to initialize the file to store thhe strain energy
+# of the mesh
+
+def initialize_strain_energy(data, direct_codeData, submesh_flag):
+
+    # Gets the directory and the name of the file
+
+    parent_path = data[0]
+
+    file_name = data[1]
+
+    # Gets the mesh data class and the constitutive model
+
+    mesh_data_class = direct_codeData[0]
+
+    constitutive_model = direct_codeData[1]
+        
+    # Takes out the termination of the file name
+
+    file_name = path_tools.take_outFileNameTermination(
+    file_name)
+
+    # Gets the name of the file with the path to it
+
+    file_name = path_tools.verify_path(parent_path, file_name)
+
+    # Initializes the list of values of the strain energy
+
+    strain_energy_list = []
+
+    # Assembles the file and the function space into a class
+
+    class OutputObject:
+
+        def __init__(self, file_name, mesh_data_class, 
+        constitutive_model, strain_energy_list):
+
+            # Saves the comm object
+
+            self.comm_object = mesh_data_class.comm
+
+            self.mesh_data_class = mesh_data_class
+
+            self.file_name = file_name
+
+            self.result = strain_energy_list
+
+            self.constitutive_model = constitutive_model
+
+    output_object = OutputObject(file_name, mesh_data_class, 
+    constitutive_model, strain_energy_list)
+
+    return output_object
+
+# Defines a function to update the strain energy
+
+def update_strain_energy(output_object, field, field_number, time, 
+fields_namesDict):
+    
+    # Verifies if the field is the displacement field. Uses the max 
+    # function since in single field simulations, the field number is -1
+
+    field_name = get_first_key_from_value(fields_namesDict, max(
+    field_number, 0))
+
+    if field_name!="Displacement":
+
+        message = "Field name <-> Field number"
+
+        for key, value in fields_namesDict.items():
+
+            message += "\n"+str(key)+" <-> "+str(value)
+
+        raise NameError("The field name is '"+str(field_name)+"', but "+
+        "the field required to evaluate the 'SaveMeshVolumeRatioToRefe"+
+        "renceVolume' post-process must be 'Displacement'. The diction"+
+        "ary of fields names has the following keys:\n"+message+"\n\nT"+
+        "he asked number was "+str(field_number))
+    
+    mpi_print(output_object.comm_object, "Updates the saving of the ra"+
+    "tio of the meshe's volume to the initial volume of the mesh\n")
+
+    # Gets the jacobian
+
+    I = Identity(3)
+
+    F = None
+
+    # If there is a single field, field number will be -1
+
+    if field_number==-1:
+
+        F = grad(field)+I 
+
+    else:
+
+        F = grad(field[field_number])+I 
+
+    # Calculates the right Cauchy-Green strain tensor
+
+    C = (F.T)*F
+
+    # Initializes the strain energy value
+
+    strain_energy_value = 0.0
+    
+    # Verifies if the constitutive model is a dictionary
+
+    if isinstance(output_object.constitutive_model, dict):
+        
+        # Iterates through the physical groups
+
+        for physical_group, local_constitutive_model in (
+        output_object.constitutive_model.items()):
+            
+            # If the physical group is a tuple
+
+            if isinstance(physical_group, tuple):
+
+                # Iterates through it
+
+                for local_physical_group in physical_group:
+
+                    # Verifies if this physical group is a true physical
+                    # group
+
+                    if not (local_physical_group in (
+                    output_object.mesh_data_class.domain_physicalGroupsNameToTag)):
+                        
+                        raise ValueError("The phyical group '"+str(
+                        local_physical_group)+"' is not a proper physi"+
+                        "cal group in the mesh. It was given at the di"+
+                        "ctionary of constitutive models. Check the pr"+
+                        "oper physical groups names:\n"+str(list(
+                        output_object.mesh_data_class.domain_physicalGroupsNameToTag.keys())))
+
+                    # Adds the contribution of the strain energy of this
+                    # physical group
+
+                    strain_energy_value += assemble(
+                    local_constitutive_model.strain_energy(C)*
+                    output_object.mesh_data_class.dx(
+                    output_object.mesh_data_class.domain_physicalGroupsNameToTag[
+                    local_physical_group]))
+
+            # Otherwise
+
+            else:
+
+                # Verifies if this physical group is a true physical
+                # group
+
+                if not (physical_group in (
+                output_object.mesh_data_class.domain_physicalGroupsNameToTag)):
+                    
+                    raise ValueError("The phyical group '"+str(
+                    physical_group)+"' is not a proper physical group "+
+                    "in the mesh. It was given at the dictionary of co"+
+                    "nstitutive models. Check the proper physical grou"+
+                    "ps names:\n"+str(list(
+                    output_object.mesh_data_class.domain_physicalGroupsNameToTag.keys())))
+
+                # Adds the contribution of the strain energy of this
+                # physical group
+
+                strain_energy_value += assemble(
+                local_constitutive_model.strain_energy(C)*
+                output_object.mesh_data_class.dx(
+                output_object.mesh_data_class.domain_physicalGroupsNameToTag[
+                physical_group]))
+
+    # Otherwise, computes for the whole mesh at once
+
+    else:
+
+        strain_energy_value += assemble(
+        output_object.constitutive_model.strain_energy(C)*
+        output_object.mesh_data_class.dx)
+
+    # Appends this result to the output class
+
+    output_object.result.append([time, strain_energy_value])
+
+    # Saves the list of volume ratios in a txt file
+
+    mpi_execute_function(output_object.comm_object, 
+    file_tools.list_toTxt, output_object.result, output_object.file_name, 
+    add_extension=True)
+    
+    return output_object
+
 ########################################################################
 ########################################################################
 ##                          Mesh properties                           ##

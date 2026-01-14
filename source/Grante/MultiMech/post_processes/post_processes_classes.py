@@ -237,6 +237,23 @@ class SaveMeshVolumeRatioToReferenceVolume(PostProcessMethod):
         "file name"], [context.mesh_data_class.dx, 
         context.mesh_data_class.comm])
 
+# Sets a class for the method to save the strain energy in a mesh
+
+class SaveStrainEnergy(PostProcessMethod):
+
+    def __init__(self, context: PostProcessContext):
+
+        # Initializes the parent template class and already passes to it
+        # the initialization function, the update function, the additio-
+        # nal data names, and the code-provided information. The additi-
+        # onal data names as lists are optional arguments, the first va-
+        # lue is the name, and the second one is the default value
+
+        super().__init__(post_functions.initialize_strain_energy, 
+        post_functions.update_strain_energy, ["directory path", 
+        "file name"], [context.mesh_data_class, 
+        context.constitutive_model])
+
 # Sets a class for the method to homogenize a field
 
 class HomogenizeField(PostProcessMethod):

@@ -1411,11 +1411,41 @@ time, fields_namesDict):
 
         u_field = field[field_number]
 
+    # Verifies if there is a pressure field. A correction to the first
+    # Piola-Kirchhoff stress tensor must be added to this case, since 
+    # the constitutive model does not give the spherical part of the
+    # stress in incompressible hyperelasticity
+
+    pressure_correction = Constant([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [
+    0.0, 0.0, 0.0]])
+
+    if "Pressure" in fields_namesDict:
+
+        print("Adds the correction of the pressure to the saving of fo"+
+        "rces and moments on surface "+str(
+        output_object.surface_physical_group)+"\n")
+
+        # Gets the deformation gradient and the jacobian
+
+        I = Identity(3)
+
+        F = grad(u_field)+I
+
+        J = det(F)
+
+        # Gets the pressure field
+
+        p_field = field[fields_namesDict["Pressure"]]
+
+        # Updates the correction tensor
+
+        pressure_correction = p_field*J*inv(F.T)
+
     # Initializes the forces and moments components
 
-    forces = []
+    forces = [0.0, 0.0, 0.0]
 
-    moments = []
+    moments = [0.0, 0.0, 0.0]
 
     # Gets the volumetric physical groups attached to the surface
 
@@ -1458,8 +1488,8 @@ time, fields_namesDict):
 
                         # Gets the resulting force
 
-                        surface_force = local_constitutive_model.first_piolaStress(
-                        u_field)*output_object.mesh_data_class.n
+                        surface_force = ((local_constitutive_model.first_piolaStress(
+                        u_field)+pressure_correction)*output_object.mesh_data_class.n)
 
                         # Assembles the three components
 
@@ -1519,8 +1549,8 @@ time, fields_namesDict):
 
                     # Gets the resulting force
 
-                    surface_force = local_constitutive_model.first_piolaStress(
-                    u_field)*output_object.mesh_data_class.n
+                    surface_force = ((local_constitutive_model.first_piolaStress(
+                    u_field)+pressure_correction)*output_object.mesh_data_class.n)
 
                     # Assembles the three components
 
@@ -1563,41 +1593,40 @@ time, fields_namesDict):
 
         # Gets the resulting force
 
-        surface_force = output_object.constitutive_model.first_piolaStress(
-        u_field)*output_object.mesh_data_class.n
+        surface_force = ((output_object.constitutive_model.first_piolaStress(
+        u_field)+pressure_correction)*output_object.mesh_data_class.n)
 
-        # Gets the tag for the integration measure for this physical 
-        # group
+        # Iterates through the physical groups attached to this surface
 
-        integration_tag = physical_groups_attached.values()[0]
+        for integration_tag in physical_groups_attached.values():
 
-        # Assembles the three components
+            # Assembles the three components
 
-        forces[0] += assemble(surface_force[0]*output_object.new_ds(
-        integration_tag))
+            forces[0] += assemble(surface_force[0]*output_object.new_ds(
+            integration_tag))
 
-        forces[1] += assemble(surface_force[1]*output_object.new_ds(
-        integration_tag))
+            forces[1] += assemble(surface_force[1]*output_object.new_ds(
+            integration_tag))
 
-        forces[2] += assemble(surface_force[2]*output_object.new_ds(
-        integration_tag))
+            forces[2] += assemble(surface_force[2]*output_object.new_ds(
+            integration_tag))
 
-        # Gets the resulting moment
+            # Gets the resulting moment
 
-        surface_moment = cross(output_object.surface_position_vector, 
-        output_object.constitutive_model.first_piolaStress(u_field)*
-        output_object.mesh_data_class.n)
+            surface_moment = cross(output_object.surface_position_vector, 
+            output_object.constitutive_model.first_piolaStress(u_field)*
+            output_object.mesh_data_class.n)
 
-        # Assembles the three components
+            # Assembles the three components
 
-        moments[0] += assemble(surface_moment[0]*output_object.new_ds(
-        integration_tag))
+            moments[0] += assemble(surface_moment[0]*output_object.new_ds(
+            integration_tag))
 
-        moments[1] += assemble(surface_moment[0]*output_object.new_ds(
-        integration_tag))
+            moments[1] += assemble(surface_moment[0]*output_object.new_ds(
+            integration_tag))
 
-        moments[2] += assemble(surface_moment[0]*output_object.new_ds(
-        integration_tag))
+            moments[2] += assemble(surface_moment[0]*output_object.new_ds(
+            integration_tag))
 
     # Appends this result to the output class
 

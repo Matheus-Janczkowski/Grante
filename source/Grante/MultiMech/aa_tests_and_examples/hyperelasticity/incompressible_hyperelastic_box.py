@@ -42,6 +42,10 @@ post_processes[0][1]["SaveMeshVolumeRatioToReferenceVolume"] = {"director"+
 post_processes[0][1]["SaveStrainEnergy"] = {"directory path": 
 results_path, "file name": "strain_energy.txt"}
 
+post_processes[0][1]["SaveForcesAndMomentsOnSurface"] = {"directory path": 
+results_path, "file name": "forces_and_moments.txt", "surface physical"+
+" group name": "top"}
+
 post_processes[1][1]["SaveField"] = {"directory path": results_path, 
 "file name": "pressure.xdmf", "readable xdmf file": True, "visualizati"+
 "on copy for readable xdmf": True}
@@ -144,6 +148,15 @@ maximum_loadingSteps = 5
 
 traction_dictionary = dict()
 
+maximum_load = 5E5
+
+traction_boundary = {"load case": "UniformReferentialTraction", "ampli"+
+"tude_tractionX": 0.0, "amplitude_tractionY": 0.0, "amplitude_tractionZ": 
+maximum_load, "parametric_load_curve": "square_root", "t": t, "t_final":
+t_final}
+
+traction_dictionary["top"] = traction_boundary
+
 # Defines a dictionary of boundary conditions. Each key is a physical
 # group and each value is another dictionary or a list of dictionaries 
 # with the boundary conditions' information. Each of these dictionaries
@@ -154,10 +167,10 @@ bcs_dictionary = dict()
 
 bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
 
-bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
+"""bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
 "mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
 "nslation": [0.0, 0.0, 0.05], "rotation_x": 45.0, "rotation_y": 0.0,
-"rotation_z": 0.0}}
+"rotation_z": 0.0}}"""
 
 ########################################################################
 ########################################################################

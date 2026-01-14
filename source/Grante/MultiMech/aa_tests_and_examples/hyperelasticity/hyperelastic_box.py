@@ -27,6 +27,10 @@ post_processes = dict()
 post_processes["SaveField"] = {"directory path":results_path, 
 "file name":displacement_fileName}
 
+post_processes["SaveForcesAndMomentsOnSurface"] = {"directory path": 
+results_path, "file name": "forces_and_moments.txt", "surface physical"+
+" group name": "right"}
+
 post_processes["SaveStrainEnergy"] = {"directory path": results_path, 
 "file name": "strain_energy.txt"}
 
@@ -61,10 +65,11 @@ constitutive_model = constitutive_models.NeoHookean(material_properties)
 # le termination, e.g. .msh or .xdmf; both options will be saved automa-
 # tically
 
-mesh_fileName = {"length x": 0.3, "length y": 0.2, "length z": 1.0, "n"+
-"umber of divisions in x": 5, "number of divisions in y": 5, "number o"+
-"f divisions in z": 25, "verbose": False, "mesh file name": "box_mesh", 
-"mesh file directory": get_parent_path_of_file()}
+mesh_fileName = {"length x": 0.3, "length y": 1.0, "length z": 0.2, "n"+
+"umber of divisions in x": 5, "number of divisions in y": 25, "number o"+
+"f divisions in z": 5, "verbose": False, "mesh file name": "box_mesh", 
+"mesh file directory": get_parent_path_of_file(), "number of subdomain"+
+"s in z direction": 2}
 
 ########################################################################
 #                            Function space                            #
@@ -111,15 +116,15 @@ maximum_load = 5E5
 # Assemble the traction vector using this load expression
 
 traction_boundary = {"load case": "UniformReferentialTraction", "ampli"+
-"tude_tractionX": 0.0, "amplitude_tractionY": 0.0, "amplitude_tractionZ": 
-maximum_load, "parametric_load_curve": "square_root", "t": t, "t_final":
+"tude_tractionX": 0.0, "amplitude_tractionY": maximum_load, "amplitude_tractionZ": 
+0.0, "parametric_load_curve": "square_root", "t": t, "t_final":
 t_final}
 
 # Defines a dictionary of tractions
 
 traction_dictionary = dict()
 
-traction_dictionary["top"] = traction_boundary
+traction_dictionary["right"] = traction_boundary
 
 # Defines a dictionary of boundary conditions. Each key is a physical
 # group and each value is another dictionary or a list of dictionaries 
@@ -129,7 +134,7 @@ traction_dictionary["top"] = traction_boundary
 
 bcs_dictionary = dict()
 
-bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
+bcs_dictionary["left"] = {"BC case": "FixedSupportDirichletBC"}
 
 ########################################################################
 ########################################################################

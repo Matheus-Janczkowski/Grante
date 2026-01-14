@@ -1803,7 +1803,9 @@ def evaluate_centroidSurface(physical_group, mesh_dataClass):
         # Tries to convert is
 
         physical_group = convert_physicalGroup(physical_group, 
-        mesh_dataClass, "boundary")
+        mesh_dataClass, "boundary")[0]
+
+    print("Gets centroid of surface tagged as "+str(physical_group)+"\n")
 
     # Gets the position vector from the mesh
 

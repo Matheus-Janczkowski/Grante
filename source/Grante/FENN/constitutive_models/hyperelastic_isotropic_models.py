@@ -27,8 +27,7 @@ class NeoHookean:
     def strain_energy(self, F):
 
         # Evaluates the right Cauchy-Green strain tensor
-
-        #C = tf.einsum('...iK,...jK->...ij', F, F)
+        
         C = tf.matmul(F, F, transpose_a=True)
 
         # Evaluates its invariants
@@ -41,4 +40,5 @@ class NeoHookean:
 
         # Calculates the Helmholtz potential
 
-        return (0.5*self.mu*(I1_C-3))-(self.mu*ln_J)+((0.5*self.lmbda)*(ln_J**2))
+        return ((0.5*self.mu*(I1_C-3))-(self.mu*ln_J)+((0.5*self.lmbda)*(
+        ln_J**2)))

@@ -7,7 +7,7 @@ import tensorflow as tf
 # into a compiled evaluation of the strain energy and of the first Piola-
 # Kirchhoff stress tensor
 
-class CompiledStrainEnergy:
+class CompiledFirstPiolaKirchhoff:
 
     def __init__(self, constitutive_models_dict, masks_dictionary):
         

@@ -25,7 +25,7 @@ results_path = get_parent_path_of_file()
 
 post_processes = [["Displacement", dict()], ["Pressure", dict()]]
 
-n_process = 3
+n_process = "incompressible_disc"
 
 post_processes[0][1]["SaveField"] = {"directory path": results_path, 
 "file name": "displacement_"+str(n_process)+".xdmf", "readable xdmf fi"+
@@ -33,6 +33,13 @@ post_processes[0][1]["SaveField"] = {"directory path": results_path,
 
 post_processes[0][1]["SaveMeshVolumeRatioToReferenceVolume"] = {"direc"+
 "tory path": results_path, "file name": "volume_ratio.txt"}
+
+post_processes[0][1]["SaveFirstPiolaStressField"] = {"direc"+
+"tory path": results_path, "file name": "first_piola_incompressible_disc"}
+
+post_processes[0][1]["SaveForcesAndMomentsOnSurface"] = {"direc"+
+"tory path": results_path, "file name": "forces_and_moments", "surface"+
+" physical group name": "top"}
 
 post_processes[1][1]["SaveField"] = {"directory path": results_path, 
 "file name": "pressure_"+str(n_process)+".xdmf", "visualization copy f"+
@@ -42,9 +49,10 @@ post_processes[1][1]["SaveField"] = {"directory path": results_path,
 #                         Material properties                          #
 ########################################################################
 
-# Sets the Young modulus and the Poisson ratio
+# Sets the Young modulus and the Poisson ratio. The Young modulus is gi-
+# ven in N/(mm^2) since the mesh is in mm
 
-E = 1E6
+E = 1.0
 
 v = 0.3
 
@@ -69,9 +77,9 @@ material_properties_nucleus["bulk modulus"] = 1E8
 
 constitutive_model = dict()
 
-constitutive_model["annulus"] = constitutive_models.NeoHookean(material_properties)
+#constitutive_model["annulus"] = constitutive_models.NeoHookean(material_properties)
 
-constitutive_model["nucleus"] = constitutive_models.MooneyRivlin(material_properties_nucleus)
+#constitutive_model["nucleus"] = constitutive_models.MooneyRivlin(material_properties_nucleus)
 
 constitutive_model = constitutive_models.NeoHookean(material_properties)
 
@@ -110,42 +118,6 @@ solver_parameters["newton_maximum_iterations"] = 15
 
 solver_parameters["linear_solver"] = "mumps"
 
-"""solver_parameters["solver framework"] = "PETSc"
-
-solver_parameters["snes_type"] = "newtonls"
-
-solver_parameters["snes_rtol"] = 1E-5
-
-solver_parameters["snes_atol"] = 1E1
-
-solver_parameters["ksp_type"] = "gmres"
-
-solver_parameters["ksp_rtol"] = 1E-7
-
-solver_parameters["ksp_atol"] = 1E-1
-
-solver_parameters["ksp_max_it"] = 15000
-
-solver_parameters["pc_type"] = "hypre"#"fieldsplit"
-
-solver_parameters["snes_linesearch_type"] = "bt"
-
-solver_parameters["snes_monitor"] = None 
-
-solver_parameters["ksp_monitor"] = None 
-
-solver_parameters["ksp_view"] = None"
-"""
-
-"""solver_parameters["pc_fieldsplit_type"] = "schur"
-
-solver_parameters["pc_fieldsplit_schur_factorization_type"] = "lower"
-
-solver_parameters["pc_fieldsplit_schur_precondition"] = "selfp"
-
-solver_parameters["solver per field"] = {"Displacement": ["cg", "hypre"],
-"Pressure": ["preonly", "jacobi"]}"""
-
 # Sets the initial time
 
 t = 0.0
@@ -162,9 +134,10 @@ maximum_loadingSteps = 5
 #                          Boundary conditions                         #
 ########################################################################
 
-# Defines a load expression
+# Defines a load expression. The traction is given in N/(mm^2) since the 
+# mesh is in mm
 
-maximum_load = 2E5
+maximum_load = 0.2
 
 # Assemble the traction vector using this load expression
 
@@ -177,7 +150,7 @@ t_final}
 
 traction_dictionary = dict()
 
-#traction_dictionary["top"] = traction_boundary
+traction_dictionary["top"] = traction_boundary
 
 # Defines a dictionary of boundary conditions. Each key is a physical
 # group and each value is another dictionary or a list of dictionaries 
@@ -195,10 +168,10 @@ bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
 "nslation": [0.0, 0.0, 5.0], "in_planeSpinDirection": [1.0, 0.0, 0.0], 
 "in_planeSpin": 10.0, "normal_toPlaneSpin": 10.0}}#"""
 
-bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
+"""bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
 "mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
 "nslation": [0.0, 0.0, 0.05], "rotation_x": 10.0, "rotation_y": 0.0,
-"rotation_z": 0.0}}
+"rotation_z": 0.0}}"""
 
 ########################################################################
 ########################################################################
@@ -212,4 +185,4 @@ variational_framework.hyperelasticity_two_fields(
 constitutive_model, traction_dictionary, maximum_loadingSteps, t_final, 
 post_processes, mesh_fileName, solver_parameters, 
 polynomial_degree_displacement=polynomial_degree, t=t, 
-dirichlet_boundaryConditions=bcs_dictionary, verbose=True, run_in_parallel=True)
+dirichlet_boundaryConditions=bcs_dictionary, verbose=True)

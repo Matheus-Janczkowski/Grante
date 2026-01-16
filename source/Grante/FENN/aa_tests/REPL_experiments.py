@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+import numpy as np
+
 # Defines a function to test the gather function
 
 def test_gather_vector():
@@ -152,6 +154,52 @@ def test_shape_functions_in_natural_coordinates():
 
     print("pushfwd_shape_fn_grad:\n"+str(pushfwd_shape_fn_grad)+"\n")
 
+def get_tetra_coeffs():
+
+    row = lambda r, s, t: np.array([r**2, s**2, t**2, r*s, r*t, s*t, r, 
+    s, t, 1.0])
+
+    terms = ["r^2", "s^2", "t^2", "r*s", "r*t", "s*t", "r", "s", "t", ""]
+
+    nodes = [[1,0,0],[0,1,0],[0,0,1],[0,0,0],[0.5,0.5,0],[0,0.5,0.5],[
+    0,0,0.5],[0.5,0,0],[0.5,0,0.5],[0,0.5,0]]
+
+    A = np.zeros((10,10))
+
+    for i in range(10):
+
+        A[i,:] = row(*nodes[i])
+
+    for i in range(10):
+
+        b = np.zeros(10)
+
+        b[i] = 1.0
+
+        coeffs = np.linalg.solve(A, b)
+
+        shape_function = ""
+
+        for j in range(10):
+
+            if abs(coeffs[j])>1E-5:
+
+                shape_function += str(coeffs[j])+"*"+str(terms[j])+" + "
+
+        print("The "+str(i+1)+" shape function is:\n"+shape_function[0:-2
+        ]+"\n\n")
+
+    row = lambda r, s, t: np.array([(2*r*r)-r, (2*s*s)-s, (2*t*t)-t, (2*
+    ((r*r)+(s*s)+(t*t)))-(3*(r+s+t))+(4*((r*s)+(r*t)+(s*t)))+1.0, 4*r*s, 
+    4*s*t, -(4*t*t)-(4*r*t)-(4*s*t)+(4*t), -(4*r*r)-(4*r*s)-(4*r*t)+(4*r
+    ), 4*r*t, -(4*s*s)-(4*r*s)-(4*s*t)+(4*s)])
+
+    for i in range(10):
+
+        A[i,:] = row(*nodes[i])
+
+    print("The verification matrix is:\n"+str(A)+"\n\n")
+
 if __name__=="__main__":
 
     test_gather_vector()
@@ -161,3 +209,5 @@ if __name__=="__main__":
     test_last_index()
 
     test_shape_functions_in_natural_coordinates()
+
+    get_tetra_coeffs()

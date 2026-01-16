@@ -1557,7 +1557,7 @@ time, fields_namesDict):
         "umber was "+str(field_number))
     
     mpi_print(output_object.mesh_data_class.comm, "Updates the saving "+
-    "of the forces and moments on the surface'"+str(
+    "of the forces and moments on the surface' "+str(
     output_object.surface_physical_group)+"'. This surface has an area"+
     " of "+str(output_object.surface_area)+"\n")
 

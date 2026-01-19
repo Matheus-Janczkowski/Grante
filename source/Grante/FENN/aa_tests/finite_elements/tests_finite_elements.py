@@ -6,6 +6,8 @@ import unittest
 
 import numpy as np
 
+import tensorflow as tf
+
 from ...finite_elements.tetrahedrons import Tetrahedron
 
 from ...tool_box import mesh_tools
@@ -82,6 +84,21 @@ class TestANNTools(unittest.TestCase):
         # Reads this mesh
 
         mesh_data_class = mesh_tools.read_msh_mesh(file_name, verbose=True)
+
+        print("\nThe nodes coordinates are:\n"+str(
+        mesh_data_class.nodes_coordinates)+"\n")
+
+        print("The dictionary of domain physical groups is:\n"+str(
+        mesh_data_class.domain_physicalGroupsNameToTag)+"\n")
+
+        print("The dictionary of boundary physical groups is:\n"+str(
+        mesh_data_class.boundary_physicalGroupsNameToTag)+"\n")
+
+        print("The dictionary of domain elements' connectivities is:\n"+
+        str(mesh_data_class.domain_connectivities)+"\n")
+
+        print("The dictionary of boundary elements' connectivities is:"+
+        "\n"+str(mesh_data_class.boundary_connectivities)+"\n")
 
     # Defines a function to test the instantiation of tetrahedron class
 

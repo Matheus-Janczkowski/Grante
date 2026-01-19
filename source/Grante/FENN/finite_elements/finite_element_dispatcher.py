@@ -101,18 +101,18 @@ class VolumeElements:
 # Defines a function to receive the dictionary of domain connectivities
 # and to dispatch the respective finite element classes
 
-def dispatch_volume_elements(domain_connectivities, nodes_coordinates,
-quadrature_degree):
+def dispatch_volume_elements(mesh_data_class):
 
     # Instantiates the class with the dictionary of finite elements 
     # classes
 
-    volume_finite_elements = VolumeElements(nodes_coordinates, 
-    quadrature_degree)
+    volume_finite_elements = VolumeElements(
+    mesh_data_class.nodes_coordinates, mesh_data_class.quadrature_degree)
 
     # Iterates through the physical groups
 
-    for physical_group_tag, finite_elements_dict in domain_connectivities.items():
+    for physical_group_tag, finite_elements_dict in (
+    mesh_data_class.domain_connectivities.items()):
 
         # TODO: just a single type of element is allowed now
 

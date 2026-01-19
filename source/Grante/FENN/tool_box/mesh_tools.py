@@ -10,7 +10,7 @@ class MshMeshData:
 
     def __init__(self, nodes_coordinates, domain_physicalGroupsNameToTag,
     boundary_physicalGroupsNameToTag, domain_connectivities, 
-    boundary_connectivities):
+    boundary_connectivities, quadrature_degree):
     
         self.nodes_coordinates = nodes_coordinates
 
@@ -21,6 +21,8 @@ class MshMeshData:
         self.domain_connectivities = domain_connectivities
         
         self.boundary_connectivities = boundary_connectivities
+
+        self.quadrature_degree = quadrature_degree
 
 ########################################################################
 #                             Mesh reading                             #
@@ -43,7 +45,8 @@ class GmshVersions:
 
 # Defines a function to read a mesh .msh
 
-def read_msh_mesh(file_name, parent_directory=None, verbose=False):
+def read_msh_mesh(file_name, quadrature_degree, parent_directory=None, 
+verbose=False):
 
     # If the parent directory is None, get the parent path of the file 
     # where this function has been called
@@ -149,7 +152,7 @@ def read_msh_mesh(file_name, parent_directory=None, verbose=False):
 
     return MshMeshData(nodes_coordinates, domain_physicalGroupsNameToTag,
     boundary_physicalGroupsNameToTag, domain_connectivities, 
-    boundary_connectivities)
+    boundary_connectivities, quadrature_degree)
 
 # Defines a function to read the bit about the Gmsh output file version
 

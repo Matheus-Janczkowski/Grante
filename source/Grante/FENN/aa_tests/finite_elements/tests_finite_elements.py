@@ -6,11 +6,11 @@ import unittest
 
 import numpy as np
 
-import tensorflow as tf
-
 from ...finite_elements.tetrahedrons import Tetrahedron
 
 from ...tool_box import mesh_tools
+
+from ...finite_elements.finite_element_dispatcher import dispatch_volume_elements
 
 from ....MultiMech.tool_box.mesh_handling_tools import create_box_mesh
 
@@ -76,6 +76,8 @@ class TestANNTools(unittest.TestCase):
         
         n_divisions_z = 2
 
+        quadrature_degree = 2
+
         create_box_mesh(length_x, length_y, length_z, n_divisions_x, 
         n_divisions_y, n_divisions_z, file_name=file_name, verbose=False, 
         convert_to_xdmf=False, file_directory=file_directory, 
@@ -83,7 +85,8 @@ class TestANNTools(unittest.TestCase):
 
         # Reads this mesh
 
-        mesh_data_class = mesh_tools.read_msh_mesh(file_name, verbose=True)
+        mesh_data_class = mesh_tools.read_msh_mesh(file_name, 
+        quadrature_degree, verbose=True)
 
         print("\nThe nodes coordinates are:\n"+str(
         mesh_data_class.nodes_coordinates)+"\n")
@@ -99,6 +102,13 @@ class TestANNTools(unittest.TestCase):
 
         print("The dictionary of boundary elements' connectivities is:"+
         "\n"+str(mesh_data_class.boundary_connectivities)+"\n")
+
+        # Tests the finite element dispatcher
+
+        volume_elements = dispatch_volume_elements(mesh_data_class)
+
+        print("The dictionary of elements per domain physical group is"+
+        ":\n"+str(volume_elements.physical_groups_elements))
 
     # Defines a function to test the instantiation of tetrahedron class
 

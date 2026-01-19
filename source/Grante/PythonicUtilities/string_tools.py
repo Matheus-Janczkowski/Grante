@@ -205,7 +205,8 @@ def string_toDict(original_string):
 
 # Defines a function to convert a string to a list
 
-def string_toList(saved_string):
+def string_toList(saved_string, element_separator=",", print_warnings=
+True):
 
     # Intializes the list to be read
 
@@ -244,7 +245,7 @@ def string_toList(saved_string):
         # If the character is a comma or a closing bracket, stops the
         # reading of the element
 
-        if current_character=="," or current_character=="]":
+        if current_character==element_separator or current_character=="]":
 
             if len(read_element)>0:
 
@@ -276,8 +277,10 @@ def string_toList(saved_string):
 
                         except:
 
-                            print("Could not convert", read_element, 
-                            "to a number\n")
+                            if print_warnings:
+
+                                print("Could not convert", read_element, 
+                                "to a number\n")
 
                             if isinstance(read_element, str):
 
@@ -325,7 +328,7 @@ def string_toList(saved_string):
             # If the character is a comma, updates the number o elements
             # in the current sublist
 
-            if current_character==",":
+            if current_character==element_separator:
 
                 element_counterSubList += 1
 

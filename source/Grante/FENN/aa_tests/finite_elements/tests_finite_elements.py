@@ -72,15 +72,16 @@ class TestANNTools(unittest.TestCase):
 
         n_divisions_y = 2 
         
-        n_divisions_z = 5
+        n_divisions_z = 2
 
         create_box_mesh(length_x, length_y, length_z, n_divisions_x, 
         n_divisions_y, n_divisions_z, file_name=file_name, verbose=False, 
-        convert_to_xdmf=False, file_directory=file_directory)
+        convert_to_xdmf=False, file_directory=file_directory, 
+        mesh_polinomial_order=2)
 
         # Reads this mesh
 
-        mesh_data_class = mesh_tools.read_msh_mesh(file_name)
+        mesh_data_class = mesh_tools.read_msh_mesh(file_name, verbose=True)
 
     # Defines a function to test the instantiation of tetrahedron class
 

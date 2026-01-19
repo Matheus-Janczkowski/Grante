@@ -520,3 +520,7 @@ domain_physical_groups_tags, boundary_physical_groups_tags, start_key=
 
     return (domain_connectivity, boundary_connectivity, 
     start_reading_at_index)
+
+########################################################################
+#                          Mesh normal vectors                         #
+########################################################################

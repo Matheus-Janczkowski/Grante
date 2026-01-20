@@ -22,7 +22,8 @@ class DomainElements:
 
         self.finite_elements_classes[11] = {"class": Tetrahedron, "pol"+
         "ynomial degree": 2, "number of nodes": 10, "name": "tetrahedr"+
-        "on of 10 nodes"}
+        "on of 10 nodes", "indices of the gmsh connectivity": [1, 2, 3,
+        0, 5, 8, 7, 4, 9, 6]}
 
         # TODO
         # 4  - Tetrahedron of 4 nodes;
@@ -62,10 +63,16 @@ class DomainElements:
         # Iterates through the fields to add an empty list with a sublist
         # for each dimension (each DOF in the node)
 
-        for field_name in self.ndofs_per_field.keys():
+        for field_name, info_dict in self.ndofs_per_field.items():
 
-            field_dofs_dictionary[field_name].append([[] for (n_dofs
-            ) in self.ndofs_per_field[field_name]])
+            # Gets the base list of degrees of freedom per element
+
+            base_dofs_list = [[] for n_dofs in info_dict["number of no"+
+            "des per node"]]
+
+            # And adds a list to this field
+
+            field_dofs_dictionary[field_name] = []
 
             # Initializes a list of lists. Each sublist corresponds to a 
             # finite element. Each sublist contains n other sublists, 

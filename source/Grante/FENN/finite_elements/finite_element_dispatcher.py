@@ -11,7 +11,8 @@ from ..finite_elements.tetrahedrons import Tetrahedron
 
 class DomainElements:
 
-    def __init__(self, nodes_coordinates, quadrature_degree):
+    def __init__(self, nodes_coordinates, quadrature_degree, 
+    ndofs_per_field):
         
         # Defines a dictionary with domain elements. The keys are the
         # integer tags of the elements in GMSH convention. The values 
@@ -38,6 +39,8 @@ class DomainElements:
 
         self.quadrature_degree = quadrature_degree
 
+        self.ndofs_per_field = ndofs_per_field
+
         # Initializes a dictionary of dispatched finite elements. The
         # keys are the physical groups tags
 
@@ -51,31 +54,45 @@ class DomainElements:
 
         element_info = self.get_element(tag)
 
-        # Initializes a list of lists. Each sublist corresponds to a fi-
-        # nite element. Each sublist contains n other sublists, where n
-        # is the number of nodes in each element. The inner-most sublists
-        # contain the nodes coordinates for that element
+        # Initializes a dictionary of lists, each key is a field name,
+        # whereas each value is a list of DOFs per dimension per element
 
-        element_nodes_coordinates = []
+        field_dofs_dictionary = dict()
 
-        # Iterates through the connectivities
+        # Iterates through the fields to add an empty list with a sublist
+        # for each dimension (each DOF in the node)
 
-        for connectivity in connectivities:
+        for field_name in self.ndofs_per_field.keys():
 
-            # Appends another sublist corresponding to the element
+            field_dofs_dictionary[field_name].append([[] for (n_dofs
+            ) in self.ndofs_per_field[field_name]])
 
-            element_nodes_coordinates.append([])
+            # Initializes a list of lists. Each sublist corresponds to a 
+            # finite element. Each sublist contains n other sublists, 
+            # where n is the number of nodes in each element. The inner-
+            # most sublists contain the nodes coordinates for that ele-
+            # ment
 
-            # Iterates through the nodes indices in the list of connec-
-            # tivity
+            element_nodes_coordinates = []
 
-            for node_index in connectivity:
+            # Iterates through the connectivities
 
-                # Gets the node coordinates and adds them to the list of
-                # element nodes coordinates
+            for connectivity in connectivities:
 
-                element_nodes_coordinates[-1].append(
-                self.nodes_coordinates[node_index])
+                # Appends another sublist corresponding to the element
+
+                element_nodes_coordinates.append([])
+
+                # Iterates through the nodes indices in the list of con-
+                # nectivity
+
+                for node_index in connectivity:
+
+                    # Gets the node coordinates and adds them to the list 
+                    # of element nodes coordinates
+
+                    element_nodes_coordinates[-1].append(
+                    self.nodes_coordinates[node_index])
 
         # Dispatch the class
 

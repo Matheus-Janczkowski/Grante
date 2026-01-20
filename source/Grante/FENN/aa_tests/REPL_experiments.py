@@ -330,6 +330,26 @@ def stack_versus_concat():
     print("The derivatives in the original system of coordinates:\n"+str(
     dfdx)+"\n\n")
 
+def test_strain_energy():
+
+    F = tf.constant([[[[1.0, 2.0, 0.0], [1.5, 2.0, 0.0], [0.0, 0.0, -1.0]],
+    [[1.0, 2.0, 0.0], [1.5, 1.5, 0.0], [0.0, 0.0, 0.0]]],[[[1.0, 2.0, 0.0
+    ], [1.5, 2.0, 0.0], [0.0, 0.0, 0.0]], [[1.0, 2.0, 0.0], [1.5, 2.0, 
+    0.0], [0.0, 0.0, 0.0]]]])
+
+    C = tf.matmul(F, F, transpose_a=True)
+
+    print("\n\nright Cauchy-Green C:\n"+str(C))
+
+    I1_C = tf.linalg.trace(C)
+
+    J  = tf.linalg.det(F)
+
+    ln_J = tf.math.log(J)
+
+    print("The invariants of C are:\n\nI1=\n"+str(I1_C)+"\n\nJ=\n"+str(J
+    )+"\n\nln(J)=\n"+str(ln_J))
+
 if __name__=="__main__":
 
     test_gather_vector()
@@ -345,3 +365,5 @@ if __name__=="__main__":
     stack_versus_concat()
 
     get_quadrature_points()
+
+    test_strain_energy()

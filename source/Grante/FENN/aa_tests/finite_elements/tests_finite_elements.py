@@ -120,12 +120,18 @@ class TestANNTools(unittest.TestCase):
         print("The dictionary of boundary elements' connectivities is:"+
         "\n"+str(mesh_data_class.boundary_connectivities)+"\n")
 
+        # Defines a dictionary of finite element per field
+
+        elements_per_field = {"Displacement": {"number of DOFs per nod"+
+        "e": 3, "required element type": "tetrahedron of 10 nodes"}}
+
         # Tests the finite element dispatcher
 
-        volume_elements = dispatch_domain_elements(mesh_data_class)
+        volume_elements = dispatch_domain_elements(mesh_data_class,
+        elements_per_field)
 
         print("The dictionary of elements per domain physical group is"+
-        ":\n"+str(volume_elements.physical_groups_elements))
+        ":\n"+str(volume_elements.elements_dictionaries))
 
 # Runs all tests
 

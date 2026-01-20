@@ -12,7 +12,7 @@ from ..finite_elements.tetrahedrons import Tetrahedron
 class DomainElements:
 
     def __init__(self, nodes_coordinates, quadrature_degree, 
-    ndofs_per_field):
+    element_per_field):
         
         # Defines a dictionary with domain elements. The keys are the
         # integer tags of the elements in GMSH convention. The values 
@@ -40,20 +40,36 @@ class DomainElements:
 
         self.quadrature_degree = quadrature_degree
 
-        self.ndofs_per_field = ndofs_per_field
+        self.element_per_field = element_per_field
+
+        # Verifies if element per field has the necessary keys
+
+        necessary_keys = ["number of DOFs per node", "required element"+
+        " type"]
+
+        for field_name, value_dict in self.element_per_field.items():
+
+            for key in necessary_keys:
+
+                if not (key in value_dict):
+
+                    raise ValueError("The key '"+str(key)+"' is not in"+
+                    " the dictionary of finite element information for"+
+                    " the '"+str(field_name)+"' field. The obligatory "+
+                    "keys are:\n"+str(necessary_keys))
 
         # Initializes a dictionary of dispatched finite elements. The
-        # keys are the physical groups tags
+        # keys are the names of the fields, whose values are dictionaries
+        # themselves. The keys of the inner dictionaries are physical 
+        # groups tags, and the respective values are instances of element
+        # classes
 
-        self.physical_groups_elements = dict()
+        self.elements_dictionaries = {field_name: {} for field_name in (
+        self.element_per_field.keys())}
 
     # Defines a function to instantiate the finite element class
 
     def dispatch_element(self, tag, connectivities, physical_group_tag):
-
-        # Gets the element dictionary of information
-
-        element_info = self.get_element(tag)
 
         # Initializes a dictionary of lists, each key is a field name,
         # whereas each value is a list of DOFs per dimension per element
@@ -63,12 +79,33 @@ class DomainElements:
         # Iterates through the fields to add an empty list with a sublist
         # for each dimension (each DOF in the node)
 
-        for field_name, info_dict in self.ndofs_per_field.items():
+        for field_name, info_dict in self.element_per_field.items():
 
             # Gets the base list of degrees of freedom per element
 
-            base_dofs_list = [[] for n_dofs in info_dict["number of no"+
-            "des per node"]]
+            base_dofs_list = [[] for n_dofs in range(info_dict["number"+
+            " of DOFs per node"])]
+
+            # Gets the type of the element required by the field
+
+            required_element_type = info_dict["required element type"]
+
+            # If the type is not an integer tries to recover the corres-
+            # ponding integer type
+
+            if not isinstance(required_element_type, int):
+
+                for type, info in self.finite_elements_classes.items():
+
+                    if info["name"]==required_element_type:
+
+                        required_element_type = type 
+
+                        break 
+
+            # Gets the element dictionary of information
+
+            element_info = self.get_element(required_element_type)
 
             # And adds a list to this field
 
@@ -90,10 +127,27 @@ class DomainElements:
 
                 element_nodes_coordinates.append([])
 
+                # Verifies if the element has enough nodes
+
+                if len(connectivity)<len(element_info["indices of the "+
+                "gmsh connectivity"]):
+                    
+                    raise IndexError("The element recovered from the m"+
+                    "esh has a connectivity of "+str(connectivity)+". "+
+                    "This connectivity list has "+str(len(connectivity)
+                    )+" nodes; but "+str(len(element_info["indices of "+
+                    "the gmsh connectivity"]))+" nodes are required by"+
+                    " element type '"+str(element_info["name"]+"'"))
+
                 # Iterates through the nodes indices in the list of con-
                 # nectivity
 
-                for node_index in connectivity:
+                for connectivity_real_index in element_info["indices o"+
+                "f the gmsh connectivity"]:
+                    
+                    # Gets the node index
+
+                    node_index = connectivity[connectivity_real_index]
 
                     # Gets the node coordinates and adds them to the list 
                     # of element nodes coordinates
@@ -101,12 +155,12 @@ class DomainElements:
                     element_nodes_coordinates[-1].append(
                     self.nodes_coordinates[node_index])
 
-        # Dispatch the class
+            # Dispatches the class
 
-        self.physical_groups_elements[physical_group_tag] = element_info[
-        "class"](element_nodes_coordinates, polynomial_degree=
-        element_info["polynomial degree"], quadrature_degree=
-        self.quadrature_degree)
+            self.elements_dictionaries[field_name][physical_group_tag
+            ] = element_info["class"](element_nodes_coordinates, 
+            polynomial_degree=element_info["polynomial degree"], 
+            quadrature_degree=self.quadrature_degree)
 
     # Defines a function to verify is the element type tag is available
 
@@ -134,13 +188,14 @@ class DomainElements:
 # Defines a function to receive the dictionary of domain connectivities
 # and to dispatch the respective finite element classes
 
-def dispatch_domain_elements(mesh_data_class):
+def dispatch_domain_elements(mesh_data_class, element_per_field):
 
     # Instantiates the class with the dictionary of finite elements 
     # classes
 
     domain_finite_elements = DomainElements(
-    mesh_data_class.nodes_coordinates, mesh_data_class.quadrature_degree)
+    mesh_data_class.nodes_coordinates, mesh_data_class.quadrature_degree,
+    element_per_field)
 
     # Iterates through the physical groups
 

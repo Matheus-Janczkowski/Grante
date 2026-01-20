@@ -67,7 +67,8 @@ class TestANNTools(unittest.TestCase):
         self.dofs_per_elements)
 
         print("The determinant of the jacobian evaluated at all quadra"+
-        "ture points is:\n"+str(tetradron_mesh.det_J)+"\n")
+        "ture points mutliplied by the quadrature weights is:\n"+str(
+        tetradron_mesh.dx)+"\n")
 
         #print("The derivatives of the shape functions at all quadratur"+
         #"e point are:\n"+str(tetradron_mesh.shape_functions_derivatives))

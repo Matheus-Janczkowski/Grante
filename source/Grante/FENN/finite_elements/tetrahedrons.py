@@ -13,11 +13,14 @@ from ..tool_box.math_tools import jacobian_3D_element
 class Tetrahedron:
 
     def __init__(self, node_coordinates, dofs_per_element, 
-    polynomial_degree=2, quadrature_degree=2, dtype=tf.float32):
+    polynomial_degree=2, quadrature_degree=2, dtype=tf.float32, 
+    integer_dtype=tf.int32):
         
         # Saves the numerical type
 
         self.dtype = dtype
+
+        self.integer_dtype = integer_dtype
 
         # Ensures node coordinates and dofs per element are tensors with 
         # the given type
@@ -29,7 +32,7 @@ class Tetrahedron:
         # n_dofs_per_node]
 
         self.dofs_per_element = convert_object_to_tensor(
-        dofs_per_element, self.dtype)
+        dofs_per_element, self.integer_dtype)
         
         # Evaluates the Gauss points and their corresponding weights
 
@@ -240,8 +243,8 @@ class Tetrahedron:
 
         # Gets the jacobian determinant and its inverse
 
-        self.det_J, J_inv = jacobian_3D_element(
-        self.natural_derivatives_N, x, y, z)
+        det_J, J_inv = jacobian_3D_element(self.natural_derivatives_N, x, 
+        y, z)
 
         # The jacobian inverse is a tensor of [elements, quadrature 
         # points, original coordinates, natural coordinates]. Whereas the
@@ -252,6 +255,11 @@ class Tetrahedron:
 
         self.shape_functions_derivatives = tf.einsum('eqxr,qnr->eqnx', 
         J_inv, self.natural_derivatives_N)
+
+        # Multiplies the quadrature weights by the determinant of the 
+        # jacobian transformation to have the correct integration measure
+
+        self.dx = tf.einsum('eq,q->eq', det_J, self.weights)
 
     # Defines a function to recover the DOFs of the current field using 
     # an indices tensor [n_elements, n_nodes, n_physical_dimensions]

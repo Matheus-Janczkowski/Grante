@@ -348,7 +348,20 @@ def test_strain_energy():
     ln_J = tf.math.log(J)
 
     print("The invariants of C are:\n\nI1=\n"+str(I1_C)+"\n\nJ=\n"+str(J
-    )+"\n\nln(J)=\n"+str(ln_J))
+    )+"\n\nln(J)=\n"+str(ln_J)+"\n")
+
+def test_gather_tensor_from_vector():
+
+    u = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+    11.0, 12.0])
+
+    indices = tf.constant([[[0,1,2], [3,4,5], [6,7,8]], [[3,4,5], [6,7,8
+    ], [9,10,11]]])
+
+    u_elements = tf.gather(u, indices)
+
+    print("The tensor of gathered DOFs of u field per element is:\n"+str(
+    u_elements)+"\n")
 
 if __name__=="__main__":
 
@@ -367,3 +380,5 @@ if __name__=="__main__":
     get_quadrature_points()
 
     test_strain_energy()
+
+    test_gather_tensor_from_vector()

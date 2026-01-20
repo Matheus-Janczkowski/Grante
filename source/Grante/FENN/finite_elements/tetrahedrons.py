@@ -252,3 +252,13 @@ class Tetrahedron:
 
         self.shape_functions_derivatives = tf.einsum('eqxr,qnr->eqnx', 
         J_inv, self.natural_derivatives_N)
+
+    # Defines a function to recover the DOFs of the current field using 
+    # an indices tensor [n_elements, n_nodes, n_physical_dimensions]
+
+    def get_field_dofs(self, field_vector):
+
+        # Gathers the field to get a tensor with the same dimensions as
+        # the indices tensor
+
+        return tf.gather(field_vector, self.dofs_per_element)

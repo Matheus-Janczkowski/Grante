@@ -1,12 +1,24 @@
-# Routine to store methods to process information in constitutive models
+# Routine to store methods to process information in and for constituti-
+# ve models
 
 import tensorflow as tf
 
-# Defines a function to transform a single material property in a tensor
-# of that property for all elements and quadrature points
+########################################################################
+#                              Kinematics                              #
+########################################################################
 
-def convert_scalar_to_tensor(scalar_value):
+# Defines a function to compute the deformation gradient as a tensor [
+# n_elements, n_quadrature_points, 3, 3]
 
-    mu_elem = tf.gather(scalar_value, element_ids)
+def compute_batched_deformation_gradient(field_vector, element_class):
 
-    mu_q = mu_elem[..., tf.newaxis]
+    # Gets a tensor [n_elements, n_nodes, 3] of the DOFs of the field
+    # vector per finite element
+
+    field_dofs = element_class.get_field_dofs(field_vector)
+
+    # Contracts the DOFs to get the displacement gradient as a tensor [
+    # n_elements, n_quadrature_points, 3, 3]
+
+    grad_u = tf.einsum('eqnx,enx->eqxx', 
+    element_class.shape_functions_derivatives, field_dofs)

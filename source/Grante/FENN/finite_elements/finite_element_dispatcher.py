@@ -98,11 +98,11 @@ class DomainElements:
 
             if not isinstance(required_element_type, int):
 
-                for type, info in self.finite_elements_classes.items():
+                for given_type, info in self.finite_elements_classes.items():
 
                     if info["name"]==required_element_type:
 
-                        required_element_type = type 
+                        required_element_type = given_type 
 
                         break 
 

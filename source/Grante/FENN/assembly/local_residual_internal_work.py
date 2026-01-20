@@ -29,6 +29,13 @@ class CompressibleInternalWorkReferenceConfiguration:
 
         self.first_piola_kirchhoff_list = []
 
+        # Creates a tensor [n_physical_groups, n_elements, 
+        # n_quadrature_points, 3, 3] containing the shape functions of
+        # the elements at each physical group multiplied by the integra-
+        # tion measure
+
+        self.variation_gradient_dx = []
+
         # Iterates through the dictionary of constitutive models
 
         for physical_group, constitutive_class in (
@@ -75,22 +82,47 @@ class CompressibleInternalWorkReferenceConfiguration:
             self.first_piola_kirchhoff_list.append(
             constitutive_class.first_piola_kirchhoff)
 
+            # Adds the derivatives of the shape functions multiplied by
+            # the integration measure
+
+            self.variation_gradient_dx.append(tf.einsum('eqnj,eq->eqnj',
+            mesh_data.shape_functions_derivatives, mesh_data.dx))
+
         # Gets the number of materials
 
         self.n_materials = len(self.first_piola_kirchhoff_list)
+
+        # Stacks the derivatives of the shape functions multiplied by the
+        # integration measure into a tensor [n_physical_groups, 
+        # n_elements, n_quadrature_points, n_nodes, n_physical_dimensions]
+
+        self.variation_gradient_dx = tf.stack(self.variation_gradient_dx,
+        axis=0)
 
     # Defines a function to assemble the residual vector
 
     @tf.function
     def assemble_residual_vector(self):
 
-        # Creates a list of the tensors containing the first Piola-
-        # Kirchhoff stress at each physical group
+        # Creates a tensor [n_physical_groups, n_elements, 
+        # n_quadrature_points, 3, 3] containing the first Piola-Kirchhoff
+        # stress at each physical group
 
         evaluated_first_piola = tf.stack([self.first_piola_kirchhoff_list[
         i](self.deformation_gradient_list[i
         ].compute_batched_deformation_gradient()) for i in range(
         self.n_materials)], axis=0)
+
+        # Contracts the first Piola-Kirchhoff stress with the derivati-
+        # ves of the shape functions multiplied by the integration mea-
+        # sure to get the integration of the internal work of the varia-
+        # tional form. Then, sums over the quadrature points, that are
+        # the third dimension (index 2 in python convention).
+        # The result is a tensor [n_physical_groups, n_elements, 
+        # n_nodes, n_physical_dimensions]
+
+        internal_work = tf.reduce_sum(tf.einsum('peqij,peqnj->peqni', 
+        evaluated_first_piola, self.variation_gradient_dx), axis=2)
 
 ########################################################################
 #                                Garbage                               #

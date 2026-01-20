@@ -138,13 +138,24 @@ class CompressibleInternalWorkReferenceConfiguration:
             # vatives of the shape functions multiplied by the integra-
             # tion measure to get the integration of the internal work 
             # of the variational form. Then, sums over the quadrature 
-            # points, that are the third dimension (index 2 in python 
+            # points, that are the second dimension (index 1 in python 
             # convention).
             # The result is a tensor [n_elements,  n_nodes, 
             # n_physical_dimensions]
 
             internal_work = tf.reduce_sum(tf.einsum('eqij,eqnj->eqni', 
-            P, self.variation_gradient_dx), axis=2)
+            P, self.variation_gradient_dx[i]), axis=1)
+
+            # Adds the contribution of this physical group to the global
+            # residual vector. Uses the own tensor of DOF indexing to
+            # scatter the local residual. Another dimension is added to
+            # the indexing tensor to make it compatible with tensorflow
+            # tensor_scatter_nd_add. Performs this change in place, as
+            # global_residual_vector is a variable
+
+            global_residual_vector.scatter_nd_add(tf.expand_dims(
+            self.deformation_gradient_list[i].indexing_dofs_tensor, axis=
+            -1), internal_work)
 
 ########################################################################
 #                                Garbage                               #

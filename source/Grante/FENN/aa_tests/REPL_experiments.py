@@ -363,6 +363,40 @@ def test_gather_tensor_from_vector():
     print("The tensor of gathered DOFs of u field per element is:\n"+str(
     u_elements)+"\n")
 
+def test_scatter_nd():
+
+    n_global_dofs = 12
+
+    global_residual_vector = tf.zeros([n_global_dofs], dtype=tf.float32)
+
+    indices = tf.constant([[[0,1,2], [3,4,5], [7,6,8]]])
+
+    u = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+    11.0, 12.0])
+
+    updates = tf.gather(u, indices)
+
+    print("Updates:\n"+str(updates)+"\n")
+
+    # Adds the new dimension
+
+    indices = tf.expand_dims(indices, axis=-1)
+
+    print("New indices: "+str(indices)+"\n")
+
+    global_residual_vector = tf.tensor_scatter_nd_add(global_residual_vector,
+    indices, updates)
+
+    print("The updated global vector is:\n"+str(global_residual_vector))
+
+    ### Using variable
+
+    global_residual_vector = tf.Variable(tf.zeros([n_global_dofs], dtype=tf.float32))
+
+    global_residual_vector.scatter_nd_add(indices, updates)
+
+    print("The updated global using variable is:\n"+str(global_residual_vector))
+
 if __name__=="__main__":
 
     test_gather_vector()
@@ -382,3 +416,5 @@ if __name__=="__main__":
     test_strain_energy()
 
     test_gather_tensor_from_vector()
+
+    test_scatter_nd()

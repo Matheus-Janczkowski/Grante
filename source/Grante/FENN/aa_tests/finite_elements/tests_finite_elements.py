@@ -10,8 +10,6 @@ from ...finite_elements.tetrahedrons import Tetrahedron
 
 from ...tool_box import mesh_tools
 
-from ...finite_elements.finite_element_dispatcher import dispatch_domain_elements
-
 from ....MultiMech.tool_box.mesh_handling_tools import create_box_mesh
 
 from ....PythonicUtilities.path_tools import get_parent_path_of_file
@@ -107,10 +105,15 @@ class TestANNTools(unittest.TestCase):
         convert_to_xdmf=False, file_directory=file_directory, 
         mesh_polinomial_order=2)
 
+        # Defines a dictionary of finite element per field
+
+        elements_per_field = {"Displacement": {"number of DOFs per nod"+
+        "e": 3, "required element type": "tetrahedron of 10 nodes"}}
+
         # Reads this mesh
 
         mesh_data_class = mesh_tools.read_msh_mesh(file_name, 
-        quadrature_degree, verbose=True)
+        quadrature_degree, elements_per_field, verbose=True)
 
         print("\nThe nodes coordinates are:\n"+str(
         mesh_data_class.nodes_coordinates)+"\n")
@@ -127,22 +130,12 @@ class TestANNTools(unittest.TestCase):
         print("The dictionary of boundary elements' connectivities is:"+
         "\n"+str(mesh_data_class.boundary_connectivities)+"\n")
 
-        # Defines a dictionary of finite element per field
-
-        elements_per_field = {"Displacement": {"number of DOFs per nod"+
-        "e": 3, "required element type": "tetrahedron of 10 nodes"}}
-
-        # Tests the finite element dispatcher
-
-        volume_elements = dispatch_domain_elements(mesh_data_class,
-        elements_per_field)
-
         print("The dictionary of elements per domain physical group is"+
-        ":\n"+str(volume_elements.elements_dictionaries)+"\n")
+        ":\n"+str(mesh_data_class.domain_elements.elements_dictionaries)+"\n")
 
         print("The tensor of DOFs per element is:")
         
-        for field_name, element_dict in volume_elements.elements_dictionaries.items():
+        for field_name, element_dict in mesh_data_class.domain_elements.elements_dictionaries.items():
             
             for physical_group, element_class in element_dict.items():
 

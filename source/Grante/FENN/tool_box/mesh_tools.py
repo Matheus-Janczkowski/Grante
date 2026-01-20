@@ -4,13 +4,16 @@ from ...PythonicUtilities.path_tools import verify_path, verify_file_existence, 
 
 from ...PythonicUtilities.string_tools import string_toList
 
+from ..finite_elements.finite_element_dispatcher import dispatch_domain_elements
+
 # Defines a class to inform mesh data
 
 class MshMeshData:
 
     def __init__(self, nodes_coordinates, domain_physicalGroupsNameToTag,
     boundary_physicalGroupsNameToTag, domain_connectivities, 
-    boundary_connectivities, quadrature_degree):
+    boundary_connectivities, quadrature_degree, domain_elements=None,
+    boundary_elements=None):
     
         self.nodes_coordinates = nodes_coordinates
 
@@ -23,6 +26,10 @@ class MshMeshData:
         self.boundary_connectivities = boundary_connectivities
 
         self.quadrature_degree = quadrature_degree
+
+        self.domain_elements = domain_elements 
+
+        self.boundary_elements = boundary_elements
 
 ########################################################################
 #                             Mesh reading                             #
@@ -45,8 +52,8 @@ class GmshVersions:
 
 # Defines a function to read a mesh .msh
 
-def read_msh_mesh(file_name, quadrature_degree, parent_directory=None, 
-verbose=False):
+def read_msh_mesh(file_name, quadrature_degree, elements_per_field, 
+parent_directory=None, verbose=False):
 
     # If the parent directory is None, get the parent path of the file 
     # where this function has been called
@@ -150,9 +157,17 @@ verbose=False):
 
     # Instantiates the class of mesh data and returns it
 
-    return MshMeshData(nodes_coordinates, domain_physicalGroupsNameToTag,
-    boundary_physicalGroupsNameToTag, domain_connectivities, 
-    boundary_connectivities, quadrature_degree)
+    mesh_data_class = MshMeshData(nodes_coordinates, 
+    domain_physicalGroupsNameToTag, boundary_physicalGroupsNameToTag, 
+    domain_connectivities, boundary_connectivities, quadrature_degree)
+
+    # Dispatches the elements of the domain. Generates a dictionary of
+    # physical group tag whose values are dictionaries of element types
+
+    mesh_data_class = dispatch_domain_elements(mesh_data_class,
+    elements_per_field)
+
+    return mesh_data_class
 
 # Defines a function to read the bit about the Gmsh output file version
 

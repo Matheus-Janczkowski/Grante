@@ -293,9 +293,12 @@ def dispatch_domain_elements(mesh_data_class, element_per_field):
             domain_finite_elements.dispatch_element(element_type, 
             connectivities, physical_group_tag)
 
-    # Returns the class of finite elements for the domain
+    # Stores the class of finite elements for the domain into the mesh
+    # data class and returns it
 
-    return domain_finite_elements
+    mesh_data_class.domain_elements = domain_finite_elements
+
+    return mesh_data_class
 
 ########################################################################
 #                           Boundary elements                          #

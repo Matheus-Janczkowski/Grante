@@ -60,7 +60,16 @@ class CompressibleInternalWorkReferenceConfiguration:
 
             # Gets the instance of the mesh data
 
-            mesh_data = mesh_dict[physical_group_tag]
+            if len(list(mesh_dict[physical_group_tag].keys()))>1:
+
+                raise NotImplementedError("Multiple element types per "+
+                "physical group has not yet been updated to compute Co"+
+                "mpressibleInternalWorkReferenceConfiguration")
+            
+            # Gets the first element type
+
+            mesh_data = mesh_dict[physical_group_tag][list(mesh_dict[
+            physical_group_tag].keys())[0]]
 
             # Gets the identity tensor for the mesh within this physical
             # group
@@ -104,26 +113,6 @@ class CompressibleInternalWorkReferenceConfiguration:
     @tf.function
     def assemble_residual_vector(self, global_residual_vector):
 
-        """# Creates a tensor [n_physical_groups, n_elements, 
-        # n_quadrature_points, 3, 3] containing the first Piola-Kirchhoff
-        # stress at each physical group
-
-        evaluated_first_piola = tf.stack([self.first_piola_kirchhoff_list[
-        i](self.deformation_gradient_list[i
-        ].compute_batched_deformation_gradient()) for i in range(
-        self.n_materials)], axis=0)
-
-        # Contracts the first Piola-Kirchhoff stress with the derivati-
-        # ves of the shape functions multiplied by the integration mea-
-        # sure to get the integration of the internal work of the varia-
-        # tional form. Then, sums over the quadrature points, that are
-        # the third dimension (index 2 in python convention).
-        # The result is a tensor [n_physical_groups, n_elements, 
-        # n_nodes, n_physical_dimensions]
-
-        internal_work = tf.reduce_sum(tf.einsum('peqij,peqnj->peqni', 
-        evaluated_first_piola, self.variation_gradient_dx), axis=2)"""
-
         # Iterates through the physical groups
 
         for i in range(self.n_materials):
@@ -156,71 +145,3 @@ class CompressibleInternalWorkReferenceConfiguration:
             global_residual_vector.scatter_nd_add(tf.expand_dims(
             self.deformation_gradient_list[i].indexing_dofs_tensor, axis=
             -1), internal_work)
-
-########################################################################
-#                                Garbage                               #
-########################################################################
-
-# Defines a class to get the constitutive model dictionary and transform
-# into a compiled evaluation of the strain energy and of the first Piola-
-# Kirchhoff stress tensor
-
-class CompiledFirstPiolaKirchhoff:
-
-    def __init__(self, constitutive_models_dict, 
-    elements_in_region_dictionary):
-        
-        # Initializes the list of strain energy functions and the list
-        # of elements owned to each region
-
-        self.elements_assigned_to_models = []
-
-        self.energy_functions_list = []
-
-        # Iterates through the dictionary of constitutive models
-
-        for physical_group, constitutive_class in (
-        constitutive_models_dict.items()):
-
-            # Adds a tensor with a tensor containing the indices of the
-            # elements that belong to this region. Uses the physical 
-            # group as key in the dictionary of elements assigned to each
-            # region
-
-            self.elements_assigned_to_models.append(
-            elements_in_region_dictionary[physical_group])
-
-            # Adds the energy function
-
-            self.energy_functions_list.append(
-            constitutive_class.strain_energy)
-
-        # Gets the number of materials
-
-        self.n_materials = len(self.energy_functions_list)
-
-    # Defines a function to assemble the total strain energy
-
-    @tf.function
-    def assemble_total_strain_energy(self, F):
-
-        return tf.math.add_n([self.energy_functions_list[i](tf.gather(F, 
-        self.elements_assigned_to_models[i])) for i in range(
-        self.n_materials)])
-    
-    # Defines a function to compute the first Piola-Kichhoff stress ten-
-    # sor
-
-    @tf.function
-    def first_piola_kirchhoff(self, F):
-
-        # Computes the derivative of the strain energy with respect to 
-        # the deformation gradient
-
-        with tf.GradientTape() as tape:
-
-            tape.watch(F)
-
-            psi = self.assemble_total_strain_energy(F)
-
-        return tape.gradient(psi, F)

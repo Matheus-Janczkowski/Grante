@@ -35,6 +35,8 @@ class DeformationGradient:
 
         self.identity_tensor = identity_tensor
 
+        self.vector_of_parameters = vector_of_parameters
+
     @tf.function
     def compute_batched_deformation_gradient(self):
         
@@ -43,4 +45,9 @@ class DeformationGradient:
         field_dofs = tf.gather(self.vector_of_parameters, 
         self.indexing_dofs_tensor)
 
-        # Contracts the DOFs to get the material displacement g
+        # Contracts the DOFs to get the material displacement gradient as 
+        # a tensor [n_elements, n_quadrature_points, 3, 3]. THen, adds 
+        # the identity tensor and returns
+
+        return (tf.einsum('eqnj,eni->eqij', 
+        self.shape_functions_derivatives, field_dofs)+self.identity_tensor)

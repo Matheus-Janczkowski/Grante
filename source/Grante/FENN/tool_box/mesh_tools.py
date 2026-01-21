@@ -1,5 +1,7 @@
 # Routine to store methods to read meshes generated in GMSH 
 
+import tensorflow as tf
+
 from ...PythonicUtilities.path_tools import verify_path, verify_file_existence, get_parent_path_of_file, take_outFileNameTermination
 
 from ...PythonicUtilities.string_tools import string_toList
@@ -12,8 +14,8 @@ class MshMeshData:
 
     def __init__(self, nodes_coordinates, domain_physicalGroupsNameToTag,
     boundary_physicalGroupsNameToTag, domain_connectivities, 
-    boundary_connectivities, quadrature_degree, domain_elements=None,
-    boundary_elements=None):
+    boundary_connectivities, quadrature_degree, dtype, 
+    global_number_dofs=None, domain_elements=None, boundary_elements=None):
     
         self.nodes_coordinates = nodes_coordinates
 
@@ -26,6 +28,10 @@ class MshMeshData:
         self.boundary_connectivities = boundary_connectivities
 
         self.quadrature_degree = quadrature_degree
+
+        self.dtype = dtype
+
+        self.global_number_dofs = global_number_dofs
 
         self.domain_elements = domain_elements 
 
@@ -53,7 +59,7 @@ class GmshVersions:
 # Defines a function to read a mesh .msh
 
 def read_msh_mesh(file_name, quadrature_degree, elements_per_field, 
-parent_directory=None, verbose=False):
+parent_directory=None, verbose=False, dtype=tf.float32):
 
     # If the parent directory is None, get the parent path of the file 
     # where this function has been called
@@ -159,13 +165,14 @@ parent_directory=None, verbose=False):
 
     mesh_data_class = MshMeshData(nodes_coordinates, 
     domain_physicalGroupsNameToTag, boundary_physicalGroupsNameToTag, 
-    domain_connectivities, boundary_connectivities, quadrature_degree)
+    domain_connectivities, boundary_connectivities, quadrature_degree,
+    dtype)
 
     # Dispatches the elements of the domain. Generates a dictionary of
     # physical group tag whose values are dictionaries of element types
 
     mesh_data_class = dispatch_domain_elements(mesh_data_class,
-    elements_per_field)
+    elements_per_field, dtype)
 
     return mesh_data_class
 

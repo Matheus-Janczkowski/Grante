@@ -6,13 +6,13 @@ import unittest
 
 import numpy as np
 
-from ...finite_elements.tetrahedrons import Tetrahedron
+from ..finite_elements.tetrahedrons import Tetrahedron
 
-from ...tool_box import mesh_tools
+from ..tool_box import mesh_tools
 
-from ....MultiMech.tool_box.mesh_handling_tools import create_box_mesh
+from ...MultiMech.tool_box.mesh_handling_tools import create_box_mesh
 
-from ....PythonicUtilities.path_tools import get_parent_path_of_file
+from ...PythonicUtilities.path_tools import get_parent_path_of_file
 
 # Defines a function to test the ANN tools methods
 
@@ -131,11 +131,11 @@ class TestANNTools(unittest.TestCase):
         "\n"+str(mesh_data_class.boundary_connectivities)+"\n")
 
         print("The dictionary of elements per domain physical group is"+
-        ":\n"+str(mesh_data_class.domain_elements.elements_dictionaries)+"\n")
+        ":\n"+str(mesh_data_class.domain_elements)+"\n")
 
         print("The tensor of DOFs per element is:")
         
-        for field_name, element_dict in mesh_data_class.domain_elements.elements_dictionaries.items():
+        for field_name, element_dict in mesh_data_class.domain_elements.items():
             
             for physical_group, element_class in element_dict.items():
 

@@ -73,7 +73,8 @@ class DomainElements:
 
     # Defines a function to instantiate the finite element class
 
-    def dispatch_element(self, tag, connectivities, physical_group_tag):
+    def dispatch_element(self, tag, connectivities, physical_group_tag,
+    dtype):
 
         # Iterates through the fields to add an empty list with a sublist
         # for each dimension (each DOF in the node)
@@ -232,7 +233,8 @@ class DomainElements:
             self.elements_dictionaries[field_name][physical_group_tag
             ] = element_info["class"](element_nodes_coordinates, 
             nodes_in_elements, polynomial_degree=element_info["polynom"+
-            "ial degree"], quadrature_degree=self.quadrature_degree)
+            "ial degree"], quadrature_degree=self.quadrature_degree,
+            dtype=dtype)
 
     # Defines a function to verify is the element type tag is available
 
@@ -260,7 +262,7 @@ class DomainElements:
 # Defines a function to receive the dictionary of domain connectivities
 # and to dispatch the respective finite element classes
 
-def dispatch_domain_elements(mesh_data_class, element_per_field):
+def dispatch_domain_elements(mesh_data_class, element_per_field, dtype):
 
     # Instantiates the class with the dictionary of finite elements 
     # classes
@@ -291,12 +293,16 @@ def dispatch_domain_elements(mesh_data_class, element_per_field):
             # ments and dispatches the class of this element
 
             domain_finite_elements.dispatch_element(element_type, 
-            connectivities, physical_group_tag)
+            connectivities, physical_group_tag, dtype)
+
+    # Stores the global number of DOFs
+
+    mesh_data_class.global_number_dofs = domain_finite_elements.dofs_counter
 
     # Stores the class of finite elements for the domain into the mesh
     # data class and returns it
 
-    mesh_data_class.domain_elements = domain_finite_elements
+    mesh_data_class.domain_elements = domain_finite_elements.elements_dictionaries
 
     return mesh_data_class
 

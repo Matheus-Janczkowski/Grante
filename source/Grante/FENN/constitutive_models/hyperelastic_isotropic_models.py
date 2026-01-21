@@ -9,7 +9,7 @@ from ..tool_box.math_tools import get_inverse
 
 class NeoHookean:
 
-    def __init__(self, material_properties, mesh_data, dtype=tf.float32):
+    def __init__(self, material_properties, mesh_data_class):
         
         # Gets the material parameters
 
@@ -19,14 +19,15 @@ class NeoHookean:
 
         # Evaluates the Lamé parameters
 
-        self.mu = tf.constant(E/(2*(1+nu)), dtype=dtype)
+        self.mu = tf.constant(E/(2*(1+nu)), dtype=mesh_data_class.dtype)
 
-        self.lmbda = tf.constant((nu*E)/((1+nu)*(1-2*nu)), dtype=dtype)
+        self.lmbda = tf.constant((nu*E)/((1+nu)*(1-2*nu)), dtype=
+        mesh_data_class.dtype)
 
-        # Initializes the batched identity tensor as a tensor [
-        # n_elements, n_quadrature_points, 3, 3]
+        # Initializes the identity tensor attribute that the code will
+        # automatically fill it later
 
-        self.identity_tensor = mesh_data.identity_tensor
+        self.identity_tensor = None
 
     # Defines a function to evaluate the free energy density
 
@@ -69,5 +70,5 @@ class NeoHookean:
         # Kirchhoff stress tensor as a tensor [n_elements, 
         # n_quadrature_points, 3, 3]
 
-        return (F+(((self.lmbda*tf.math.log(J))-self.mu)*
-        F_inv_transposed))
+        return (F+tf.einsum('eq,eqij->eqij', ((self.lmbda*tf.math.log(J)
+        )-self.mu), F_inv_transposed))

@@ -11,16 +11,36 @@ class CompressibleHyperelasticity:
 
     def __init__(self, mesh_data_class, vector_of_parameters,
     constitutive_models_dict):
+        
+        self.global_number_dofs = mesh_data_class.global_number_dofs
+
+        self.dtype = mesh_data_class.dtype
 
         # Initializes the the global residual vector as a null variable
 
-        vector_of_parameters = tf.Variable(tf.zeros([
-        mesh_data_class.global_number_dofs], dtype=mesh_data_class.dtypes))
+        self.global_residual_vector = tf.Variable(tf.zeros([
+        self.global_number_dofs], dtype=self.dtype))
         
         # Instantiates the class to compute the parcel of the residual
         # vector due to the variation of the internal work
 
-        internal_work_variation = CompressibleInternalWorkReferenceConfiguration(
+        self.internal_work_variation = CompressibleInternalWorkReferenceConfiguration(
         vector_of_parameters, constitutive_models_dict, 
-        mesh_data_class.domain_elements, 
+        mesh_data_class.domain_elements["Displacement"], 
         mesh_data_class.domain_physicalGroupsNameToTag)
+
+    # Defines a function to compute the residual vector
+
+    def evaluate_residual_vector(self):
+
+        # Nullifies the residual for this evaluation
+
+        self.global_residual_vector.assign(tf.zeros([
+        self.global_number_dofs], dtype=self.dtype))
+
+        # Adds the parcel of the variation of the internal work
+
+        self.internal_work_variation.assemble_residual_vector(
+        self.global_residual_vector)
+
+        return self.global_residual_vector

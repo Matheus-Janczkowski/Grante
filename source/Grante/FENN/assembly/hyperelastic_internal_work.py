@@ -60,7 +60,7 @@ class CompressibleInternalWorkReferenceConfiguration:
 
             # Gets the instance of the mesh data
 
-            if len(list(mesh_dict[physical_group_tag].keys()))>1:
+            if isinstance(mesh_dict[physical_group_tag], dict):
 
                 raise NotImplementedError("Multiple element types per "+
                 "physical group has not yet been updated to compute Co"+
@@ -68,8 +68,7 @@ class CompressibleInternalWorkReferenceConfiguration:
             
             # Gets the first element type
 
-            mesh_data = mesh_dict[physical_group_tag][list(mesh_dict[
-            physical_group_tag].keys())[0]]
+            mesh_data = mesh_dict[physical_group_tag]
 
             # Gets the identity tensor for the mesh within this physical
             # group
@@ -77,6 +76,13 @@ class CompressibleInternalWorkReferenceConfiguration:
             identity_tensor = tf.eye(3, batch_shape=[
             mesh_data.number_elements, mesh_data.number_quadrature_points
             ], dtype=mesh_data.dtype)
+
+            # Puts the identity tensor into the constitutive model class 
+            # if it has the attribute
+
+            if hasattr(constitutive_class, "identity_tensor"):
+
+                constitutive_class.identity_tensor = identity_tensor
 
             # Instantiates the class to calculate the deformation gradi-
             # ent

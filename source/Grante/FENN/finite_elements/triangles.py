@@ -7,9 +7,9 @@ from ..tool_box.tensorflow_utilities import convert_object_to_tensor
 
 from ..tool_box.math_tools import jacobian_3D_element
 
-# Defines a class to store the tetrahedron element 
+# Defines a class to store the triangle element
 
-class Tetrahedron:
+class Triangle:
 
     def __init__(self, node_coordinates, dofs_per_element, 
     polynomial_degree=2, quadrature_degree=2, dtype=tf.float32, 

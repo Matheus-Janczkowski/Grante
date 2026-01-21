@@ -6,7 +6,7 @@ from ...PythonicUtilities.path_tools import verify_path, verify_file_existence, 
 
 from ...PythonicUtilities.string_tools import string_toList
 
-from ..finite_elements.finite_element_dispatcher import dispatch_domain_elements
+from ..finite_elements.finite_element_dispatcher import dispatch_region_elements
 
 # Defines a class to inform mesh data
 
@@ -171,8 +171,8 @@ parent_directory=None, verbose=False, dtype=tf.float32):
     # Dispatches the elements of the domain. Generates a dictionary of
     # physical group tag whose values are dictionaries of element types
 
-    mesh_data_class = dispatch_domain_elements(mesh_data_class,
-    elements_per_field, dtype)
+    mesh_data_class = dispatch_region_elements(mesh_data_class,
+    elements_per_field, dtype, "domain")
 
     return mesh_data_class
 

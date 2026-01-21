@@ -5,7 +5,7 @@ from ..finite_elements import volume_elements
 
 from ..finite_elements import surface_elements
 
-from ...PythonicUtilities.import_tools import load_classes_from_package
+from ...PythonicUtilities.package_tools import load_classes_from_package
 
 ########################################################################
 #                            Domain elements                           #
@@ -26,20 +26,11 @@ class DomainElements:
         
         # Defines a dictionary with domain elements. The keys are the
         # integer tags of the elements in GMSH convention. The values 
-        # are the classes and other information
+        # are the classes and other information. Automatically retrieves
+        # the finite element classes from the volume_elements and
+        # surface_elements packages
 
-        self.finite_elements_classes = dict()
-
-        self.finite_elements_classes[11] = Tetrahedron
-
-        # TODO
-        # 4  - Tetrahedron of 4 nodes;
-        # 29 - Tetrahedron of 20 nodes;
-        # 30 - Tetrahedron of 35 nodes;
-        # 5  - Hexahedron of 8 nodes;
-        # 12 - Hexahedron of 27 nodes;
-        # 92 - Hexahedron of 64 nodes;
-        # 93 - Hexahedron of 125 nodes.
+        self.finite_elements_classes = automatic_import_finite_element_classes()
 
         # Saves necessary information
 
@@ -116,21 +107,11 @@ class BoundaryElements:
         
         # Defines a dictionary with boundary elements. The keys are the
         # integer tags of the elements in GMSH convention. The values 
-        # are the classes and other information
+        # are the classes and other information. Automatically retrieves
+        # the finite element classes from the volume_elements and
+        # surface_elements packages
 
-        self.finite_elements_classes = dict()
-
-        self.finite_elements_classes[9] = Triangle
-
-        # TODO
-        # 2  - triangle of 3 nodes;
-        # 9  - triangle of 6 nodes;
-        # 21 - triangle of 10 nodes;
-        # 23 - triangle of 15 nodes;
-        # 3  - quadrilateral of 4 nodes;
-        # 10 - quadrilateral of 9 nodes;
-        # 36 - quadrilateral of 16 nodes;
-        # 37 - quadrilateral of 25 nodes.
+        self.finite_elements_classes = automatic_import_finite_element_classes()
 
         # Saves necessary information
 
@@ -401,8 +382,8 @@ def automatic_import_finite_element_classes():
 
     # Imports the classes of the surface finite elements
 
-    classes_list = load_classes_from_package(volume_elements, 
-    necessary_attributes=["stored_elements"], classes_dict=
+    classes_list = load_classes_from_package(surface_elements, 
+    necessary_attributes=["stored_elements"], classes_list=
     classes_list)
 
     # Constructs the dictionary 

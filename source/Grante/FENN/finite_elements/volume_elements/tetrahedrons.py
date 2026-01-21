@@ -3,9 +3,9 @@
 
 import tensorflow as tf
 
-from ..tool_box.tensorflow_utilities import convert_object_to_tensor
+from ...tool_box.tensorflow_utilities import convert_object_to_tensor
 
-from ..tool_box.math_tools import jacobian_3D_element
+from ...tool_box.math_tools import jacobian_3D_element
 
 # Defines a class to store the tetrahedron element 
 

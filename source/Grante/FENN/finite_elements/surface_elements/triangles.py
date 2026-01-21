@@ -51,7 +51,7 @@ class Triangle:
 
         # Evaluates the u quantity
 
-        self.u = 1.0-self.r-self.s-self.t
+        self.u = 1.0-self.r-self.s
 
         # Precomputes the shape functions in the Gauss points
 
@@ -80,59 +80,49 @@ class Triangle:
 
         if quadrature_degree==1:
 
-            self.r = tf.constant([0.25], dtype=self.dtype)
+            self.r = tf.constant([1.0/3.0], dtype=self.dtype)
 
-            self.s = tf.constant([0.25], dtype=self.dtype)
+            self.s = tf.constant([1.0/3.0], dtype=self.dtype)
 
-            self.t = tf.constant([0.25], dtype=self.dtype)
+            self.weights = tf.constant([1.0/2.0], dtype=self.dtype)
 
-            self.weights = tf.constant([1.0/6.0], dtype=self.dtype)
-
-        # Selects a quadrature degree of 2, thus, there are four points
+        # Selects a quadrature degree of 2, thus, there are three points
 
         elif quadrature_degree==2:
 
-            self.r = tf.constant([0.1381966011250105, 0.5854101966249685, 
-            0.1381966011250105, 0.1381966011250105], dtype=self.dtype)
+            self.r = tf.constant([0.5, 0.5, 0.0], dtype=self.dtype)
 
-            self.s = tf.constant([0.1381966011250105, 0.1381966011250105, 
-            0.5854101966249685, 0.1381966011250105], dtype=self.dtype)
+            self.s = tf.constant([0.5, 0.0, 0.5], dtype=self.dtype)
 
-            self.t = tf.constant([0.1381966011250105, 0.1381966011250105, 
-            0.1381966011250105, 0.5854101966249685], dtype=self.dtype)
+            self.weights = tf.constant([1.0/6.0, 1.0/6.0, 1.0/6.0], 
+            dtype=self.dtype)
 
-            self.weights = tf.constant([1.0/24.0, 1.0/24.0, 1.0/24.0,
-            1.0/24.0], dtype=self.dtype)
-
-        # Selects a quadrature degree of 3, thus, there are five points
+        # Selects a quadrature degree of 3, thus, there are four points
 
         elif quadrature_degree==3:
 
-            self.r = tf.constant([0.25, 0.5, 1.0/6.0, 1.0/6.0, 1.0/6.0], 
-            dtype=self.dtype)
+            self.r = tf.constant([1.0/3.0, 0.6, 0.2, 0.2], dtype=
+            self.dtype)
 
-            self.s = tf.constant([0.25, 1.0/6.0, 0.5, 1.0/6.0, 1.0/6.0], 
-            dtype=self.dtype)
+            self.s = tf.constant([1.0/3.0, 0.2, 0.6, 0.2], dtype=
+            self.dtype)
 
-            self.t = tf.constant([0.25, 1.0/6.0, 1.0/6.0, 0.5, 1.0/6.0], 
-            dtype=self.dtype)
-
-            self.weights = tf.constant([-2.0/15.0, 3.0/40.0, 3.0/40.0, 
-            3.0/40.0, 3.0/40.0], dtype=self.dtype)
+            self.weights = tf.constant([-27.0/96.0, 25.0/96.0, 25.0/96.0, 
+            25.0/96.0], dtype=self.dtype)
 
         else:
 
             raise ValueError("A quadrature degree of "+str(
-            quadrature_degree)+" was asked to created tetrahedral fini"+
-            " elements. But the only available degrees are 1 (one poin"+
-            "t), 2 (four point), 3 (five points).")
+            quadrature_degree)+" was asked to created triangle fini el"+
+            "ements. But the only available degrees are 1 (one point),"+
+            " 2 (three point), 3 (four points).")
 
         # Saves the number of quadrature points
 
         self.number_quadrature_points = self.weights.shape[0]
 
-    # Defines a function to calculate quadratic shape functions for a 10-
-    # node tetrahedron
+    # Defines a function to calculate quadratic shape functions for a 6-
+    # node triangle
 
     def make_quadratic_shape_functions(self):
 

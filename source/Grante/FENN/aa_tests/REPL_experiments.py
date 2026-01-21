@@ -376,7 +376,8 @@ def test_scatter_nd():
 
     updates = tf.gather(u, indices)
 
-    print("Updates:\n"+str(updates)+"\n")
+    print("Updates:\n"+str(updates)+"\nShape updates at the third index:\n"+str(
+    updates.shape[2])+"\n")
 
     # Adds the new dimension
 
@@ -396,6 +397,92 @@ def test_scatter_nd():
     global_residual_vector.scatter_nd_add(indices, updates)
 
     print("The updated global using variable is:\n"+str(global_residual_vector))
+
+def test_pick_first_node():
+
+    nodes = tf.constant([[[2.0, 0.5, 0.0], [0.0, 1.5, 0.0], [0.0, 0.0, 
+    0.0]], [[1.0, 0.0, 0.0], [0.0, 0.0, 2.0], [0.0, 0.0, 0.0]]])
+
+    x = nodes[...,0]
+
+    y = nodes[...,1]
+
+    z = nodes[...,2]
+
+    print("\nx:\n"+str(x)+"\n\ny:"+str(y)+"\n")
+
+    print("\nx of the first node:\n"+str(x[...,0])+"\n\ny of the first n"+
+    "ode:\n"+str(y[...,0])+"\n")
+
+    x -= x[:,2:3]
+
+    y -= y[:,2:3]
+
+    z -= z[:,2:3]
+
+    print("The translated x coordinates are: "+str(x)+"\n")
+
+    print("The translated y coordinates are: "+str(y)+"\n")
+
+    print("The original coordinates:\n"+str(nodes)+"\n")
+
+    vectors = tf.stack([x,y, z], axis=-1)
+
+    print("The vectors are:\n"+str(vectors)+"\n")
+
+    e1 = vectors[:,0,:]
+
+    old_e2 = vectors[:,1,:]
+
+    e3 = tf.linalg.cross(e1, old_e2)
+
+    print("e1:\n"+str(e1)+"\n")
+
+    print("e2:\n"+str(old_e2)+"\n")
+
+    print("e3:\n"+str(e3)+"\n")
+
+    norm_e1 = tf.linalg.norm(e1, axis=-1, keepdims=True)
+
+    print("norm of e1:\n"+str(norm_e1)+"\n")
+
+    norm_e3 = tf.linalg.norm(e3, axis=-1, keepdims=True)
+
+    print("norm of e3:\n"+str(norm_e3)+"\n")
+
+    e1 = e1/norm_e1
+
+    e3 = e3/norm_e3
+
+    print("Normalized e1:\n"+str(e1)+"\n")
+
+    print("Normalized e3:\n"+str(e3)+"\n")
+
+    e2 = tf.linalg.cross(e3, e1)
+
+    print("Normalized new e2:\n"+str(e2)+"\n")
+
+    project_old_e2_onto_e2 = tf.reduce_sum(old_e2*e2, axis=-1)
+
+    print("Old e2 projected onto the direction of new e2:\n"+str(
+    project_old_e2_onto_e2)+"\n")
+
+    project_old_e2_onto_e1 = tf.reduce_sum(old_e2*e1, axis=-1)
+
+    print("Old e2 projected onto the direction of e1:\n"+str(
+    project_old_e2_onto_e1)+"\n")
+
+    # Projects all vectors onto e1 to get the new x coordinates
+
+    new_x = tf.stack([tf.reduce_sum(vectors[:,i,:]*e1, axis=-1) for (i
+    ) in range(vectors.shape[1])], axis=-1)
+
+    print("New x coordinates:\n"+str(new_x)+"\n")
+
+    new_y = tf.stack([tf.reduce_sum(vectors[:,i,:]*e2, axis=-1) for (i
+    ) in range(vectors.shape[1])], axis=-1)
+
+    print("New y coordinates:\n"+str(new_y)+"\n")
 
 if __name__=="__main__":
 
@@ -418,3 +505,5 @@ if __name__=="__main__":
     test_gather_tensor_from_vector()
 
     test_scatter_nd()
+
+    test_pick_first_node()

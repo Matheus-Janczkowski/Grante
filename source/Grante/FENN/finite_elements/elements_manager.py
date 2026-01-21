@@ -109,9 +109,12 @@ class BoundaryElements:
         # integer tags of the elements in GMSH convention. The values 
         # are the classes and other information. Automatically retrieves
         # the finite element classes from the volume_elements and
-        # surface_elements packages
+        # surface_elements packages. Also gets a dictionary that pairs
+        # the element tags to their suitable boundary elements
 
-        self.finite_elements_classes = automatic_import_finite_element_classes()
+        (self.finite_elements_classes, self.suitable_boundary_elements
+        ) = automatic_import_finite_element_classes(
+        get_suitable_boundary_elements=True)
 
         # Saves necessary information
 
@@ -157,7 +160,8 @@ class BoundaryElements:
         physical_group_tag, dtype, self.element_per_field, 
         self.finite_elements_classes, self.nodes_coordinates, 
         self.quadrature_degree, self.elements_dictionaries, "boundary", 
-        0, self.dofs_node_dict, flag_building_dofs_dict=False)
+        0, self.dofs_node_dict, flag_building_dofs_dict=False, 
+        suitable_boundary_elements=self.suitable_boundary_elements)
 
 ########################################################################
 #              Element dispatching and class instantiation             #
@@ -168,7 +172,8 @@ class BoundaryElements:
 def dispatch_element_template(tag, connectivities, physical_group_tag,
 dtype, element_per_field, finite_elements_classes, nodes_coordinates,
 quadrature_degree, elements_dictionaries, region_name, dofs_counter, 
-dofs_node_dict, flag_building_dofs_dict=True):
+dofs_node_dict, flag_building_dofs_dict=True, suitable_boundary_elements=
+None):
 
     # Iterates through the fields to add an empty list with a sublist
     # for each dimension (each DOF in the node)
@@ -200,6 +205,14 @@ dofs_node_dict, flag_building_dofs_dict=True):
                     required_element_type = given_type 
 
                     break 
+
+        # If the region is the boundary, the suitable element in the 
+        # boundary must be taken
+
+        if region_name=="boundary":
+
+            required_element_type = suitable_boundary_elements[
+            required_element_type]
 
         # Gets the element dictionary of information
 
@@ -310,6 +323,10 @@ dofs_node_dict, flag_building_dofs_dict=True):
 
                     max_dof_number = max(DOF_number, max_dof_number)
 
+            # Updates the DOFs couter
+
+            dofs_counter = max_dof_number+1
+
         # Uses the dictionary of nodes to DOFs to create a list of ele-
         # ments with nested lists for nodes, which, in turn, have nested
         # lists for dimensions (local DOFs)
@@ -322,10 +339,6 @@ dofs_node_dict, flag_building_dofs_dict=True):
                 nodes_in_elements[element_index][node_index] = (
                 dofs_node_dict[field_name][nodes_in_elements[
                 element_index][node_index]])
-
-        # Updates the DOFs couter
-
-        dofs_counter = max_dof_number+1
 
         # Instantiates the finite element class
 
@@ -373,7 +386,8 @@ def get_element(tag, finite_elements_classes, region):
 # elements classes, where the keys are the elements GMSH integer tag and
 # the respective values are the classes objects
 
-def automatic_import_finite_element_classes():
+def automatic_import_finite_element_classes(
+get_suitable_boundary_elements=False):
 
     # Imports the classes of the volumetric finite elements
 
@@ -386,6 +400,17 @@ def automatic_import_finite_element_classes():
     necessary_attributes=["stored_elements"], classes_list=
     classes_list)
 
+    # If a dictionary of suitable boundary elements is to be constructed,
+    # initializes a dictionary whose keys are gmsh integer tags, and the
+    # values are gmsh integer tags of the elements that form a suitable
+    # boundary to the latter ones
+
+    suitable_boundary_elements = None 
+
+    if get_suitable_boundary_elements:
+
+        suitable_boundary_elements = dict()
+
     # Constructs the dictionary 
 
     finite_elements_dictionary = dict()
@@ -394,12 +419,25 @@ def automatic_import_finite_element_classes():
 
         # Iterates through the dictionary of stored elements
 
-        for element_gmsh_tag in class_object.stored_elements.keys():
+        for element_gmsh_tag, element_info in (
+        class_object.stored_elements.items()):
             
             # Adds to the dictionary of finite elements
 
             finite_elements_dictionary[element_gmsh_tag] = class_object
 
+            # If the suitable boundary element is to be registered
+
+            if get_suitable_boundary_elements and ("suitable boundary "+
+            "element type tag" in element_info):
+                
+                suitable_boundary_elements[element_gmsh_tag] = (
+                element_info["suitable boundary element type tag"])
+
     # Returns the dictionary of finite elements
+
+    if get_suitable_boundary_elements:
+
+        return finite_elements_dictionary, suitable_boundary_elements
 
     return finite_elements_dictionary

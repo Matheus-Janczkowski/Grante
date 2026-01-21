@@ -15,7 +15,8 @@ class MshMeshData:
     def __init__(self, nodes_coordinates, domain_physicalGroupsNameToTag,
     boundary_physicalGroupsNameToTag, domain_connectivities, 
     boundary_connectivities, quadrature_degree, dtype, 
-    global_number_dofs=None, domain_elements=None, boundary_elements=None):
+    global_number_dofs=None, domain_elements=None, boundary_elements=
+    None, dofs_node_dict=None):
     
         self.nodes_coordinates = nodes_coordinates
 
@@ -36,6 +37,8 @@ class MshMeshData:
         self.domain_elements = domain_elements 
 
         self.boundary_elements = boundary_elements
+
+        self.dofs_node_dict = dofs_node_dict
 
 ########################################################################
 #                             Mesh reading                             #
@@ -173,6 +176,11 @@ parent_directory=None, verbose=False, dtype=tf.float32):
 
     mesh_data_class = dispatch_region_elements(mesh_data_class,
     elements_per_field, dtype, "domain")
+
+    # Dispatches the elements of the boundary in the same way
+
+    mesh_data_class = dispatch_region_elements(mesh_data_class,
+    elements_per_field, dtype, "boundary")
 
     return mesh_data_class
 

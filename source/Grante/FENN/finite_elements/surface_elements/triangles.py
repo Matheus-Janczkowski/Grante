@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from ...tool_box.tensorflow_utilities import convert_object_to_tensor
 
-from ...tool_box.math_tools import jacobian_3D_element
+from ...tool_box.math_tools import jacobian_2D_element
 
 # Defines a class to store the triangle element
 
@@ -17,7 +17,7 @@ class Triangle:
 
     stored_elements = {9: {"polynomial degree": 2, "number of nodes": 6, 
     "name": "triangle of 6 nodes", "indices of the gmsh connectivity": [
-    0, 1, 2, 3, 4, 5]}}
+    1, 2, 0, 4, 5, 3]}}
 
     def __init__(self, node_coordinates, dofs_per_element, 
     polynomial_degree=2, quadrature_degree=2, dtype=tf.float32, 
@@ -38,6 +38,17 @@ class Triangle:
 
         node_coordinates = convert_object_to_tensor(node_coordinates,
         self.dtype)
+
+        # Verifies if this is a triangle embedded in a 3D space by coun-
+        # ting the number of coordinates for each node
+
+        if node_coordinates.shape[2]>2:
+
+            self.triangle_in_3D_space = True 
+
+        else:
+
+            self.triangle_in_3D_space = False
 
         # The dofs per element is a tensor [n_elements, n_nodes, 
         # n_dofs_per_node]
@@ -133,50 +144,33 @@ class Triangle:
         #                        Shape functions                       #
         ################################################################
 
-        # First node: r = 1, s = 0, t = 0
-
+        # First node: r = 1, s = 0
         N_1 = (self.r*((2*self.r)-1.0))[..., tf.newaxis]
 
-        # Second node: r = 0, s = 1, t = 0
+        # Second node: r = 0, s = 1
 
         N_2 = (self.s*((2*self.s)-1.0))[..., tf.newaxis]
 
-        # Third node: r = 0, s = 0, t = 1
+        # Third node: r = 0, s = 0
 
-        N_3 = (self.t*((2*self.t)-1.0))[..., tf.newaxis]
+        N_3 = (self.u*((2*self.u)-1.0))[..., tf.newaxis]
 
-        # Fourth node: r = 0, s = 0, t = 0
+        # Fourth node: r = 0.5, s = 0.5
 
-        N_4 = (self.u*((2*self.u)-1.0))[..., tf.newaxis]
+        N_4 = (4*self.r*self.s)[..., tf.newaxis]
 
-        # Fifth node: r = 0.5, s = 0.5, t = 0
+        # Fifth node: r = 0, s = 0.5
 
-        N_5 = (4*self.r*self.s)[..., tf.newaxis]
+        N_5 = (4*self.s*self.u)[..., tf.newaxis]
 
-        # Sixth node: r = 0, s = 0.5, t = 0.5
+        # Sixth node: r = 0.5, s = 0
 
-        N_6 = (4*self.s*self.t)[..., tf.newaxis]
-
-        # Seventh node: r = 0, s = 0, t = 0.5
-
-        N_7 = (4*self.t*self.u)[..., tf.newaxis]
-
-        # Eigth node: r = 0.5, s = 0, t = 0
-
-        N_8 = (4*self.r*self.u)[..., tf.newaxis]
-
-        # Nineth node: r = 0.5, s = 0, t = 0.5
-
-        N_9 = (4*self.r*self.t)[..., tf.newaxis]
-
-        # Tenth node: r = 0, s = 0.5, t = 0
-
-        N_10 = (4*self.s*self.u)[..., tf.newaxis]
+        N_6 = (4*self.r*self.u)[..., tf.newaxis]
 
         # Concatenates all shape function into a single tensor
 
         self.shape_functions_tensor = tf.concat((N_1, N_2, N_3, N_4, N_5, 
-        N_6, N_7, N_8, N_9, N_10), axis=-1)
+        N_6), axis=-1)
         
         ################################################################
         #                  Shape functions derivatives                 #
@@ -190,15 +184,11 @@ class Triangle:
 
         dN2_ds = ((4*self.s)-1.0)[..., tf.newaxis]
 
-        dN3_dt = ((4*self.t)-1.0)[..., tf.newaxis]
+        dN3_dr = (1.0-(4*self.u))[..., tf.newaxis]
 
-        dN4_dr = (1.0-(4*self.u))[..., tf.newaxis]
+        dN4_dr = (4*self.s)[..., tf.newaxis]
 
-        dN5_dr = (4*self.s)[..., tf.newaxis]
-
-        dN5_ds = (4*self.r)[..., tf.newaxis]
-
-        dN6_ds = (4*self.t)[..., tf.newaxis]
+        dN4_ds = (4*self.r)[..., tf.newaxis]
 
         quadruple_u = (4*self.u)[..., tf.newaxis]
 
@@ -208,22 +198,15 @@ class Triangle:
         # array encompasses the derivatives of the ten shape functions
         # with respect to a single natural coordinate
 
-        dN_dr = tf.concat([dN1_dr, null_vector, null_vector, dN4_dr, 
-        dN5_dr, null_vector, -dN6_ds, quadruple_u-dN5_ds, dN6_ds, -dN5_dr
-        ], axis=-1)
+        dN_dr = tf.concat([dN1_dr, null_vector, dN3_dr, dN4_dr, -dN4_dr, 
+        quadruple_u-dN4_ds], axis=-1)
 
-        dN_ds = tf.concat([null_vector, dN2_ds, null_vector, dN4_dr, 
-        dN5_ds, dN6_ds, -dN6_ds, -dN5_ds, null_vector, quadruple_u-dN5_dr
-        ], axis=-1)
-
-        dN_dt = tf.concat([null_vector, null_vector, dN3_dt, dN4_dr,
-        null_vector, dN5_dr, quadruple_u-dN6_ds, -dN5_ds, dN5_ds, -dN5_dr
-        ], axis=-1)
+        dN_ds = tf.concat([null_vector, dN2_ds, dN3_dr, dN4_ds, 
+        quadruple_u-dN4_dr, -dN4_ds], axis=-1)
 
         # Compacts them into a single array
 
-        self.natural_derivatives_N = tf.stack([dN_dr, dN_ds, dN_dt], 
-        axis=-1)
+        self.natural_derivatives_N = tf.stack([dN_dr, dN_ds], axis=-1)
 
     # Defines a function to return the shape functions evaluated at the
     # original coordinates of the finite element
@@ -234,22 +217,72 @@ class Triangle:
         original system of coordinates of the finite elements. Computes
         jacobians to perform the mapping of the derivatives"""
 
-        # Gets the x, y, and z coordinates of the nodes. Adds the new a-
-        # xis in the middle to compatibilize it with the dimension of 
-        # quadrature points. It is important to note that the nodes here
-        # denote the midpoints too. Just like in the book The Finite El-
-        # ement Method by Hughes
+        # Gets the x, and y coordinates of the nodes. It is important to 
+        # note that the nodes here denote the midpoints too. Just like 
+        # in the book The Finite Element Method by Hughes
 
         x = nodes_coordinates[..., 0]
 
         y = nodes_coordinates[..., 1]
 
-        z = nodes_coordinates[..., 2]
+        # If it is a triangle embedded in a 3D space, the tridimensional
+        # coordinates must be projected onto a 2D coordinate system lo-
+        # cal to the element
+
+        if self.triangle_in_3D_space:
+
+            # Gets the z coordinate
+
+            z = nodes_coordinates[..., 2]
+
+            # Translates every node by the third node
+
+            x -= x[:,2:3]
+
+            y -= y[:,2:3]
+
+            z -= z[:,2:3]
+
+            # Stacks the coordinates as three vectors
+
+            vectors = tf.stack([x, y, z], axis=-1)
+
+            # Retrieves the first two vectors, that are embedded in the
+            # plane of the element
+
+            v_1 = vectors[:,0,:]
+
+            v_2 = vectors[:,1,:]
+
+            # Evaluates the outward pointing vector using the cross pro-
+            # duct
+
+            e_3 = tf.linalg.cross(v_1, v_2)
+
+            # Normalizes e1 and e3
+
+            eps = tf.keras.backend.epsilon()
+
+            e_1 = v_1/(tf.linalg.norm(v_1, axis=-1, keepdims=True)+eps)
+
+            e_3 = e_3/(tf.linalg.norm(e_3, axis=-1, keepdims=True)+eps)
+
+            # Now, computes e2 again to keep all of them orthogonal to
+            # each other
+
+            e_2 = tf.linalg.cross(e_3, e_1)
+
+            # Projects all vector onto the new e1 and e2 vectors, to the
+            # the coordinates on the local system of each element
+
+            x = tf.einsum('eni,ei->en', vectors, e_1)
+
+            y = tf.einsum('eni,ei->en', vectors, e_2)
 
         # Gets the jacobian determinant and its inverse
 
-        det_J, J_inv = jacobian_3D_element(self.natural_derivatives_N, x, 
-        y, z)
+        det_J, J_inv = jacobian_2D_element(self.natural_derivatives_N, x, 
+        y)
 
         # The jacobian inverse is a tensor of [elements, quadrature 
         # points, original coordinates, natural coordinates]. Whereas the

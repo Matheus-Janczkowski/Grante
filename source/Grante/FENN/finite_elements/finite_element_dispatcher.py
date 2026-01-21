@@ -87,6 +87,8 @@ region):
 
         mesh_data_class.global_number_dofs = region_finite_elements.dofs_counter
 
+        mesh_data_class.dofs_node_dict = region_finite_elements.dofs_node_dict
+
     # Stores the class of finite elements for the region into the mesh
     # data class and returns it
 

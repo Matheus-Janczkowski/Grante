@@ -6,6 +6,8 @@ import unittest
 
 from ..finite_elements.volume_elements.tetrahedrons import Tetrahedron
 
+from ..finite_elements.surface_elements.triangles import Triangle
+
 from ..tool_box import mesh_tools
 
 from ...MultiMech.tool_box.mesh_handling_tools import create_box_mesh
@@ -50,6 +52,31 @@ class TestANNTools(unittest.TestCase):
         28,29]], [[3,4,5], [0,1,2], [6,7,8], [30,31,32], [12,13,14], [24,
         25,26], [33,34,35], [36,37,38], [15,16,17], [39,40,41]]]
 
+        # Defines a list of nodes coordinates for two triangle elements
+
+        nodes_coordinates = [[1.0, 0.0], [0.0, 1.0], [0.0, 0.0], [0.5, 
+        0.5], [0.0, 0.5], [0.5, 0.0], [1.0, 0.5], [1.0, 1.0], [0.5, 1.0]]
+
+        # Gets a list of nodes coordinates per element
+
+        self.nodes_coordinates_2Delements = []
+
+        # Appends the nodes of the first element
+
+        self.nodes_coordinates_2Delements.append([nodes_coordinates[0], 
+        nodes_coordinates[1], nodes_coordinates[2], nodes_coordinates[3],
+        nodes_coordinates[4], nodes_coordinates[5]])
+
+        # Appends the nodes of the second element
+
+        self.nodes_coordinates_2Delements.append([nodes_coordinates[1], 
+        nodes_coordinates[0], nodes_coordinates[7], nodes_coordinates[3],
+        nodes_coordinates[6], nodes_coordinates[8]])
+
+        self.dofs_per_2Delements = [[[0,1,2], [3,4,5], [6,7,8], [9,10,11], 
+        [12,13,14], [15,16,17]], [[3,4,5], [0,1,2], [21,22,23], [9,10,11], 
+        [18,19,20], [24,25,26]]]
+
     # Defines a function to test the instantiation of tetrahedron class
 
     def test_quadratic_tetrahedron(self):
@@ -65,6 +92,25 @@ class TestANNTools(unittest.TestCase):
         print("The determinant of the jacobian evaluated at all quadra"+
         "ture points mutliplied by the quadrature weights is:\n"+str(
         tetradron_mesh.dx)+"\n")
+
+        #print("The derivatives of the shape functions at all quadratur"+
+        #"e point are:\n"+str(tetradron_mesh.shape_functions_derivatives))
+
+    # Defines a function to test the instantiation of triangle class
+
+    def test_quadratic_triangle(self):
+
+        print("\n#####################################################"+
+        "###################\n#                Tests the second order "+
+        "triangle element               #\n###########################"+
+        "#############################################\n")
+
+        triangle_mesh = Triangle(self.nodes_coordinates_2Delements,
+        self.dofs_per_2Delements)
+
+        print("The determinant of the jacobian evaluated at all quadra"+
+        "ture points mutliplied by the quadrature weights is:\n"+str(
+        triangle_mesh.dx)+"\n")
 
         #print("The derivatives of the shape functions at all quadratur"+
         #"e point are:\n"+str(tetradron_mesh.shape_functions_derivatives))

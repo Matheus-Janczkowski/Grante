@@ -17,7 +17,8 @@ class Tetrahedron:
 
     stored_elements = {11: {"polynomial degree": 2, "number of nodes": 
     10, "name": "tetrahedron of 10 nodes", "indices of the gmsh conn"+
-    "ectivity": [1, 2, 3, 0, 5, 8, 7, 4, 9, 6]}}
+    "ectivity": [1, 2, 3, 0, 5, 8, 7, 4, 9, 6], "suitable boundary e"+
+    "lement type tag": 9}}
 
     def __init__(self, node_coordinates, dofs_per_element, 
     polynomial_degree=2, quadrature_degree=2, dtype=tf.float32, 

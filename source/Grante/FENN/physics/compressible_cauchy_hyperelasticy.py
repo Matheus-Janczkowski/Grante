@@ -20,6 +20,14 @@ class CompressibleHyperelasticity:
 
         self.global_residual_vector = tf.Variable(tf.zeros([
         self.global_number_dofs], dtype=self.dtype))
+
+        # Verifies if the domain elements have the field displacement
+
+        if not ("Displacement" in mesh_data_class.domain_elements):
+
+            raise NameError("There is no field named 'Displacement' in"+
+            " the mesh. Thus, it is not possible to compute Compressib"+
+            "leHyperelasticity")
         
         # Instantiates the class to compute the parcel of the residual
         # vector due to the variation of the internal work

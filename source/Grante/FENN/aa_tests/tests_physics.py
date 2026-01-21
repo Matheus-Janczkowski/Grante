@@ -47,7 +47,7 @@ class TestANNTools(unittest.TestCase):
         
         n_divisions_x = 2 
 
-        n_divisions_y = 2 
+        n_divisions_y = 2
         
         n_divisions_z = 2
 
@@ -87,7 +87,7 @@ class TestANNTools(unittest.TestCase):
 
         residual_vector = residual_class.evaluate_residual_vector()
 
-        print("The residual vector is:\n"+str(residual_vector))
+        print("\nThe residual vector is:\n"+str(residual_vector)+"\n")
 
 # Runs all tests
 

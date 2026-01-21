@@ -70,5 +70,5 @@ class NeoHookean:
         # Kirchhoff stress tensor as a tensor [n_elements, 
         # n_quadrature_points, 3, 3]
 
-        return (F+tf.einsum('eq,eqij->eqij', ((self.lmbda*tf.math.log(J)
-        )-self.mu), F_inv_transposed))
+        return ((self.mu*F)+tf.einsum('eq,eqij->eqij', ((self.lmbda*
+        tf.math.log(J))-self.mu), F_inv_transposed))

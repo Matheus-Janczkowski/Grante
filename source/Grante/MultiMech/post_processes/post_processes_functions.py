@@ -1501,7 +1501,7 @@ submesh_flag):
         def __init__(self, file_name, mesh_data_class, 
         constitutive_model, forces_moments_list, new_ds, 
         new_boundary_physical_groups_dict, surface_physical_group,
-        surface_position_vector, area_inverse):
+        surface_position_vector, area_inverse, surface_centroid):
 
             # Saves the comm object
 
@@ -1525,9 +1525,12 @@ submesh_flag):
 
             self.surface_area = 1/area_inverse
 
+            self.surface_centroid = surface_centroid
+
     output_object = OutputObject(file_name, mesh_data_class, 
     constitutive_model, forces_moments_list, new_ds, new_boundary_dict,
-    surface_physical_group, surface_position_vector, area_inverse)
+    surface_physical_group, surface_position_vector, area_inverse,
+    surface_centroid)
 
     return output_object
 
@@ -1559,7 +1562,8 @@ time, fields_namesDict):
     mpi_print(output_object.mesh_data_class.comm, "Updates the saving "+
     "of the forces and moments on the surface' "+str(
     output_object.surface_physical_group)+"'. This surface has an area"+
-    " of "+str(output_object.surface_area)+"\n")
+    " of "+str(output_object.surface_area)+"\nThe centroid of this sur"+
+    "face is at "+str(output_object.surface_centroid.values())+"\n")
 
     # If there is a single field, field number will be -1
 

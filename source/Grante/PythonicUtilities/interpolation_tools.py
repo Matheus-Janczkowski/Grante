@@ -12,7 +12,8 @@ import numpy as np
 # space
 
 def spline_3D_interpolation(x_points=None, y_points=None, z_points=None, 
-points_array=None, add_initial_point_as_end_point=False):
+points_array=None, add_initial_point_as_end_point=False, 
+polar_angle_around_z=False):
     
     """
     Function for creating a cubic spline interpolation function of a
@@ -32,6 +33,9 @@ points_array=None, add_initial_point_as_end_point=False):
 
     add_initial_point_as_end_point: Flag to add a copy of the initial 
     point as end point to close the curve
+
+    polar_angle_around_z: the spline parametric variable becomes the
+    polar angle around z in degrees
     """
 
     # Tests if the points array is not None
@@ -185,7 +189,88 @@ points_array=None, add_initial_point_as_end_point=False):
 
     # Gets the range of the parametric variable
 
-    parametric_variable = np.linspace(0.0, 1.0, n_points)
+    parametric_variable = None
+
+    # If the original points are x and y values that have meaning in a
+    # cylindrical coordinate system, the code makes sure that the para-
+    # metric variable has the same interval as the polar angle
+
+    if polar_angle_around_z:
+
+        # Calculates the polar angle of the first point
+
+        polar_angle = 0.5*np.pi
+
+        # Verifies if the point lies on the first or fourth quadrants
+
+        if x_points[0]>1E-9:
+
+            polar_angle = np.arctan(y_points[0]/x_points[0])
+
+            # If the point is in the fourth quadrant, adds 2 pi
+
+            if y_points[0]<0.0:
+
+                polar_angle += (2*np.pi)
+
+        # Verifies if the point lies in the second or third quadrants
+
+        elif x_points[0]<-1E-9:
+
+            polar_angle = np.arctan(y_points[0]/x_points[0])
+
+            # Adds pi to correct for the negative x
+            
+            polar_angle += np.pi
+
+        elif y_points[0]<0.0:
+
+            polar_angle = 1.5*np.pi 
+
+        # Updates the list of parametric variable with this angle
+
+        parametric_variable = [polar_angle*(180/np.pi)]
+
+        # Iterates through the remaing points
+
+        for i in range(1, n_points):
+
+            # Calculates the angle between this point and the previous 
+            # one using the cross product
+
+            a_x = x_points[i-1]
+
+            a_y = y_points[i-1]
+
+            b_x = x_points[i]
+
+            b_y = y_points[i]
+
+            delta_theta = np.arcsin(((a_x*b_y)-(a_y*b_x))/np.sqrt(((a_x*
+            a_x)+(a_y*a_y))*((b_x*b_x)+(b_y*b_y))))
+
+            # If the angle is negative, adds 2 pi to get the complement
+
+            if delta_theta<0.0:
+
+                delta_theta += 2*np.pi
+
+            # Adds the polar angle as parametric variable. Adds to the
+            # last value to allow for values greater than 2*pi and in 
+            # ascending order
+
+            parametric_variable.append(parametric_variable[-1]+(
+            delta_theta*(180/np.pi)))
+
+        # Sorts the points in ascending order of 
+
+        # Transforms the parametric variable list into a numpy array
+
+        parametric_variable = np.array(parametric_variable)
+
+    else:
+
+        parametric_variable = np.linspace(0.0, 1.0, n_points)
 
     # Gets the spline interpolation for each dimension
 

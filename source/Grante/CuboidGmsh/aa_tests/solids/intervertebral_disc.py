@@ -29,38 +29,40 @@ def mesh_disc():
 
     # Square curve
 
-    points_array_inferior_square = [[cube_radius*np.cos(np.pi*(7/4)), 
-    cube_radius*np.sin(np.pi*(7/4)), 0.0], [cube_radius*np.cos(np.pi*(9/
-    4)), cube_radius*np.sin(np.pi*(9/4)), 0.0], [cube_radius*np.cos(
-    np.pi*(11/4)), cube_radius*np.sin(np.pi*(11/4)), 0.0], [cube_radius*
-    np.cos(np.pi*(13/4)), cube_radius*np.sin(np.pi*(13/4)), 0.0]]
+    points_array_inferior_square = [[cube_radius*np.cos(np.pi*(1/4)), 
+    cube_radius*np.sin(np.pi*(1/4)), 0.0], [cube_radius*np.cos(np.pi*(3/
+    4)), cube_radius*np.sin(np.pi*(3/4)), 0.0], [cube_radius*np.cos(
+    np.pi*(5/4)), cube_radius*np.sin(np.pi*(5/4)), 0.0], [cube_radius*
+    np.cos(np.pi*(7/4)), cube_radius*np.sin(np.pi*(7/4)), 0.0]]
 
-    points_array_superior_square = [[cube_radius*np.cos(np.pi*(7/4)), 
-    cube_radius*np.sin(np.pi*(7/4)), height], [cube_radius*np.cos(np.pi*
-    (9/4)), cube_radius*np.sin(np.pi*(9/4)), height], [cube_radius*
-    np.cos(np.pi*(11/4)), cube_radius*np.sin(np.pi*(11/4)), height], [
-    cube_radius*np.cos(np.pi*(13/4)), cube_radius*np.sin(np.pi*(13/4)), 
+    points_array_superior_square = [[cube_radius*np.cos(np.pi*(1/4)), 
+    cube_radius*np.sin(np.pi*(1/4)), height], [cube_radius*np.cos(np.pi*
+    (3/4)), cube_radius*np.sin(np.pi*(3/4)), height], [cube_radius*
+    np.cos(np.pi*(5/4)), cube_radius*np.sin(np.pi*(5/4)), height], [
+    cube_radius*np.cos(np.pi*(7/4)), cube_radius*np.sin(np.pi*(7/4)), 
     height]]
 
     inferior_curve_cube = spline_3D_interpolation(points_array=
-    points_array_inferior_square, add_initial_point_as_end_point=True)
+    points_array_inferior_square, add_initial_point_as_end_point=True,
+    polar_angle_around_z=True)
 
     superior_curve_cube = spline_3D_interpolation(points_array=
-    points_array_superior_square, add_initial_point_as_end_point=True)
+    points_array_superior_square, add_initial_point_as_end_point=True,
+    polar_angle_around_z=True)
 
     # Inner curve
 
-    points_array_inferior_inner = [[inner_radius*np.cos(np.pi*(7/4)), 
-    inner_radius*np.sin(np.pi*(7/4)), 0.0], [inner_radius*np.cos(np.pi*(9/
-    4)), inner_radius*np.sin(np.pi*(9/4)), 0.0], [inner_radius*np.cos(
-    np.pi*(11/4)), inner_radius*np.sin(np.pi*(11/4)), 0.0], [inner_radius*
-    np.cos(np.pi*(13/4)), inner_radius*np.sin(np.pi*(13/4)), 0.0]]
+    points_array_inferior_inner = [[inner_radius*np.cos(np.pi*(1/4)), 
+    inner_radius*np.sin(np.pi*(1/4)), 0.0], [inner_radius*np.cos(np.pi*(3/
+    4)), inner_radius*np.sin(np.pi*(3/4)), 0.0], [inner_radius*np.cos(
+    np.pi*(5/4)), inner_radius*np.sin(np.pi*(5/4)), 0.0], [inner_radius*
+    np.cos(np.pi*(7/4)), inner_radius*np.sin(np.pi*(7/4)), 0.0]]
 
-    points_array_superior_inner = [[inner_radius*np.cos(np.pi*(7/4)), 
-    inner_radius*np.sin(np.pi*(7/4)), height], [inner_radius*np.cos(np.pi*
-    (9/4)), inner_radius*np.sin(np.pi*(9/4)), height], [inner_radius*
-    np.cos(np.pi*(11/4)), inner_radius*np.sin(np.pi*(11/4)), height], [
-    inner_radius*np.cos(np.pi*(13/4)), inner_radius*np.sin(np.pi*(13/4)), 
+    points_array_superior_inner = [[inner_radius*np.cos(np.pi*(1/4)), 
+    inner_radius*np.sin(np.pi*(1/4)), height], [inner_radius*np.cos(np.pi*
+    (3/4)), inner_radius*np.sin(np.pi*(3/4)), height], [inner_radius*
+    np.cos(np.pi*(5/4)), inner_radius*np.sin(np.pi*(5/4)), height], [
+    inner_radius*np.cos(np.pi*(7/4)), inner_radius*np.sin(np.pi*(7/4)), 
     height]]
 
     """inferior_curve_inner = lambda theta: [inner_radius*np.cos((2*np.pi*
@@ -72,24 +74,26 @@ def mesh_disc():
     np.pi)), height]"""
 
     inferior_curve_inner = spline_3D_interpolation(points_array=
-    points_array_inferior_inner, add_initial_point_as_end_point=True)
+    points_array_inferior_inner, add_initial_point_as_end_point=True,
+    polar_angle_around_z=True)
 
     superior_curve_inner = spline_3D_interpolation(points_array=
-    points_array_superior_inner, add_initial_point_as_end_point=True)
+    points_array_superior_inner, add_initial_point_as_end_point=True,
+    polar_angle_around_z=True)
 
     # Outer curve
 
-    points_array_inferior_outer = [[outer_radius*np.cos(np.pi*(7/4)), 
-    outer_radius*np.sin(np.pi*(7/4)), 0.0], [outer_radius*np.cos(np.pi*(9/
-    4)), outer_radius*np.sin(np.pi*(9/4)), 0.0], [outer_radius*np.cos(
-    np.pi*(11/4)), outer_radius*np.sin(np.pi*(11/4)), 0.0], [outer_radius*
-    np.cos(np.pi*(13/4)), outer_radius*np.sin(np.pi*(13/4)), 0.0]]
+    points_array_inferior_outer = [[outer_radius*np.cos(np.pi*(1/4)), 
+    outer_radius*np.sin(np.pi*(1/4)), 0.0], [outer_radius*np.cos(np.pi*(3/
+    4)), outer_radius*np.sin(np.pi*(3/4)), 0.0], [outer_radius*np.cos(
+    np.pi*(5/4)), outer_radius*np.sin(np.pi*(5/4)), 0.0], [outer_radius*
+    np.cos(np.pi*(7/4)), outer_radius*np.sin(np.pi*(7/4)), 0.0]]
 
-    points_array_superior_outer = [[outer_radius*np.cos(np.pi*(7/4)), 
-    outer_radius*np.sin(np.pi*(7/4)), height], [outer_radius*np.cos(np.pi*
-    (9/4)), outer_radius*np.sin(np.pi*(9/4)), height], [outer_radius*
-    np.cos(np.pi*(11/4)), outer_radius*np.sin(np.pi*(11/4)), height], [
-    outer_radius*np.cos(np.pi*(13/4)), outer_radius*np.sin(np.pi*(13/4)), 
+    points_array_superior_outer = [[outer_radius*np.cos(np.pi*(1/4)), 
+    outer_radius*np.sin(np.pi*(1/4)), height], [outer_radius*np.cos(np.pi*
+    (3/4)), outer_radius*np.sin(np.pi*(3/4)), height], [outer_radius*
+    np.cos(np.pi*(5/4)), outer_radius*np.sin(np.pi*(5/4)), height], [
+    outer_radius*np.cos(np.pi*(7/4)), outer_radius*np.sin(np.pi*(7/4)), 
     height]]
 
     """inferior_curve_outer = lambda theta: [outer_radius*np.cos((2*np.pi*
@@ -101,10 +105,12 @@ def mesh_disc():
     np.pi)), height]"""
 
     inferior_curve_outer = spline_3D_interpolation(points_array=
-    points_array_inferior_outer, add_initial_point_as_end_point=True)
+    points_array_inferior_outer, add_initial_point_as_end_point=True,
+    polar_angle_around_z=True)
 
     superior_curve_outer = spline_3D_interpolation(points_array=
-    points_array_superior_outer, add_initial_point_as_end_point=True)
+    points_array_superior_outer, add_initial_point_as_end_point=True,
+    polar_angle_around_z=True)
 
     parametric_curves = {"inferior square": inferior_curve_cube, "supe"+
     "rior square": superior_curve_cube, "inferior inner": 
@@ -139,10 +145,10 @@ def mesh_disc():
 
     # Center cube
 
-    corner_points = [["inferior square", 0.0], ["inferior square", 0.25], 
-    ["inferior square", 0.5], ["inferior square", 0.75], ["superior sq"+
-    "uare", 0.0], ["superior square", 0.25], ["superior square", 0.5], [
-    "superior square", 0.75]]
+    corner_points = [["inferior square", 45.0], ["inferior square", 135.0], 
+    ["inferior square", 225.0], ["inferior square", 315.0], ["superior sq"+
+    "uare", 45.0], ["superior square", 135.0], ["superior square", 225.0], [
+    "superior square", 315.0]]
 
     geometric_data = prisms.hexahedron_from_corners(corner_points, 
     transfinite_directions=transfinite_directions, geometric_data=
@@ -153,9 +159,9 @@ def mesh_disc():
 
     # First nucleus flare
 
-    theta_1 = 0.0
+    theta_1 = 45.0
 
-    theta_2 = 0.25
+    theta_2 = 135.0
 
     corner_points = [["inferior inner", theta_1], ["inferior inner", 
     theta_2], ["inferior square", theta_2], ["inferior square", theta_1
@@ -176,9 +182,9 @@ def mesh_disc():
 
     # Second nucleus flare
 
-    theta_1 = 0.25
+    theta_1 = 135.0
 
-    theta_2 = 0.5
+    theta_2 = 225.0
 
     corner_points = [["inferior inner", theta_1], ["inferior inner", 
     theta_2], ["inferior square", theta_2], ["inferior square", theta_1
@@ -199,9 +205,9 @@ def mesh_disc():
 
     # Third nucleus flare
 
-    theta_1 = 0.5
+    theta_1 = 225.0
 
-    theta_2 = 0.75
+    theta_2 = 315.0
 
     corner_points = [["inferior inner", theta_1], ["inferior inner", 
     theta_2], ["inferior square", theta_2], ["inferior square", theta_1
@@ -222,9 +228,9 @@ def mesh_disc():
 
     # Fourth nucleus flare
 
-    theta_1 = 0.75
+    theta_1 = 315.0
 
-    theta_2 = 1.0
+    theta_2 = 405.0
 
     corner_points = [["inferior inner", theta_1], ["inferior inner", 
     theta_2], ["inferior square", theta_2], ["inferior square", theta_1
@@ -245,9 +251,9 @@ def mesh_disc():
 
     # First annulus flare
 
-    theta_1 = 0.0
+    theta_1 = 45.0
 
-    theta_2 = 0.25
+    theta_2 = 135.0
 
     corner_points = [["inferior outer", theta_1], ["inferior outer", 
     theta_2], ["inferior inner", theta_2], ["inferior inner", theta_1],
@@ -268,9 +274,9 @@ def mesh_disc():
 
     # Second annulus flare
 
-    theta_1 = 0.25
+    theta_1 = 135.0
 
-    theta_2 = 0.5
+    theta_2 = 225.0
 
     corner_points = [["inferior outer", theta_1], ["inferior outer", 
     theta_2], ["inferior inner", theta_2], ["inferior inner", theta_1],
@@ -291,9 +297,9 @@ def mesh_disc():
 
     # Third annulus flare
 
-    theta_1 = 0.5
+    theta_1 = 225.0
 
-    theta_2 = 0.75
+    theta_2 = 315.0
 
     corner_points = [["inferior outer", theta_1], ["inferior outer", 
     theta_2], ["inferior inner", theta_2], ["inferior inner", theta_1],
@@ -314,9 +320,9 @@ def mesh_disc():
 
     # Fourth annulus flare
 
-    theta_1 = 0.75
+    theta_1 = 315.0
 
-    theta_2 = 1.0
+    theta_2 = 405.0
 
     corner_points = [["inferior outer", theta_1], ["inferior outer", 
     theta_2], ["inferior inner", theta_2], ["inferior inner", theta_1],

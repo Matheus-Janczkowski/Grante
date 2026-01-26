@@ -180,6 +180,8 @@ polar_angle_around_z=False, verbose=False):
     x_centroid = np.mean(np.array(x_points))
 
     y_centroid = np.mean(np.array(y_points))
+
+    z_centroid = np.mean(np.array(z_points))
     
     # If the initial point is meant to be copied as the end point
 
@@ -290,7 +292,8 @@ polar_angle_around_z=False, verbose=False):
     if verbose:
 
         print("The parametric variables and the coordinates for the sp"+
-        "line interpolation are:")
+        "line interpolation\nof the curve whose centroid is at ("+str(
+        x_centroid)+", "+str(y_centroid)+", "+str(z_centroid)+") are:")
 
         for i in range(len(x_points)):
 

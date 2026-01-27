@@ -33,31 +33,31 @@ post_processes = [["Displacement", dict()], ["Pressure", dict()]]
 # function afterwards
 
 post_processes[0][1]["SaveField"] = {"directory path": results_path, 
-"file name": "displacement.xdmf", "readable xdmf file": True, "visuali"+
-"zation copy for readable xdmf": True}
+"file name": "displacement_incompressible_box.xdmf", "readable xdmf fi"+
+"le": True, "visualization copy for readable xdmf": True}
 
 post_processes[0][1]["SaveMeshVolumeRatioToReferenceVolume"] = {"director"+
-"y path": results_path, "file name": "volume_ratio.txt"}
+"y path": results_path, "file name": "volume_ratio_incompressible_box.txt"}
 
 post_processes[0][1]["SaveStrainEnergy"] = {"directory path": 
-results_path, "file name": "strain_energy.txt"}
+results_path, "file name": "strain_energy_incompressible_box.txt"}
 
 post_processes[0][1]["SaveForcesAndMomentsOnSurface"] = {"directory path": 
-results_path, "file name": "forces_and_moments.txt", "surface physical"+
-" group name": "top"}
+results_path, "file name": "forces_and_moments_incompressible_box.txt", 
+"surface physical group name": "top"}
 
 post_processes[0][1]["SaveFirstPiolaStressField"] = {"directory path":
-results_path, "file name": "first_piola_stress"}
+results_path, "file name": "first_piola_stress_incompressible_box"}
 
 post_processes[0][1]["SaveCauchyStressField"] = {"directory path":
-results_path, "file name": "cauchy_stress"}
+results_path, "file name": "cauchy_stress_incompressible_box"}
 
 post_processes[0][1]["SaveReferentialTractionField"] = {"directory path":
-results_path, "file name": "referential_traction"}
+results_path, "file name": "referential_traction_incompressible_box"}
 
 post_processes[1][1]["SaveField"] = {"directory path": results_path, 
-"file name": "pressure.xdmf", "readable xdmf file": True, "visualizati"+
-"on copy for readable xdmf": True}
+"file name": "pressure_incompressible_box.xdmf", "readable xdmf file": 
+True, "visualization copy for readable xdmf": True}
 
 ########################################################################
 #                         Material properties                          #
@@ -96,7 +96,7 @@ E_2, "nu": poisson_2})
 
 mesh_fileName = {"length x": 0.3, "length y": 0.2, "length z": 1.0, "n"+
 "umber of divisions in x": 10, "number of divisions in y": 10, "number o"+
-"f divisions in z": 25, "verbose": False, "mesh file name": "box_mesh", 
+"f divisions in z": 10, "verbose": False, "mesh file name": "box_mesh", 
 "mesh file directory": get_parent_path_of_file(), "number of subdomain"+
 "s in z direction": 2, "bias x": ["Bump", 0.2], "bias y": ["Bump", 0.2]}
 
@@ -125,18 +125,6 @@ solver_parameters["newton_absolute_tolerance"] = 1e-4
 solver_parameters["newton_maximum_iterations"] = 15
 
 solver_parameters["linear_solver"] = "mumps"
-
-"""
-
-solver_parameters["preconditioner"] = "hypre_amg"
-
-solver_parameters["krylov_absolute_tolerance"] = 1e-5
-
-solver_parameters["krylov_relative_tolerance"] = 1e-6
-
-solver_parameters["krylov_maximum_iterations"] = 15000
-
-solver_parameters["krylov_monitor_convergence"] = True#"""
 
 # Sets the initial time
 
@@ -176,11 +164,6 @@ traction_dictionary["top"] = traction_boundary
 bcs_dictionary = dict()
 
 bcs_dictionary["bottom"] = {"BC case": "FixedSupportDirichletBC"}
-
-"""bcs_dictionary["top"] = {"BC case": "PrescribedDirichletBC", "bc_infor"+
-"mationsDict": {"load_function": "SurfaceTranslationAndRotation", "tra"+
-"nslation": [0.0, 0.0, 0.05], "rotation_x": 45.0, "rotation_y": 0.0,
-"rotation_z": 0.0}}"""
 
 ########################################################################
 ########################################################################

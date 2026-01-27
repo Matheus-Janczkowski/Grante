@@ -122,10 +122,6 @@ code_given_information=None):
             raise KeyError("The key '"+str(key)+"' was not found in th"+
             "e dictionary of material parameters. See: "+str(
             dictionary.keys()))
-
-        # Adds this key to the new dictionary
-
-        new_dictionary[key] = None
         
         # Recovers the dictionary corresponding value
 

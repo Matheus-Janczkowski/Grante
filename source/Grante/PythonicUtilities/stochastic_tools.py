@@ -46,11 +46,6 @@ def get_random_point_on_elipsoid_surface(limits, return_as_list=True):
     direction_vector = ((1.0/np.linalg.norm(direction_vector))*
     direction_vector)
 
-    # Creates a variable to sum the quotient of the position squared by
-    # the semiaxis squared
-
-    quotient = 0.0
-
     # Iterates through the dimensions
 
     for i in range(len(limits)):
@@ -73,23 +68,13 @@ def get_random_point_on_elipsoid_surface(limits, return_as_list=True):
 
         semiaxis = abs(0.5*(dimension_limits[1]-dimension_limits[0]))
 
-        # Updates the quotient variable
-
-        quotient += (direction_vector[i]**2)
-
         # Updates the direction vector according to the semiaxis
 
         direction_vector[i] = direction_vector[i]*semiaxis
 
-    # Gets the length of the vector by plugging the direction vector in-
-    # to the ellipse equation
-
-    length_direction = np.sqrt(1/quotient)
-
     # Updates the direction vector by the length and adds the centroid
 
-    direction_vector = ((length_direction*direction_vector)+np.array(
-    centroid))
+    direction_vector += np.array(centroid)
 
     # Returns a list if it is asked as so
 

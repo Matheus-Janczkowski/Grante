@@ -8,6 +8,20 @@ import numpy as np
 #                               Splines                                #
 ########################################################################
 
+# Defines a class to store spline results
+
+class SplineInterpolation:
+
+    def __init__(self, interpolation_function):
+
+        self.interpolation_function = interpolation_function
+
+    # Defines a function to call the class as a function
+
+    def __call__(self, theta):
+        
+        return self.interpolation_function(theta)
+
 # Defines a function to return a spline interpolation of a curve in a 3D
 # space
 
@@ -381,15 +395,16 @@ periodic_interpolation=False):
         
         # Creates a driver
 
-        parametric_curve = lambda theta: parametric_curve_function(theta,
-        initial_angle, final_angle)
+        parametric_curve = SplineInterpolation(lambda theta: (
+        parametric_curve_function(theta,initial_angle, final_angle)))
 
     # Otherwise, creates a plain driver
 
     else:
 
-        parametric_curve = lambda theta: [cubic_spline_x(theta), 
-        cubic_spline_y(theta), cubic_spline_z(theta)]
+        parametric_curve = SplineInterpolation(lambda theta: [
+        cubic_spline_x(theta), cubic_spline_y(theta), cubic_spline_z(
+        theta)])
 
     # Returns everything
 
@@ -551,6 +566,7 @@ None, add_initial_point_as_end_point=False):
 
     # Gets the spline interpolation of the y points
 
-    cubic_spline_y = interpolate.CubicSpline(x_points, y_points)
+    cubic_spline_y = SplineInterpolation(interpolate.CubicSpline(
+    x_points, y_points))
 
     return cubic_spline_y

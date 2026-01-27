@@ -106,13 +106,26 @@ code_given_information=None):
     required_keys: list of string keys that this dictionary must have
     """
 
+    # Creates a new dictionary to not modify the given dictionary, in
+    # case it will be reused later
+
+    new_dictionary = dict()
+
+    # Iterates through the keys of the dictionary
+
     for key in required_keys:
+
+        # Verifies if the key is present
 
         if not (key in dictionary):
 
             raise KeyError("The key '"+str(key)+"' was not found in th"+
             "e dictionary of material parameters. See: "+str(
             dictionary.keys()))
+
+        # Adds this key to the new dictionary
+
+        new_dictionary[key] = None
         
         # Recovers the dictionary corresponding value
 
@@ -174,10 +187,10 @@ code_given_information=None):
             corresponding_value, ["field file", "mesh file", "director"+
             "y path"])
 
-            dictionary[key] = read_field_from_xdmf(field_file, mesh_file,
-            function_space_info, directory_path=directory_path, 
-            code_given_field_name=key, code_given_mesh_data_class=
-            code_given_information)
+            new_dictionary[key] = read_field_from_xdmf(field_file, 
+            mesh_file, function_space_info, directory_path=
+            directory_path, code_given_field_name=key, 
+            code_given_mesh_data_class=code_given_information)
 
         # If the value is a float, gets it into a Constant
 
@@ -185,7 +198,7 @@ code_given_information=None):
         corresponding_value, int) or isinstance(corresponding_value, 
         np.ndarray) or isinstance(corresponding_value, list)):
             
-            dictionary[key] = Constant(corresponding_value)
+            new_dictionary[key] = Constant(corresponding_value)
 
         # If the value is not a boolean, throws an error
 
@@ -196,6 +209,12 @@ code_given_information=None):
             "umpy array, nor a list, nor a boolean (True or False). It"+
             "s current value is: "+str(corresponding_value)+". Thus, i"+
             "t cannot be used as parameter of a constitutive model")
+        
+        # Saves everything else directly into the new dictionary
+        
+        else:
+
+            new_dictionary[key] = dictionary[key]
 
     # Checks if there is any key in the dictionary that is not in the 
     # list of required keys
@@ -210,7 +229,7 @@ code_given_information=None):
 
     # Returns the dictionary
 
-    return dictionary
+    return new_dictionary
 
 # Defines a function to retrieve from the constitutive tools the neces-
 # sary fields' names

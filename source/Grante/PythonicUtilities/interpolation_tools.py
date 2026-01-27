@@ -354,11 +354,12 @@ periodic_interpolation=False):
 
                 # Gets the delta angle
 
-                delta_theta = theta-initial_angle
+                delta_theta = ((initial_angle-theta)%(final_angle-
+                initial_angle))
 
                 # Sums to the final angle
 
-                theta = final_angle+delta_theta
+                theta = final_angle-delta_theta
 
             #  If the angle is larger than the final angle
 

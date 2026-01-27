@@ -75,7 +75,11 @@ def get_random_point_on_elipsoid_surface(limits, return_as_list=True):
 
         # Updates the quotient variable
 
-        quotient += ((direction_vector[i]/semiaxis)**2)
+        quotient += (direction_vector[i]**2)
+
+        # Updates the direction vector according to the semiaxis
+
+        direction_vector[i] = direction_vector[i]*semiaxis
 
     # Gets the length of the vector by plugging the direction vector in-
     # to the ellipse equation
@@ -103,7 +107,9 @@ def get_random_point_on_elipsoid_surface(limits, return_as_list=True):
 
 if __name__=="__main__":
 
-    limits = [[-1.0, 1.0], [2.0, 3.5], [-3.0, -2.0]]
+    factor = 1E-3
+
+    limits = [[-1.0*factor, 1.0*factor], [2.0*factor, 3.5*factor], [-3.0, -2.0]]
 
     random_point = get_random_point_on_elipsoid_surface(limits)
 

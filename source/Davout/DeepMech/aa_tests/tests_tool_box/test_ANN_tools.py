@@ -22,7 +22,7 @@ from ...tool_box import loss_tools
 
 from ...tool_box import loss_assembler_classes as loss_assemblers
 
-from ....MultiMech.tool_box import file_handling_tools
+from ....PythonicUtilities import file_handling_tools
 
 # Defines a function to test the ANN tools methods
 

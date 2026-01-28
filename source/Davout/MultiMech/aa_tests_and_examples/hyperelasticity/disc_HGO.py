@@ -1,12 +1,12 @@
 # Routine to test a hyperelastic disc
 
-from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
-from .....Grante.MultiMech.constitutive_models.hyperelasticity import anisotropic_hyperelasticity as anisotropic_constitutiveModels
+from .....Davout.MultiMech.constitutive_models.hyperelasticity import anisotropic_hyperelasticity as anisotropic_constitutiveModels
 
-from .....Grante.MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity as isotropic_constitutiveModels
+from .....Davout.MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity as isotropic_constitutiveModels
 
-from .....Grante.MultiMech.physics import hyperelastic_cauchy_continuum as variational_framework
+from .....Davout.MultiMech.physics import hyperelastic_cauchy_continuum as variational_framework
 
 ########################################################################
 ########################################################################

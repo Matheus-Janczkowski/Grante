@@ -2,11 +2,11 @@
 
 import os
 
-from .....Grante.MultiMech.constitutive_models.hyperelasticity import micropolar_hyperelasticity as micropolar_constitutiveModels
+from .....Davout.MultiMech.constitutive_models.hyperelasticity import micropolar_hyperelasticity as micropolar_constitutiveModels
 
-from .....Grante.MultiMech.physics import hyperelastic_micropolar_continuum as variational_framework
+from .....Davout.MultiMech.physics import hyperelastic_micropolar_continuum as variational_framework
 
-from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
 ########################################################################
 ########################################################################

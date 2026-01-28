@@ -3,17 +3,17 @@
 
 import numpy as np
 
-from .....Grante.MultiMech.tool_box import mesh_handling_tools
+from .....Davout.MultiMech.tool_box import mesh_handling_tools
 
-from .....Grante.MultiMech.tool_box.expressions_tools import interpolate_scalar_function
+from .....Davout.MultiMech.tool_box.expressions_tools import interpolate_scalar_function
 
-from .....Grante.MultiMech.tool_box.read_write_tools import write_field_to_xdmf
+from .....Davout.MultiMech.tool_box.read_write_tools import write_field_to_xdmf
 
-from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
-from .....Grante.PythonicUtilities.coordinate_systems_tools import cartesian_to_cylindrical_coordinates
+from .....Davout.PythonicUtilities.coordinate_systems_tools import cartesian_to_cylindrical_coordinates
 
-from .....Grante.PythonicUtilities.interpolation_tools import spline_1D_interpolation
+from .....Davout.PythonicUtilities.interpolation_tools import spline_1D_interpolation
 
 # Defines the parametric curves for the circumferential variation of the
 # material parameter using splines. The x points are the angles in a cy-

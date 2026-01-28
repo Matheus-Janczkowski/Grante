@@ -1,10 +1,10 @@
 # Routine to test a hyperelastic disc
 
-from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
-from .....Grante.MultiMech.constitutive_models.heat_transfer import isotropic_heat_conduction as constitutive_models
+from .....Davout.MultiMech.constitutive_models.heat_transfer import isotropic_heat_conduction as constitutive_models
 
-from .....Grante.MultiMech.physics import steady_state_heat_transfer as variational_framework
+from .....Davout.MultiMech.physics import steady_state_heat_transfer as variational_framework
 
 ########################################################################
 ########################################################################

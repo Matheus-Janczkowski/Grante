@@ -1,13 +1,13 @@
 # Routine to test a hyperelastic disc
 #
 # Parallel execution:
-# mpirun -np 2 python3 -m source.Grante.MultiMech.aa_tests_and_examples.hyperelasticity.disc_neo_hookean_incompressible
+# mpirun -np 2 python3 -m source.Davout.MultiMech.aa_tests_and_examples.hyperelasticity.disc_neo_hookean_incompressible
 
-from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
-from .....Grante.MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity as constitutive_models
+from .....Davout.MultiMech.constitutive_models.hyperelasticity import isotropic_hyperelasticity as constitutive_models
 
-from .....Grante.MultiMech.physics import hyperelastic_incompressible_cauchy_continuum as variational_framework
+from .....Davout.MultiMech.physics import hyperelastic_incompressible_cauchy_continuum as variational_framework
 
 ########################################################################
 ########################################################################

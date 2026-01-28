@@ -5,13 +5,13 @@ from dolfin import *
 
 import numpy as np
 
-from .....Grante.MultiMech.tool_box import mesh_handling_tools
+from .....Davout.MultiMech.tool_box import mesh_handling_tools
 
-from .....Grante.PythonicUtilities.path_tools import get_parent_path_of_file
+from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
-from .....Grante.MultiMech.tool_box.expressions_tools import interpolate_scalar_function
+from .....Davout.MultiMech.tool_box.expressions_tools import interpolate_scalar_function
 
-from .....Grante.MultiMech.tool_box.expressions_tools import interpolate_tensor_function
+from .....Davout.MultiMech.tool_box.expressions_tools import interpolate_tensor_function
 
 # Gets the path to the mesh
 

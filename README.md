@@ -1,5 +1,5 @@
-# Grante
-Repository to store the Grante's Wonderland.
+# Davout
+Repository to store my workhorses and research-themed park.
 
 1. Link to the booklet on installation of a miscelaneous of software: https://www.overleaf.com/read/wbxhncmtnmkm#0eb73b
 
@@ -23,4 +23,4 @@ To test the installation:
 
 python
 
-import Grante
+import Davout

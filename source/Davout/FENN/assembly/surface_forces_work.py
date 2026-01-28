@@ -3,6 +3,10 @@
 
 import tensorflow as tf
 
+from ...PythonicUtilities.package_tools import load_classes_from_package
+
+from ..tool_box import surface_loading_tools
+
 # Defines a class to compute the contribution to the residual vector due
 # to the surface tractions
 
@@ -20,6 +24,10 @@ class ReferentialTractionWork:
         # sors of traction vectors
 
         self.traction_classes = []
+
+        # Gets the available classes to construct the traction tensors
+
+        available_traction_classes = load_classes_from_package()
 
         # Iterates through the dictionary of constitutive models
 
@@ -57,7 +65,10 @@ class ReferentialTractionWork:
 
             self.traction_classes.append(traction_vector)
 
-            self.traction_classes[-1].build_traction(mesh_data,
+            # Gets the batched tensor [n_elements, n_quadrature_points,
+            # 3] of the referential traction vector
+
+            self.traction_classes[-1].compute_traction(mesh_data,
             vector_of_parameters)
 
             # Gets the shape functions multiplied by the surface inte-
@@ -88,11 +99,6 @@ class ReferentialTractionWork:
 
         for i in range(self.n_surfaces_under_load):
 
-            # Gets the batched tensor [n_elements, n_quadrature_points,
-            # 3] of the referential traction vector
-
-            T = self.traction_classes[i].compute_traction_vector()
-
             # Contracts the referential traction vector with the shape 
             # functions multiplied by the integration measure to get the 
             # integration of the variation of the external work due to 
@@ -101,7 +107,8 @@ class ReferentialTractionWork:
             # on). The result is a tensor [n_elements,  n_nodes, 
             # n_physical_dimensions]
 
-            external_work = tf.reduce_sum(tf.einsum('eqi,eqni->eqni', T,
+            external_work = tf.reduce_sum(tf.einsum('eqi,eqni->eqni', 
+            self.traction_classes[i].traction_tensor,
             self.variation_field_ds[i]), axis=1)
 
             # Adds the contribution of this physical group to the global

@@ -11,7 +11,7 @@ import inspect
 # __init__ file in it
 
 def load_classes_from_package(package, necessary_attributes=None,
-classes_list=None):
+classes_list=None, return_dictionary_of_classes=False):
 
     # If no necessary attributes are asked, creates an empty list
 
@@ -23,7 +23,17 @@ classes_list=None):
 
     if classes_list is None:
 
-        classes_list = []
+        # If a dictionary of classes is to be created
+
+        if return_dictionary_of_classes:
+
+            classes_list = dict()
+
+        # Otherwise creates a list
+
+        else:
+
+            classes_list = []
 
     # Iterates through the modules inside the package
 
@@ -36,7 +46,8 @@ classes_list=None):
 
         # Iterates through the class objects inside this module
 
-        for _, class_object in inspect.getmembers(module, inspect.isclass):
+        for class_name, class_object in inspect.getmembers(module, 
+        inspect.isclass):
 
             # Only keeps classes defined in this module (not imports)
 
@@ -57,6 +68,16 @@ classes_list=None):
 
                 if flag_has_attributes:
 
-                    classes_list.append(class_object)
+                    # If a dictionary is to be created
+
+                    if return_dictionary_of_classes:
+
+                        classes_list[class_name] = class_object
+
+                    # Otherwise, appends to a list
+
+                    else:
+
+                        classes_list.append(class_object)
 
     return classes_list

@@ -484,6 +484,20 @@ def test_pick_first_node():
 
     print("New y coordinates:\n"+str(new_y)+"\n")
 
+def test_broadcast():
+
+    t = tf.constant([1.0, 2.0, 3.0])
+
+    T = tf.broadcast_to(t, [2, 3, 3])
+
+    print("\nThe broadcast tensor t:\n"+str(t)+"\nis:\n"+str(T))
+
+    t = [[[1.0, 2.0, 3.0]], [[4.0, 5.0, 6.0]]]
+
+    T = tf.broadcast_to(t, [2, 4, 3])
+
+    print("\nThe broadcast tensor t:\n"+str(t)+"\nis:\n"+str(T))
+
 if __name__=="__main__":
 
     test_gather_vector()
@@ -507,3 +521,5 @@ if __name__=="__main__":
     test_scatter_nd()
 
     test_pick_first_node()
+
+    test_broadcast()

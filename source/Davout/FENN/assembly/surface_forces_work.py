@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from ...PythonicUtilities.package_tools import load_classes_from_package
 
-from ..tool_box import surface_loading_tools
+from ..tool_box import neumann_loading_tools
 
 # Defines a class to compute the contribution to the residual vector due
 # to the surface tractions
@@ -27,7 +27,8 @@ class ReferentialTractionWork:
 
         # Gets the available classes to construct the traction tensors
 
-        available_traction_classes = load_classes_from_package()
+        available_traction_classes = load_classes_from_package(
+        neumann_loading_tools, return_dictionary_of_classes=True)
 
         # Iterates through the dictionary of constitutive models
 
@@ -61,15 +62,51 @@ class ReferentialTractionWork:
 
             mesh_data = mesh_dict[physical_group_tag]
 
-            # Adds the class with the mesh data
+            # Checks if the traction vector is a dictionary
 
-            self.traction_classes.append(traction_vector)
+            if not isinstance(traction_vector, dict):
 
-            # Gets the batched tensor [n_elements, n_quadrature_points,
-            # 3] of the referential traction vector
+                raise TypeError("The dictionary of tractions must be d"+
+                "ictionary of dictionaries, i.e. the keys are the surf"+
+                "ace physical groups names and the values are dictiona"+
+                "ries with instructions for the classes of Neumann bou"+
+                "ndary conditions. Each one of these dictionaries must"+
+                " have the key 'load case', whose value is the string "+
+                "with the name of the class to apply Neumann boundary "+
+                "conditions")
 
-            self.traction_classes[-1].compute_traction(mesh_data,
-            vector_of_parameters)
+            # Verifies if the traction vector has the key to store the
+            # name of the class to create the traction tensor
+                        
+            elif not ('load case' in traction_vector):
+
+                raise KeyError("At physical group '"+str(physical_group)+
+                "', the traction dictionary does not have the key 'loa"+
+                "d case'. Check ou the given dictionary: "+str(
+                traction_vector))
+            
+            # Verifies if the load case is a valid name
+
+            elif not (traction_vector["load case"] in (
+            available_traction_classes)):
+                
+                names = ""
+
+                for name in available_traction_classes.keys():
+
+                    names += "\n"+str(name)
+                
+                raise ValueError("The 'load case' given is '"+str(
+                traction_vector["load case"])+"', but this is not an a"+
+                "vailable method to construct Neumann boundary conditi"+
+                "ons. Check the available methods to create tractions "+
+                "on the boundary:"+names)
+
+            # Instantiates and adds the class with the mesh data
+
+            self.traction_classes.append(available_traction_classes[
+            traction_vector["load case"]](mesh_data, traction_vector,
+            vector_of_parameters, physical_group))
 
             # Gets the shape functions multiplied by the surface inte-
             # gration measure. Uses the attribute dx, because the el-

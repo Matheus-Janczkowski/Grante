@@ -492,7 +492,9 @@ def test_broadcast():
 
     print("\nThe broadcast tensor t:\n"+str(t)+"\nis:\n"+str(T))
 
-    t = [[[1.0, 2.0, 3.0]], [[4.0, 5.0, 6.0]]]
+    t = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
+
+    t = tf.expand_dims(t, axis=1)
 
     T = tf.broadcast_to(t, [2, 4, 3])
 

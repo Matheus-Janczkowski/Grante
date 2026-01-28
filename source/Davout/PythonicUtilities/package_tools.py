@@ -81,3 +81,69 @@ classes_list=None, return_dictionary_of_classes=False):
                         classes_list.append(class_object)
 
     return classes_list
+
+# Defines a function to import classes from a single module. Modules are 
+# the .py file
+
+def load_classes_from_module(module, necessary_attributes=None,
+classes_list=None, return_dictionary_of_classes=False):
+
+    # If no necessary attributes are asked, creates an empty list
+
+    if necessary_attributes is None:
+
+        necessary_attributes = []
+    
+    # Initializes a list of classes
+
+    if classes_list is None:
+
+        # If a dictionary of classes is to be created
+
+        if return_dictionary_of_classes:
+
+            classes_list = dict()
+
+        # Otherwise creates a list
+
+        else:
+
+            classes_list = []
+
+    # Iterates through the class objects inside this module
+
+    for class_name, class_object in inspect.getmembers(module, 
+    inspect.isclass):
+
+        # Only keeps classes defined in this module (not imports)
+
+        if class_object.__module__ == module.__name__:
+
+            # Verifies if the class has the necessary attributes (be-
+            # fore instantiation)
+
+            flag_has_attributes = True 
+
+            for necessary_attribute in necessary_attributes:
+
+                if not hasattr(class_object, necessary_attribute):
+
+                    flag_has_attributes = False 
+
+                    break 
+
+            if flag_has_attributes:
+
+                # If a dictionary is to be created
+
+                if return_dictionary_of_classes:
+
+                    classes_list[class_name] = class_object
+
+                # Otherwise, appends to a list
+
+                else:
+
+                    classes_list.append(class_object)
+
+    return classes_list

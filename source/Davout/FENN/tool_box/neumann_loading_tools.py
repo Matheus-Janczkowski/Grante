@@ -28,44 +28,26 @@ class TractionVectorOnSurface:
         # Verifies if the traction information provided by the user has
         # the keys for each traction component
 
-        if not ("amplitude_tractionX" in traction_information):
+        dimensions_names = ["X", "Y", "Z"]
 
-            raise KeyError("The information dictionary provided to set"+
-            " 'TractionVectorOnSurface' in surface '"+str(
-            physical_group_name)+"' does not have the key 'amplitude_t"+
-            "ractionX'. The given dictionary is: "+str(
-            traction_information))
-        
-        else:
+        for dimension in dimensions_names:
 
-            traction_vector.append(traction_information["amplitude_tra"+
-            "ctionX"])
+            # Verifies the key
 
-        if not ("amplitude_tractionY" in traction_information):
+            amplitude_key = "amplitude_traction"+str(dimension)
 
-            raise KeyError("The information dictionary provided to set"+
-            " 'TractionVectorOnSurface' in surface '"+str(
-            physical_group_name)+"' does not have the key 'amplitude_t"+
-            "ractionY'. The given dictionary is: "+str(
-            traction_information))
-        
-        else:
+            if not (amplitude_key in traction_information):
 
-            traction_vector.append(traction_information["amplitude_tra"+
-            "ctionY"])
+                raise KeyError("The information dictionary provided to"+
+                " set 'TractionVectorOnSurface' in surface '"+str(
+                physical_group_name)+"' does not have the key '"+
+                amplitude_key+"'. The given dictionary is: "+str(
+                traction_information))
+            
+            else:
 
-        if not ("amplitude_tractionZ" in traction_information):
-
-            raise KeyError("The information dictionary provided to set"+
-            " 'TractionVectorOnSurface' in surface '"+str(
-            physical_group_name)+"' does not have the key 'amplitude_t"+
-            "ractionZ'. The given dictionary is: "+str(
-            traction_information))
-        
-        else:
-
-            traction_vector.append(traction_information["amplitude_tra"+
-            "ctionZ"])
+                traction_vector.append(traction_information[
+                amplitude_key])
         
         # Converts traction vector to a tensor
 

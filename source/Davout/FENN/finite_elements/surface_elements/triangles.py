@@ -282,7 +282,8 @@ class Triangle:
             # Saves the normal vector to each Gauss point, thus, getting
             # a tensor [n_elements, n_quadrature_points, 3]
 
-            self.normal_vector = tf.broadcast_to(e_3, [self.number_elements, 
+            self.normal_vector = tf.broadcast_to(tf.expand_dims(e_3, 
+            axis=1), [self.number_elements, 
             self.number_quadrature_points, 3])
 
         # Gets the jacobian determinant and its inverse

@@ -3,7 +3,7 @@
 
 import tensorflow as tf
 
-from ...PythonicUtilities.package_tools import load_classes_from_package
+from ...PythonicUtilities.package_tools import load_classes_from_module
 
 from ..tool_box import neumann_loading_tools
 
@@ -12,8 +12,8 @@ from ..tool_box import neumann_loading_tools
 
 class ReferentialTractionWork:
 
-    def __init__(self, vector_of_parameters, traction_dict, 
-    boundary_physical_groups_dict, mesh_dict):
+    def __init__(self, vector_of_parameters, traction_dict, mesh_dict,
+    boundary_physical_groups_dict):
 
         # Creates a list of the variation of the primal field at the 
         # surfaces multiplied by the surface integration measure
@@ -27,8 +27,19 @@ class ReferentialTractionWork:
 
         # Gets the available classes to construct the traction tensors
 
-        available_traction_classes = load_classes_from_package(
+        available_traction_classes = load_classes_from_module(
         neumann_loading_tools, return_dictionary_of_classes=True)
+
+        # Verifies if traction dictionary is None
+
+        if traction_dict is None:
+
+            traction_dict = {}
+
+        elif not isinstance(traction_dict, dict):
+
+            raise TypeError("The dictionary of tractions must be a dic"+
+            "tionary. Currently, it is: "+str(traction_dict))
 
         # Iterates through the dictionary of constitutive models
 
@@ -113,7 +124,7 @@ class ReferentialTractionWork:
             # ement is 2D, thus the ds for the 3D mesh is the element's
             # dx
 
-            self.variation_field_ds.append(tf.einsum('eqnj,eq->eqnj',
+            self.variation_field_ds.append(tf.einsum('qn,eq->eqn',
             mesh_data.shape_functions_tensor, mesh_data.dx))
 
         # Gets the number of surfaces under load
@@ -122,7 +133,7 @@ class ReferentialTractionWork:
 
         # Stacks the shape functions multiplied by the integration mea-
         # sure into a tensor [n_physical_groups, n_elements, 
-        # n_quadrature_points, n_nodes, n_physical_dimensions]
+        # n_quadrature_points, n_nodes]
 
         self.variation_field_ds = tf.stack(self.variation_field_ds,
         axis=0)
@@ -144,7 +155,7 @@ class ReferentialTractionWork:
             # on). The result is a tensor [n_elements,  n_nodes, 
             # n_physical_dimensions]
 
-            external_work = tf.reduce_sum(tf.einsum('eqi,eqni->eqni', 
+            external_work = tf.reduce_sum(tf.einsum('eqi,eqn->eqni', 
             self.traction_classes[i].traction_tensor,
             self.variation_field_ds[i]), axis=1)
 
@@ -156,5 +167,5 @@ class ReferentialTractionWork:
             # global_residual_vector is a variable
 
             global_residual_vector.scatter_nd_add(tf.expand_dims(
-            self.traction_classes[i].indexing_dofs_tensor, axis=-1),
-            external_work)
+            self.traction_classes[i].surface_mesh_data.dofs_per_element, 
+            axis=-1), -external_work)

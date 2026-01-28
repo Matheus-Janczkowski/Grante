@@ -13,6 +13,8 @@ from ..tool_box import pseudotime_stepping_tools as newton_raphson_tools
 
 from ...PythonicUtilities import programming_tools
 
+from dolfin import assemble
+
 # Defines a function to model a hyperelastic problem with a displacement
 # field only
 
@@ -28,7 +30,8 @@ mesh_fileName, solver_parameters, neumann_loads=None, dirichlet_loads=
 None, polynomial_degree=2, quadrature_degree=2, t=0.0, 
 volume_physGroupsSubmesh=None, post_processesSubmesh=None, 
 solution_name=None, verbose=False, dirichlet_boundaryConditions=None,
-body_forcesDict=None, run_in_parallel=False, comm=None):
+body_forcesDict=None, run_in_parallel=False, comm=None, 
+return_residual_vector_only=False):
 
     ####################################################################
     #                               Mesh                               #
@@ -110,6 +113,14 @@ body_forcesDict=None, run_in_parallel=False, comm=None):
     # solver parameters too
 
     residual_form = internal_VarForm-traction_VarForm-body_forcesVarForm
+
+    # If only the residual vector if to be returned
+
+    if return_residual_vector_only:
+
+        return assemble(residual_form)
+    
+    # Otherwise proceed with creating the solver object
 
     solver = functional_tools.set_nonlinearProblem(residual_form, 
     functional_data_class, bc, solver_parameters=solver_parameters)

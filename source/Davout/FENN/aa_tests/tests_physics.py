@@ -170,12 +170,19 @@ class TestANNTools(unittest.TestCase):
 
         residual_vector = residual_vector.numpy()
 
+        n_nonzero_components = 0
+
         for i in range(len(residual_vector)):
 
             if abs(residual_vector[i])>1E-5:
 
                 print("FENN: residual_vector["+str(i)+"]="+str(residual_vector[
                 i]))
+
+                n_nonzero_components += 1
+
+        print("\nThere are "+str(n_nonzero_components)+" non-zero comp"+
+        "onents in the residual vector calculated by FENN")
 
 # Runs all tests
 

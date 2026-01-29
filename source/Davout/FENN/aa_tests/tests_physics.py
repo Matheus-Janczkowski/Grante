@@ -212,8 +212,8 @@ class TestANNTools(unittest.TestCase):
                 n_nonzero_components += 1
 
             print("FENN: residual_vector["+str(i)+"]="+str(
-            residual_vector[i])+"; FEniCS: residual_vector["+str(i)+"]="+
-            str(residual_vector_fenics[i]))
+            residual_vector[i])+";            FEniCS: residual_vector["+
+            str(i)+"]="+str(residual_vector_fenics[i]))
 
         print("\nThere are "+str(n_nonzero_components)+" non-zero comp"+
         "onents in the residual vector calculated by FENN")

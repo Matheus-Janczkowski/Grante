@@ -500,6 +500,52 @@ def test_broadcast():
 
     print("\nThe broadcast tensor t:\n"+str(t)+"\nis:\n"+str(T))
 
+def test_unique_dofs():
+
+    dofs = tf.constant([[[4, 5], [12, 13], [0, 1], [2, 3], [8, 9], [6, 7
+    ]], [[12, 13], [4, 5], [16, 17], [14, 15], [8, 9], [10, 11]]])
+
+    # Gets the first local DOF
+
+    dofs_x = dofs[...,0]
+
+    print("\nThe dofs in x per element per node are:\n"+str(dofs_x)+"\n")
+
+    dofs_x = tf.reshape(dofs_x, (-1,))
+
+    print("The dofs in x per element per node after reshaping are:\n"+
+    str(dofs_x)+"\n")
+
+    dofs_x_unique, indices = tf.unique(dofs_x)
+
+    print("Unique list of dofs in x:\n"+str(dofs_x_unique)+"\n")
+
+    values_x = 2.0*tf.ones(dofs_x_unique.shape)
+
+    print("Values in x:\n"+str(values_x)+"\n")
+
+    dofs_y_unique, _ = tf.unique(tf.reshape(dofs[...,1], (-1,)))
+
+    values_y = 1.0*tf.ones(dofs_y_unique.shape)
+
+    print("Unique dofs in y:\n"+str(dofs_y_unique)+"\n")
+
+    dofs = tf.stack([dofs_x_unique, dofs_y_unique], axis=0)
+
+    values = tf.stack([values_x, values_y], axis=0)
+
+    dofs = tf.reshape(dofs, (-1,1))
+
+    values = tf.reshape(values, (-1,))
+
+    print("Reshaped and flattened dofs:\n"+str(dofs)+"\n")
+
+    vector_of_parameters = tf.Variable(tf.zeros((18,)))
+
+    vector_of_parameters.scatter_nd_update(dofs, values)
+
+    print("Updated vector of parameters:\n"+str(vector_of_parameters))
+
 if __name__=="__main__":
 
     test_gather_vector()
@@ -525,3 +571,5 @@ if __name__=="__main__":
     test_pick_first_node()
 
     test_broadcast()
+
+    test_unique_dofs()

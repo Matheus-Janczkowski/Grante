@@ -16,7 +16,7 @@ from ..constitutive_models.hyperelastic_isotropic_models import NeoHookean
 
 from ..tool_box import mesh_tools
 
-from ...MultiMech.tool_box.mesh_handling_tools import create_box_mesh, read_mshMesh
+from ...MultiMech.tool_box.mesh_handling_tools import create_box_mesh, read_mshMesh, dofs_per_node_finder_class
 
 from ...MultiMech.tool_box import functional_tools, variational_tools
 
@@ -76,13 +76,15 @@ class TestANNTools(unittest.TestCase):
         mesh_data_class = mesh_tools.read_msh_mesh(file_name, 
         quadrature_degree, elements_per_field, verbose=True)
 
-        # Initializes the vector of parameters as the null vector
-
         vector_of_parameters = np.zeros(81)
 
         prescribed_dofs = [14, 17, 20, 23, 38, 41, 44, 47, 77]
 
         dirichlet_load = 0.1
+
+        neumann_load = 0.0E5
+
+        # Initializes the vector of parameters as the null vector
 
         for dof in prescribed_dofs:
 
@@ -100,11 +102,9 @@ class TestANNTools(unittest.TestCase):
 
         # Sets the dictionary of traction classes
 
-        maximum_load = 1E5
-
         traction_dictionary = {"top": {"load case": "TractionVectorOnS"+
         "urface", "amplitude_tractionX": 0.0, "amplitude_tractionY": 0.0, 
-        "amplitude_tractionZ": maximum_load}}
+        "amplitude_tractionZ": neumann_load}}
 
         # Instantiates the class to evaluate the residual vector
 
@@ -118,7 +118,7 @@ class TestANNTools(unittest.TestCase):
 
         # Evaluates the residual vector using FEniCS
 
-        mesh_data_class = read_mshMesh({"length x": length_x, "length y": 
+        mesh_data_class_fenics = read_mshMesh({"length x": length_x, "length y": 
         length_y, "length z": length_z, "number of divisions in x": 
         n_divisions_x, "number of divisions in y": n_divisions_y, "num"+
         "ber of divisions in z": n_divisions_z, "verbose": False, "mes"+
@@ -127,15 +127,16 @@ class TestANNTools(unittest.TestCase):
 
         functional_data_class = functional_tools.construct_monolithicFunctionSpace(
         {"Displacement": {"field type": "vector", "interpolation funct"+
-        "ion": "CG", "polynomial degree": 2}}, mesh_data_class)
+        "ion": "CG", "polynomial degree": 2}}, mesh_data_class_fenics)
 
         # Dirichlet boundary conditions
 
-        bc, dirichlet_loads = functional_tools.construct_DirichletBCs({
-        "bottom": {"BC case": "PrescribedDirichletBC", "bc_information"+
+        bcs, dirichlet_loads = functional_tools.construct_DirichletBCs({
+        "top": {"BC case": "PrescribedDirichletBC", "bc_information"+
         "sDict": {"load_function": "linear", "degrees_ofFreedomList": 2,
-        "end_point": [1.0, dirichlet_load]}}}, functional_data_class, 
-        mesh_data_class)
+        "end_point": [1.0, dirichlet_load]}}, "bottom": {"BC case": "F"+
+        "ixedSupportDirichletBC"}}, functional_data_class, 
+        mesh_data_class_fenics)
 
         # Variational form of the exterior work using an uniform referential 
         # traction
@@ -143,9 +144,9 @@ class TestANNTools(unittest.TestCase):
         external_work, neumann_loads = variational_tools.traction_work({
         "top": {"load case": "UniformReferentialTraction", "amplitude_"+
         "tractionX": 0.0, "amplitude_tractionY": 0.0, "amplitude_tract"+
-        "ionZ": maximum_load, "parametric_load_curve": "square_root", 
+        "ionZ": neumann_load, "parametric_load_curve": "square_root", 
         "t": 0.0, "t_final": 1.0}}, "Displacement", 
-        functional_data_class, mesh_data_class, [])
+        functional_data_class, mesh_data_class_fenics, [])
 
         constitutive_model_multimech = NeoHookeanMultiMech(
         material_properties)
@@ -154,7 +155,7 @@ class TestANNTools(unittest.TestCase):
 
         internal_work = variational_tools.hyperelastic_internalWorkFirstPiola(
         "Displacement", functional_data_class, 
-        constitutive_model_multimech, mesh_data_class)
+        constitutive_model_multimech, mesh_data_class_fenics)
 
         # Update the load class
 
@@ -162,11 +163,43 @@ class TestANNTools(unittest.TestCase):
 
         dirichlet_loads[0].update_load(1.0)
 
-        residual_vector_fenics = [float(dof) for dof in assemble(
-        internal_work-external_work)]
+        # Updates the Dirichlet boundary conditions
 
-        print("The residual vector according to fenics is:\n"+str(
-        residual_vector_fenics)+"\n")
+        for bc in bcs:
+
+            bc.apply(functional_data_class.solution_fields["Displaceme"+
+            "nt"].vector())
+
+        # Creates a class that finds the DOFs closest to a point
+
+        dofs_finder = dofs_per_node_finder_class(functional_data_class)
+
+        # Constructs a list of DOFs per node in FEniCS enumeration using
+        # the node numbering of GMSH
+
+        dofs_fenics_from_gmsh_nodes = np.array([dofs_finder(
+        *node_coordinates).tolist() for node_coordinates in (
+        mesh_data_class.nodes_coordinates)])
+
+        # Assembles the residual vector and stores as a list
+
+        assembled_residual = assemble(internal_work-external_work)
+
+        residual_vector_fenics = np.zeros(residual_vector.shape[0])
+
+        for dof_number, dof_value in enumerate(assembled_residual):
+
+            # Gets the DOF enumeration in gmsh
+
+            dof_number_gmsh = np.argwhere(dofs_fenics_from_gmsh_nodes==
+            dof_number)[0]
+
+            dof_number_gmsh = int((3*(dof_number_gmsh[0]))+
+            dof_number_gmsh[1])
+
+            residual_vector_fenics[dof_number_gmsh] = dof_value
+
+        # Plots both to compare
 
         residual_vector = residual_vector.numpy()
 
@@ -176,10 +209,11 @@ class TestANNTools(unittest.TestCase):
 
             if abs(residual_vector[i])>1E-5:
 
-                print("FENN: residual_vector["+str(i)+"]="+str(residual_vector[
-                i]))
-
                 n_nonzero_components += 1
+
+            print("FENN: residual_vector["+str(i)+"]="+str(
+            residual_vector[i])+"; FEniCS: residual_vector["+str(i)+"]="+
+            str(residual_vector_fenics[i]))
 
         print("\nThere are "+str(n_nonzero_components)+" non-zero comp"+
         "onents in the residual vector calculated by FENN")

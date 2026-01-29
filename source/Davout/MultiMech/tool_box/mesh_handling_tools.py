@@ -1255,6 +1255,108 @@ physical_group_name=None, region_function=None, field_name=None):
         "inates of a point and spits out True or False, according to i"+
         "f the point is in a volumetric region or not")
     
+# Defines a function to create a class that returns the DOFs in a node
+# closest to a point 
+
+def dofs_per_node_finder_class(functional_data_class, field_name=None, 
+node_proximity_tolerance=1E-6):
+    
+    """
+    Function to construct a class that stores a tree query object that,
+    when called, returns the closest degrees of freedom to a point in
+    space
+
+    functional_data_class: instance of the FunctionalData class with
+    information on function space
+
+    field_name: name of the field whose DOFs are to be searched
+    """
+
+    # Gets the map of coordinates per DOF
+
+    dof_coordinates = None 
+
+    # Verifies if a field name is asked
+
+    if field_name is not None:
+
+        # Verifies if this field name belongs to the dictionary of fields
+        # names
+
+        if not (field_name in functional_data_class.fields_names_dict):
+
+            raise ValueError("The field '"+str(field_name)+"' does not"+
+            " belong to the dictionary of fields of this problem. See "+
+            "the available fields:\n"+str(list(
+            functional_data_class.fields_names_dict.keys())))
+        
+        # Verifies if this problem has more than one field
+
+        if len(functional_data_class.fields_names_dict.keys())>1:
+
+            # Gets the map of DOFs for the selected field only
+
+            dof_coordinates = functional_data_class.monolithic_function_space.sub(
+            functional_data_class.fields_names_dict[field_name]
+            ).tabulate_dof_coordinates()
+
+    # If the map of DOFs was not created, the field name was not provided
+    # or the problem has only one field 
+
+    if dof_coordinates is None:
+
+        dof_coordinates = functional_data_class.monolithic_function_space.tabulate_dof_coordinates()
+
+    # Defines a class with the data query object
+
+    class DOFsNode:
+
+        def __init__(self, dof_coordinates, function_space, tolerance=
+        1E-6):
+            
+            # Reshapes the dof coordinates according to the number of 
+            # dimensions of the geometry, since FEniCS returns an array
+            # of size n_DOFS * n_geometric_dimensions 
+
+            self.dof_coordinates = dof_coordinates.reshape((-1, 
+            function_space.mesh().geometry().dim()))
+
+            self.tolerance = tolerance
+
+        # Defines a call method to get the node numebr
+
+        def __call__(self, x, y, z):
+
+            # Constructs a point array and calculate the distances from 
+            # this point to the DOFs coordinates
+
+            distances = np.linalg.norm(self.dof_coordinates-np.array([x, 
+            y, z]), axis=1)
+
+            # Selects the DOFs indices that are close to the point given
+            # the tolerance
+
+            dofs_indices = np.where(distances<self.tolerance)[0]
+
+            # Verifies if the found DOFs are close enough to consider it 
+            # a valid node
+
+            if len(dofs_indices)==0:
+
+                raise ValueError("Point ("+str(x)+", "+str(y)+", "+str(z
+                )+") is not a valid node to look for DOFs")
+            
+            # If there are multiple DOFs in a single location, returns a
+            # list of them
+
+            return dofs_indices
+
+    # Instantiates the class and returns it
+
+    return DOFsNode(dof_coordinates, 
+    functional_data_class.monolithic_function_space, tolerance=
+    node_proximity_tolerance)
+    
 # Defines a function to create a list of nodes indexes that lie on a
 # surface
 

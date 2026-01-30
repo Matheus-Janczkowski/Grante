@@ -16,11 +16,9 @@ class linear:
         self.final_time = tf.convert_to_tensor(final_time, dtype=
         current_time.dtype)
 
-        # Initializes the result
-
-        self.result = tf.Variable(0.0, dtype=current_time.dtype)
+        # Initializes the result and updates with the values initially
+        # provided
 
     def __call__(self):
 
-        self.result.assign(self.final_value*(self.current_time/
-        self.final_time))
+        return self.final_value*(self.current_time/self.final_time)

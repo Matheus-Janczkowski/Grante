@@ -526,7 +526,7 @@ def test_unique_dofs():
 
     dofs_y_unique, _ = tf.unique(tf.reshape(dofs[...,1], (-1,)))
 
-    values_y = 1.0*tf.ones(dofs_y_unique.shape)
+    values_y = tf.Variable(1.0*tf.ones(dofs_y_unique.shape))
 
     print("Unique dofs in y:\n"+str(dofs_y_unique)+"\n")
 
@@ -543,6 +543,10 @@ def test_unique_dofs():
     vector_of_parameters = tf.Variable(tf.zeros((18,)))
 
     vector_of_parameters.scatter_nd_update(dofs, values)
+
+    print("Updated vector of parameters:\n"+str(vector_of_parameters))
+
+    values_y.assign(3.0*tf.ones(dofs_y_unique.shape))
 
     print("Updated vector of parameters:\n"+str(vector_of_parameters))
 
@@ -573,3 +577,5 @@ if __name__=="__main__":
     test_broadcast()
 
     test_unique_dofs()
+
+    test_tensor_array()

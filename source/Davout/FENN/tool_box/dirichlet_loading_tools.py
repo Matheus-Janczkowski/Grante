@@ -196,10 +196,6 @@ class PrescribedDirichletBC:
 
         dofs_list = []
 
-        # Initializes a list of prescribed values
-
-        values_list = []
-
         # Verifies if it is a list. elif is not used to assert the value
         # if an integer was given
 
@@ -262,21 +258,17 @@ class PrescribedDirichletBC:
 
                 dofs_list.append(unique_tensor_dofs)
 
-                # Gets the value and transforms it into a load
+                # Gets the value and transforms it into a load. Multi-
+                # plied by the tensor already
 
-                load_class_instance = load_class(time, value, final_time)
+                load_class_instance = load_class(time, value*tf.ones(
+                unique_tensor_dofs.shape, dtype=mesh_data_class.dtype), 
+                final_time)
 
                 # Updates the value and appends this instance to a load
                 # instances list
 
-                load_class_instance()
-
                 self.list_of_load_instances.append(load_class_instance)
-
-                # Appends the value into a tensor
-
-                values_list.append(load_class_instance.result*tf.ones(
-                unique_tensor_dofs.shape, dtype=mesh_data_class.dtype))
 
         else:
 
@@ -288,24 +280,27 @@ class PrescribedDirichletBC:
         # Stacks the list of prescribed DOFs back into a tensor, and re-
         # shapes it to a flat tensor
 
-        self.prescribed_dofs = tf.reshape(tf.stack(dofs_list, axis=0), 
-        (-1,1))
+        self.prescribed_dofs = tf.reshape(tf.stack(dofs_list, axis=
+        0), (-1,1))
+        
+        # Updates the tensor for further evaluation
+
+        self.update_load_curve()
+
+    # Defines a function to update loads
+
+    def update_load_curve(self):
         
         # Stacks the list of prescribed values in the same fashion
 
-        self.prescribed_values = tf.reshape(tf.stack(values_list, axis=
-        0), (-1,))
+        self.prescribed_values = tf.reshape(tf.stack(
+        [load_instance() for load_instance in (
+        self.list_of_load_instances)], axis=0), (-1,))
 
     # Defines a function to apply such boundary conditions
 
     @tf.function
     def apply(self, vector_of_parameters):
-
-        # Updates the load instances
-
-        for load in self.list_of_load_instances:
-
-            load()
 
         # Assigns values to the vector of parameters in place
 

@@ -128,28 +128,6 @@ parent_directory=None, verbose=False, dtype=tf.float32):
     start_key=version_info["physical groups"][0], end_key=version_info[
     "physical groups"][1])
 
-    if verbose:
-
-        print("#######################################################"+
-        "#################\n#                        Domain physical g"+
-        "roups                        #\n#############################"+
-        "###########################################\n")
-
-        for name, tag in domain_physicalGroupsNameToTag.items():
-
-            print("Domain physical group name: "+str(name)+"; tag: "+str(
-            tag))
-
-        print("\n#####################################################"+
-        "###################\n#                       Boundary physica"+
-        "l groups                       #\n###########################"+
-        "#############################################\n")
-
-        for name, tag in boundary_physicalGroupsNameToTag.items():
-
-            print("Boundary physical group name: "+str(name)+"; tag: "+
-            str(tag))
-
     # Reads the node coordinates
 
     nodes_coordinates, start_reading_at_index = read_nodes(lines_list,
@@ -181,6 +159,42 @@ parent_directory=None, verbose=False, dtype=tf.float32):
 
     mesh_data_class = dispatch_region_elements(mesh_data_class,
     elements_per_field, dtype, "boundary")
+
+    if verbose:
+
+        print("#######################################################"+
+        "#################\n#                        Domain physical g"+
+        "roups                        #\n#############################"+
+        "###########################################\n")
+
+        for name, tag in domain_physicalGroupsNameToTag.items():
+
+            print("Domain physical group name: "+str(name)+"; tag: "+str(
+            tag))
+
+            for field, dictionary in mesh_data_class.domain_elements.items():
+
+                print("    field '"+str(field)+"' has "+str(dictionary[
+                tag].number_elements)+" finite elements")
+
+            print("")
+
+        print("\n#####################################################"+
+        "###################\n#                       Boundary physica"+
+        "l groups                       #\n###########################"+
+        "#############################################\n")
+
+        for name, tag in boundary_physicalGroupsNameToTag.items():
+
+            print("Boundary physical group name: "+str(name)+"; tag: "+
+            str(tag))
+
+            for field, dictionary in mesh_data_class.boundary_elements.items():
+
+                print("    field '"+str(field)+"' has "+str(dictionary[
+                tag].number_elements)+" finite elements")
+
+            print("")
 
     return mesh_data_class
 

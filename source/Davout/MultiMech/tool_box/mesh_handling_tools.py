@@ -93,6 +93,11 @@ file_directory=None, n_subdomains_z=1, bias_x=1.0, bias_y=1.0, bias_z=
 
         volume_regions_names.append("volume "+str(i+1))
 
+    # Updates the transfinite directions by dividing it into the subdo-
+    # mains in the z direction
+
+    n_divisions_z = int(round(max(2, n_divisions_z/n_subdomains_z)))
+
     # Uses CuboidGmsh to avoid topology loss with fenics built-in meshes
 
     geometric_data = tools_gmsh.gmsh_initialization(

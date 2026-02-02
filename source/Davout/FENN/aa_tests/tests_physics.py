@@ -257,12 +257,14 @@ class TestANNTools(unittest.TestCase):
         
         n_divisions_z = 50
 
+        n_subdomains_z = 5
+
         quadrature_degree = 2
 
         create_box_mesh(length_x, length_y, length_z, n_divisions_x, 
         n_divisions_y, n_divisions_z, file_name=file_name, verbose=False, 
         convert_to_xdmf=False, file_directory=file_directory, 
-        mesh_polinomial_order=2)
+        mesh_polinomial_order=2, n_subdomains_z=n_subdomains_z)
 
         ################################################################
         #                             FENN                             #
@@ -295,8 +297,12 @@ class TestANNTools(unittest.TestCase):
 
         material_properties = {"E": 1E6, "nu": 0.4}
 
-        constitutive_models = {"volume 1": NeoHookean(material_properties, 
-        mesh_data_class)}
+        constitutive_models = dict()
+
+        for subdomain in range(n_subdomains_z):
+
+            constitutive_models["volume "+str(subdomain+1)] = NeoHookean(
+            material_properties, mesh_data_class)
 
         # Sets the dictionary of traction classes
 

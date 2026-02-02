@@ -6,6 +6,8 @@ import unittest
 
 import tensorflow as tf
 
+from time import time
+
 import numpy as np
 
 from dolfin import assemble
@@ -225,6 +227,117 @@ class TestANNTools(unittest.TestCase):
 
         print("\nThere are "+str(n_nonzero_components)+" non-zero comp"+
         "onents in the residual vector calculated by FENN")
+
+    # Defines a function to test compilation time
+
+    def test_compilation_time(self):
+
+        print("\n#####################################################"+
+        "###################\n#                        Tests compilati"+
+        "on time                        #\n###########################"+
+        "#############################################\n")
+
+        start_time = time()
+
+        file_name = "box"
+
+        file_directory = get_parent_path_of_file()
+
+        # Creates a box mesh 
+
+        length_x = 0.2
+        
+        length_y = 0.3
+        
+        length_z = 1.0
+        
+        n_divisions_x = 50 
+
+        n_divisions_y = 50
+        
+        n_divisions_z = 50
+
+        quadrature_degree = 2
+
+        create_box_mesh(length_x, length_y, length_z, n_divisions_x, 
+        n_divisions_y, n_divisions_z, file_name=file_name, verbose=False, 
+        convert_to_xdmf=False, file_directory=file_directory, 
+        mesh_polinomial_order=2)
+
+        ################################################################
+        #                             FENN                             #
+        ################################################################
+
+        # Defines a dictionary of finite element per field
+
+        elements_per_field = {"Displacement": {"number of DOFs per nod"+
+        "e": 3, "required element type": "tetrahedron of 10 nodes"}}
+
+        # Reads this mesh
+
+        mesh_data_class = mesh_tools.read_msh_mesh(file_name, 
+        quadrature_degree, elements_per_field, verbose=True)
+
+        # Sets the loads
+
+        dirichlet_load = 0.1
+
+        neumann_load = 0.0E5
+
+        # Creates a dictionary to tell Dirichlet boundary conditions
+
+        boundary_conditions_dict = {"top": {"BC case": "PrescribedDiri"+
+        "chletBC", "load_function": "linear", "degrees_ofFreedomList": 2,
+        "end_point": [1.0, dirichlet_load]}, "bottom": {"BC case": "Fi"+
+        "xedSupportDirichletBC"}}
+
+        # Sets the dictionary of constitutive models
+
+        material_properties = {"E": 1E6, "nu": 0.4}
+
+        constitutive_models = {"volume 1": NeoHookean(material_properties, 
+        mesh_data_class)}
+
+        # Sets the dictionary of traction classes
+
+        traction_dictionary = {"top": {"load case": "TractionVectorOnS"+
+        "urface", "amplitude_tractionX": 0.0, "amplitude_tractionY": 0.0, 
+        "amplitude_tractionZ": neumann_load}}
+
+        # Instantiates the class to evaluate the residual vector
+
+        residual_class = CompressibleHyperelasticity(mesh_data_class,
+        constitutive_models, traction_dictionary=traction_dictionary, 
+        boundary_conditions_dict=boundary_conditions_dict, time=1.0)
+
+        final_time_creation = time()
+
+        # Evaluates the residual
+
+        residual_vector = residual_class.evaluate_residual_vector()
+
+        first_residual_evaluation = time()
+
+        # Evaluates the residual again
+
+        residual_vector = residual_class.evaluate_residual_vector()
+
+        second_residual_evaluation = time()
+
+        # Evaluates the residual again
+
+        residual_vector = residual_class.evaluate_residual_vector()
+
+        third_residual_evaluation = time()
+
+        print("\n\nTime to create and read mesh and to create calculation "+
+        "classes:   "+str(final_time_creation-start_time)+"\nTime to c"+
+        "alculate the residual for the first time:   "+str(
+        first_residual_evaluation-final_time_creation)+"\nTime to calc"+
+        "ulate the residual for the second time:   "+str(
+        second_residual_evaluation-first_residual_evaluation)+"\nTime to calc"+
+        "ulate the residual for the third time:   "+str(
+        third_residual_evaluation-second_residual_evaluation)+"\n")
 
 # Runs all tests
 

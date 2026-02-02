@@ -138,7 +138,9 @@ class ReferentialTractionWork:
         self.variation_field_ds = tf.stack(self.variation_field_ds,
         axis=0)
 
-        # TODO make traction_classes a tuple
+        # Makes traction_classes a tuple to show its immutability
+
+        self.traction_classes = tuple(self.traction_classes)
 
     # Defines a function to assemble the residual vector
 

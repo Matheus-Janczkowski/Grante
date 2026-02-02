@@ -114,8 +114,14 @@ class CompressibleInternalWorkReferenceConfiguration:
         self.variation_gradient_dx = tf.stack(self.variation_gradient_dx,
         axis=0)
 
-        # TODO make deformation_gradient_list and first_piola_kirchhoff_list
-        # tuples
+        # Makes deformation_gradient_list and first_piola_kirchhoff_list
+        # tuples to show their immutability
+
+        self.first_piola_kirchhoff_list = tuple(
+        self.first_piola_kirchhoff_list)
+
+        self.deformation_gradient_list = tuple(
+        self.deformation_gradient_list)
 
     # Defines a function to assemble the residual vector
 

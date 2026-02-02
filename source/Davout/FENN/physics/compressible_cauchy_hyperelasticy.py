@@ -77,8 +77,8 @@ class CompressibleHyperelasticity:
 
         # Nullifies the residual for this evaluation
 
-        self.global_residual_vector.assign(tf.zeros([
-        self.global_number_dofs], dtype=self.dtype))
+        self.global_residual_vector.assign(tf.zeros_like(
+        self.global_residual_vector))
 
         # Adds the parcel of the variation of the internal work
 

@@ -118,7 +118,9 @@ class DirichletBoundaryConditions:
 
         self.n_surfaces_under_load = len(self.BCs_classes)
 
-        # TODO make BCs_classes a tuple
+        # Makes BCs_classes a tuple to show its immutability
+
+        self.BCs_classes = tuple(self.BCs_classes)
 
         # Applies boundary conditions using the initial information
 

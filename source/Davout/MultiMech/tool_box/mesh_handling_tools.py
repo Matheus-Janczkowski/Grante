@@ -96,7 +96,12 @@ file_directory=None, n_subdomains_z=1, bias_x=1.0, bias_y=1.0, bias_z=
     # Updates the transfinite directions by dividing it into the subdo-
     # mains in the z direction
 
-    n_divisions_z = int(round(max(2, n_divisions_z/n_subdomains_z)))
+    corrected_n_divisions_z = int(round(max(2, n_divisions_z/
+    n_subdomains_z)))
+
+    # Updates the length in z
+
+    corrected_length_z = length_z/n_subdomains_z
 
     # Uses CuboidGmsh to avoid topology loss with fenics built-in meshes
 
@@ -110,11 +115,12 @@ file_directory=None, n_subdomains_z=1, bias_x=1.0, bias_y=1.0, bias_z=
 
         # Gets the corner points
 
-        corner_points = [[length_x, 0.0, (i*length_z)], [length_x, 
-        length_y, (i*length_z)], [0.0, length_y, (i*length_z)], [0.0, 
-        0.0, (i*length_z)], [length_x, 0.0, ((i+1)*length_z)], [length_x, 
-        length_y, ((i+1)*length_z)], [0.0, length_y, ((i+1)*length_z)], 
-        [0.0, 0.0, ((i+1)*length_z)]]
+        corner_points = [[length_x, 0.0, (i*corrected_length_z)], [
+        length_x, length_y, (i*corrected_length_z)], [0.0, length_y, (i*
+        corrected_length_z)], [0.0, 0.0, (i*corrected_length_z)], [
+        length_x, 0.0, ((i+1)*corrected_length_z)], [length_x, length_y, 
+        ((i+1)*corrected_length_z)], [0.0, length_y, ((i+1)*
+        corrected_length_z)], [0.0, 0.0, ((i+1)*corrected_length_z)]]
 
         # Gets the surface regions
 
@@ -137,7 +143,7 @@ file_directory=None, n_subdomains_z=1, bias_x=1.0, bias_y=1.0, bias_z=
 
         geometric_data = prism_gmsh.hexahedron_from_corners(
         corner_points, transfinite_directions=[n_divisions_x, n_divisions_y, 
-        n_divisions_z], geometric_data=geometric_data, 
+        corrected_n_divisions_z], geometric_data=geometric_data, 
         explicit_volume_physical_group_name="volume "+str(i+1), 
         explicit_surface_physical_group_name=
         explicit_surface_physical_group_name, bias_directions={"x": 
@@ -1348,8 +1354,12 @@ node_proximity_tolerance=1E-6):
 
             if len(dofs_indices)==0:
 
+                closest_node = self.dof_coordinates[np.argmin(distances)]
+
                 raise ValueError("Point ("+str(x)+", "+str(y)+", "+str(z
-                )+") is not a valid node to look for DOFs")
+                )+") is not a valid node to look for DOFs. The closest"+
+                " node is x="+str(closest_node[0])+", y="+str(
+                closest_node[1])+", z="+str(closest_node[2]))
             
             # If there are multiple DOFs in a single location, returns a
             # list of them

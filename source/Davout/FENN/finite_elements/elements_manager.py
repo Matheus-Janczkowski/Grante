@@ -184,7 +184,7 @@ None):
 
         n_dofs_per_node = info_dict["number of DOFs per node"]
 
-        # Initializes a set of node indexes that are really used by this
+        # Initializes a set of node indexes that are already used by this
         # field
 
         used_nodes_set = set()

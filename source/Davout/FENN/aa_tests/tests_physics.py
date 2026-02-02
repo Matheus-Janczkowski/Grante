@@ -59,14 +59,16 @@ class TestANNTools(unittest.TestCase):
 
         n_divisions_y = 2
         
-        n_divisions_z = 2
+        n_divisions_z = 3
 
         quadrature_degree = 2
+
+        n_subdomains_z = 2
 
         create_box_mesh(length_x, length_y, length_z, n_divisions_x, 
         n_divisions_y, n_divisions_z, file_name=file_name, verbose=False, 
         convert_to_xdmf=False, file_directory=file_directory, 
-        mesh_polinomial_order=2)
+        mesh_polinomial_order=2, n_subdomains_z=n_subdomains_z)
 
         ################################################################
         #                             FENN                             #
@@ -81,6 +83,9 @@ class TestANNTools(unittest.TestCase):
 
         mesh_data_class = mesh_tools.read_msh_mesh(file_name, 
         quadrature_degree, elements_per_field, verbose=True)
+
+        print("The read mesh has "+str(mesh_data_class.global_number_dofs
+        )+" degrees of freedom")
 
         # Sets the loads
 
@@ -99,8 +104,12 @@ class TestANNTools(unittest.TestCase):
 
         material_properties = {"E": 1E6, "nu": 0.4}
 
-        constitutive_models = {"volume 1": NeoHookean(material_properties, 
-        mesh_data_class)}
+        constitutive_models = dict()
+
+        for subdomain in range(n_subdomains_z):
+
+            constitutive_models["volume "+str(subdomain+1)] = NeoHookean(
+            material_properties, mesh_data_class)
 
         # Sets the dictionary of traction classes
 
@@ -129,7 +138,8 @@ class TestANNTools(unittest.TestCase):
         n_divisions_x, "number of divisions in y": n_divisions_y, "num"+
         "ber of divisions in z": n_divisions_z, "verbose": False, "mes"+
         "h file name": "box_mesh", "mesh file directory": 
-        get_parent_path_of_file()})
+        get_parent_path_of_file(), "number of subdomains in z direction":
+        1})
 
         functional_data_class = functional_tools.construct_monolithicFunctionSpace(
         {"Displacement": {"field type": "vector", "interpolation funct"+
@@ -224,6 +234,12 @@ class TestANNTools(unittest.TestCase):
             print("FENN: residual_vector["+str(i)+"]="+str(
             residual_vector[i])+";            FEniCS: residual_vector["+
             str(i)+"]="+str(residual_vector_fenics[i]))
+
+        print("\nThe FEniCS residual vector has a length of "+str(len(
+        assembled_residual)))
+
+        print("The FENN residual vector has a length of "+str(len(
+        residual_vector)))
 
         print("\nThere are "+str(n_nonzero_components)+" non-zero comp"+
         "onents in the residual vector calculated by FENN")
@@ -336,13 +352,13 @@ class TestANNTools(unittest.TestCase):
 
         third_residual_evaluation = time()
 
-        print("\n\nTime to create and read mesh and to create calculation "+
-        "classes:   "+str(final_time_creation-start_time)+"\nTime to c"+
-        "alculate the residual for the first time:   "+str(
+        print("\n\nTime to create and read mesh and to create calculat"+
+        "ion classes:   "+str(final_time_creation-start_time)+"\nTime "+
+        "to calculate the residual for the first time:   "+str(
         first_residual_evaluation-final_time_creation)+"\nTime to calc"+
         "ulate the residual for the second time:   "+str(
-        second_residual_evaluation-first_residual_evaluation)+"\nTime to calc"+
-        "ulate the residual for the third time:   "+str(
+        second_residual_evaluation-first_residual_evaluation)+"\nTime "+
+        "to calculate the residual for the third time:   "+str(
         third_residual_evaluation-second_residual_evaluation)+"\n")
 
 # Runs all tests

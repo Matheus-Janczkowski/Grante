@@ -140,14 +140,16 @@ class TestANNTools(unittest.TestCase):
 
         n_divisions_y = 2 
         
-        n_divisions_z = 2
+        n_divisions_z = 3
+
+        n_subdomains_z = 1
 
         quadrature_degree = 2
 
         create_box_mesh(length_x, length_y, length_z, n_divisions_x, 
         n_divisions_y, n_divisions_z, file_name=file_name, verbose=False, 
         convert_to_xdmf=False, file_directory=file_directory, 
-        mesh_polinomial_order=2)
+        mesh_polinomial_order=2, n_subdomains_z=n_subdomains_z)
 
         # Defines a dictionary of finite element per field
 
@@ -160,7 +162,8 @@ class TestANNTools(unittest.TestCase):
         quadrature_degree, elements_per_field, verbose=True)
 
         print("\nThe nodes coordinates are:\n"+str(
-        mesh_data_class.nodes_coordinates)+"\n")
+        mesh_data_class.nodes_coordinates)+"\nThere are "+str(len(
+        mesh_data_class.nodes_coordinates))+" nodes\n")
 
         print("The dictionary of domain physical groups is:\n"+str(
         mesh_data_class.domain_physicalGroupsNameToTag)+"\n")

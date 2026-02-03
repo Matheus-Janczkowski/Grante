@@ -301,31 +301,30 @@ None):
 
             used_nodes_set = sorted(used_nodes_set)
 
-            max_dof_number = 0
+            # Iterates through the set of used/found nodes
 
-            for set_index in range(len(used_nodes_set)):
+            for used_node in used_nodes_set:
 
-                # Adds a list of the DOFs for this node
+                # Verifies if this node has already been registered
 
-                dofs_node_dict[field_name][used_nodes_set[set_index]] = []
+                if not (used_node in dofs_node_dict[field_name]):
 
-                # And iterates through the local numbers of DOFs
-                
-                for local_dof in range(n_dofs_per_node):
+                    # Adds a list of the DOFs for this node
 
-                    DOF_number = ((set_index*n_dofs_per_node)+local_dof+
-                    dofs_counter)
+                    dofs_node_dict[field_name][used_node] = []
+
+                    # And iterates through the local numbers of DOFs
                     
-                    dofs_node_dict[field_name][used_nodes_set[set_index]
-                    ].append(DOF_number)
+                    for local_dof in range(n_dofs_per_node):
 
-                    # Updates the maximum DOF number
+                        DOF_number = local_dof+dofs_counter
+                        
+                        dofs_node_dict[field_name][used_node].append(
+                        DOF_number)
 
-                    max_dof_number = max(DOF_number, max_dof_number)
+                    # Updates the DOFs couter
 
-            # Updates the DOFs couter
-
-            dofs_counter = max_dof_number+1
+                    dofs_counter += n_dofs_per_node
 
         # Uses the dictionary of nodes to DOFs to create a list of ele-
         # ments with nested lists for nodes, which, in turn, have nested

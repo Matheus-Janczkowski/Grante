@@ -172,9 +172,17 @@ class TestANNTools(unittest.TestCase):
         mesh_data_class.boundary_physicalGroupsNameToTag)+"\n")
 
         print("The dictionary of domain elements' connectivities is:\n"+
-        str(mesh_data_class.domain_connectivities)+"\n")
+        str(mesh_data_class.domain_connectivities))
 
-        print("The dictionary of boundary elements' connectivities is:"+
+        for physical_group, element_dict in mesh_data_class.domain_connectivities.items():
+
+            for element_type, connectivities in element_dict.items():
+
+                print("At physical group "+str(physical_group)+", for "+
+                "element type "+str(element_type)+", there are "+str(len(
+                connectivities))+" elements")
+
+        print("\nThe dictionary of boundary elements' connectivities is:"+
         "\n"+str(mesh_data_class.boundary_connectivities)+"\n")
 
         print("The dictionary of elements per domain physical group is"+
@@ -189,6 +197,9 @@ class TestANNTools(unittest.TestCase):
                 print("\nField name: "+str(field_name)+"; physical gro"+
                 "up: "+str(physical_group)+"; DOFs per element:\n"+str(
                 element_class.dofs_per_element))
+
+        print("\nThere are "+str(mesh_data_class.global_number_dofs)+
+        " DOFs in the mesh")
 
 # Runs all tests
 

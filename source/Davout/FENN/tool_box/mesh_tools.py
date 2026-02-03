@@ -2,6 +2,8 @@
 
 import tensorflow as tf
 
+from time import time
+
 from ...PythonicUtilities.path_tools import verify_path, verify_file_existence, get_parent_path_of_file, take_outFileNameTermination
 
 from ...PythonicUtilities.string_tools import string_toList
@@ -82,6 +84,8 @@ parent_directory=None, verbose=False, dtype=tf.float32):
 
     # Reads the msh file into a list of strings. Each element is a line
 
+    start_time = time()
+
     lines_list = []
 
     try:
@@ -96,6 +100,8 @@ parent_directory=None, verbose=False, dtype=tf.float32):
 
         raise FileNotFoundError("The file "+file_name+" was not found "+
         "while evaluating trying to read a msh mesh.")
+
+    lines_reading_time = time()-start_time
     
     # Gets the gmsh version with which the file was written
 
@@ -122,25 +128,37 @@ parent_directory=None, verbose=False, dtype=tf.float32):
     # Reads the physical groups. Gets the dictionaries of physical groups
     # of names to tags
 
+    start_time = time()
+
     (domain_physicalGroupsNameToTag, 
     boundary_physicalGroupsNameToTag, start_reading_at_index
     ) = read_physical_groups(lines_list, start_reading_at_index, 
     start_key=version_info["physical groups"][0], end_key=version_info[
     "physical groups"][1])
 
+    physical_groups_reading_time = time()-start_time
+
     # Reads the node coordinates
+
+    start_time = time()
 
     nodes_coordinates, start_reading_at_index = read_nodes(lines_list,
     start_reading_at_index, start_key=version_info["nodes"][0], end_key=
     version_info["nodes"][1])
+
+    nodes_reading_time = time()-start_time
     
     # Reads the finite elements connectivities
+
+    start_time = time()
 
     (domain_connectivities, boundary_connectivities, 
     start_reading_at_index) = read_elements(lines_list, 
     start_reading_at_index, list(domain_physicalGroupsNameToTag.values()
     ), list(boundary_physicalGroupsNameToTag.values()), start_key=
     version_info["elements"][0], end_key=version_info["elements"][1])
+
+    connectivities_reading_time = time()-start_time
 
     # Instantiates the class of mesh data and returns it
 
@@ -152,15 +170,46 @@ parent_directory=None, verbose=False, dtype=tf.float32):
     # Dispatches the elements of the domain. Generates a dictionary of
     # physical group tag whose values are dictionaries of element types
 
+    start_time = time()
+
     mesh_data_class = dispatch_region_elements(mesh_data_class,
     elements_per_field, dtype, "domain")
 
+    domain_dispatching_reading_time = time()-start_time
+
     # Dispatches the elements of the boundary in the same way
+
+    start_time = time()
 
     mesh_data_class = dispatch_region_elements(mesh_data_class,
     elements_per_field, dtype, "boundary")
 
+    boundary_dispatching_reading_time = time()-start_time
+
     if verbose:
+
+        print("#######################################################"+
+        "#################\n#                             Elapsed time"+
+        "                             #\n#############################"+
+        "###########################################\n")
+
+        print("Reading the msh file took:                 "+str(
+        lines_reading_time))
+
+        print("Reading physical groups took:              "+str(
+        physical_groups_reading_time)+" s")
+
+        print("Reading nodes took:                        "+str(
+        nodes_reading_time)+" s")
+
+        print("Reading connectivitites took:              "+str(
+        connectivities_reading_time)+" s")
+
+        print("Dispatching domain finite elements took:   "+str(
+        domain_dispatching_reading_time)+" s")
+
+        print("Dispatching boundary finite elements took: "+str(
+        boundary_dispatching_reading_time)+" s\n")
 
         print("#######################################################"+
         "#################\n#                        Domain physical g"+

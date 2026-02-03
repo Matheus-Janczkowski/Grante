@@ -93,6 +93,8 @@ class TestANNTools(unittest.TestCase):
 
         neumann_load = 0.0E5
 
+        current_time = 1.0
+
         # Creates a dictionary to tell Dirichlet boundary conditions
 
         boundary_conditions_dict = {"top": {"BC case": "PrescribedDiri"+
@@ -121,7 +123,8 @@ class TestANNTools(unittest.TestCase):
 
         residual_class = CompressibleHyperelasticity(mesh_data_class,
         constitutive_models, traction_dictionary=traction_dictionary, 
-        boundary_conditions_dict=boundary_conditions_dict, time=1.0)
+        boundary_conditions_dict=boundary_conditions_dict, time=
+        current_time)
 
         # Evaluates the residual
 
@@ -139,7 +142,7 @@ class TestANNTools(unittest.TestCase):
         "ber of divisions in z": n_divisions_z, "verbose": False, "mes"+
         "h file name": "box_mesh", "mesh file directory": 
         get_parent_path_of_file(), "number of subdomains in z direction":
-        1})
+        n_subdomains_z})
 
         functional_data_class = functional_tools.construct_monolithicFunctionSpace(
         {"Displacement": {"field type": "vector", "interpolation funct"+
@@ -175,9 +178,9 @@ class TestANNTools(unittest.TestCase):
 
         # Update the load class
 
-        neumann_loads[0].update_load(1.0)
+        neumann_loads[0].update_load(current_time)
 
-        dirichlet_loads[0].update_load(1.0)
+        dirichlet_loads[0].update_load(current_time)
 
         # Updates the Dirichlet boundary conditions
 
@@ -214,8 +217,11 @@ class TestANNTools(unittest.TestCase):
             dof_number_gmsh = np.argwhere(dofs_fenics_from_gmsh_nodes==
             dof_number)[0]
 
-            dof_number_gmsh = int((3*(dof_number_gmsh[0]))+
-            dof_number_gmsh[1])
+            # Gets the DOF number in the FENN numbering system using the
+            # node number
+
+            dof_number_gmsh = mesh_data_class.dofs_node_dict["Displace"+
+            "ment"][dof_number_gmsh[0]][dof_number_gmsh[1]]
 
             residual_vector_fenics[dof_number_gmsh] = dof_value
 

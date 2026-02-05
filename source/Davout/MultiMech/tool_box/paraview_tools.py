@@ -3,11 +3,15 @@
 
 from paraview.simple import *
 
+from PIL import Image
+
+import numpy as np
+
 from ...PythonicUtilities import path_tools
 
 from ...PythonicUtilities import programming_tools
 
-from ...PythonicUtilities.string_tools import string_toList
+from ...PythonicUtilities.string_tools import string_toList, string_toDict
 
 ########################################################################
 #                           Frozen snapshots                           #
@@ -21,8 +25,11 @@ output_path=None, camera_position=None, color_map="Cool to Warm",
 output_imageFileName="plot.png", execution_rootPath=None, time=None,
 time_step_index=None, camera_focal_point=None, camera_up_direction=None,
 representation_type=None, legend_bar_position=None, legend_bar_length=
-None, axes_color=None, image_resolution=None, get_attributes_render=None,
-camera_parallel_scale=None, camera_rotation=None):
+None, axes_color=None, size_in_pixels=None, get_attributes_render=None,
+camera_parallel_scale=None, camera_rotation=None, legend_bar_font=None,
+legend_bar_font_file=None, zoom_factor=None, plot_x_axis=None, 
+plot_y_axis=None, plot_z_axis=None, no_axes=None, component_to_plot=None,
+resolution_ratio=None):
     
     programming_tools.script_executioner("source.Davout.MultiMech.tool"+
     "_box.paraview_tools", python_interpreter="pvpython", function_name=
@@ -34,9 +41,14 @@ camera_parallel_scale=None, camera_rotation=None):
     camera_focal_point, "camera_up_direction": camera_up_direction,
     "representation_type": representation_type, "legend_bar_position":
     legend_bar_position, "legend_bar_length": legend_bar_length, "axes"+
-    "_color": axes_color, "image_resolution": image_resolution, "get_a"+
+    "_color": axes_color, "size_in_pixels": size_in_pixels, "get_a"+
     "ttributes_render": get_attributes_render, "camera_parallel_scale":
-    camera_parallel_scale, "camera_rotation": camera_rotation},
+    camera_parallel_scale, "camera_rotation": camera_rotation, "legend"+
+    "_bar_font": legend_bar_font, "zoom_factor": zoom_factor, "legend_"+
+    "bar_font_file": legend_bar_font_file, "plot_x_axis": plot_x_axis,
+    "plot_y_axis": plot_y_axis, "plot_z_axis": plot_z_axis, "no_axes":
+    no_axes, "component_to_plot": component_to_plot, "resolution_ratio":
+    resolution_ratio},
     execution_rootPath=execution_rootPath, run_as_module=True)
 
 # Defines a function to control paraview to take a single or a set of
@@ -47,8 +59,10 @@ output_path=None, camera_position=None, color_map="Cool to Warm",
 output_imageFileName="plot.png", time_step_index=None, time=None,
 camera_focal_point=None, camera_up_direction=None, representation_type=
 None, legend_bar_position=None, legend_bar_length=None, axes_color=None,
-image_resolution=None, get_attributes_render=None, camera_parallel_scale=
-None, camera_rotation=None):
+size_in_pixels=None, get_attributes_render=None, camera_parallel_scale=
+None, camera_rotation=None, legend_bar_font=None, legend_bar_font_file=
+None, zoom_factor=None, plot_x_axis=None, plot_y_axis=None, plot_z_axis=
+None, no_axes=None, component_to_plot=None, resolution_ratio=None):
     
     # Verifies the input and output paths
 
@@ -71,6 +85,11 @@ None, camera_rotation=None):
 
         output_imageFileName = path_tools.verify_path(output_path,
         output_imageFileName)
+
+    # Makes sure the file ends with xdmf
+
+    input_fileName = path_tools.take_outFileNameTermination(
+    input_fileName)+".xdmf"
     
     # Loads the simulation output data
 
@@ -134,6 +153,36 @@ None, camera_rotation=None):
 
         renderView.OrientationAxesZColor = axes_color
 
+    # Verifies if no axes are to be plotted
+
+    if no_axes:
+
+        plot_x_axis = "False" 
+
+        plot_y_axis = "False" 
+
+        plot_z_axis = "False" 
+
+    # Verifies if the axes are to plotted
+
+    if plot_x_axis:
+
+        if plot_x_axis=="False":
+
+            renderView.OrientationAxesXVisibility = False
+
+    if plot_y_axis:
+
+        if plot_y_axis=="False":
+
+            renderView.OrientationAxesYVisibility = False
+
+    if plot_z_axis:
+
+        if plot_z_axis=="False":
+
+            renderView.OrientationAxesZVisibility = False
+
     # Verifies if the representation is set
 
     if representation_type:
@@ -162,9 +211,116 @@ None, camera_rotation=None):
 
         display.Representation = representation_type
 
+    # Gets the components of the data
+
+    data.UpdatePipeline()
+
+    Render()
+
+    info = data.GetPointDataInformation()
+
+    array_info = info.GetArray(field_name)
+
+    number_of_components = 1
+
+    if hasattr(array_info, "GetNumberOfComponents"):
+
+        number_of_components = array_info.GetNumberOfComponents()
+
+    else:
+
+        # Makes the component to plot automatically magnitude
+
+        component_to_plot = "Magnitude"
+
+    # Verifies the component to plot
+
+    if component_to_plot is None:
+
+        # Sets Magnitude as default
+
+        component_to_plot = "Magnitude"
+    
+    # If the component is not Magnitude, verifies if it is indeed a valid
+    # component
+
+    if component_to_plot!="Magnitude":
+
+        # Initializes a flag to check if the component has been found
+
+        flag_component_found = False
+
+        # Tries to convert the component to a number
+
+        try:
+            
+            component_to_plot = int(component_to_plot)
+
+            if component_to_plot>=number_of_components or (
+            component_to_plot<0):
+
+                flag_component_found = "out of bounds"
+            
+            else:
+
+                flag_component_found = True
+
+        except:
+
+            # Iterates through the components
+
+            for i in range(number_of_components):
+
+                if component_to_plot==array_info.GetComponentName(i):
+
+                    # Updates the flag to tell that the component has
+                    # been found
+
+                    flag_component_found = True 
+
+                    break 
+
+        # Verifies the flag
+
+        if flag_component_found=="out of bounds":
+
+            raise NameError("'component_to_plot' in 'frozen_snapshots'"+
+            " is a number, "+str(component_to_plot)+", but it is not b"+
+            "etween 0 and "+str(number_of_components-1))
+
+        elif not flag_component_found:
+
+            available_names = ""
+
+            for i in range(number_of_components):
+
+                available_names += "\n'"+str(array_info.GetComponentName(
+                i))+"'   or   "+str(i)
+
+            raise NameError("'component_to_plot' in 'frozen_snapshots'"+
+            " is '"+str(component_to_plot)+"', but it is not an availa"
+            "ble name. Check the list of available names:"+
+            available_names)
+
     # Sets color
 
-    ColorBy(display, ('POINTS', field_name))
+    # Takes care of scalar fields
+
+    if number_of_components==1:
+
+        ColorBy(display, ('POINTS', field_name))
+
+    # Otherwise, allows for the required component
+
+    else:
+
+        ColorBy(display, ('POINTS', field_name, component_to_plot))
+
+    Render()
+
+    # Rescales the color
+
+    display.RescaleTransferFunctionToDataRange(True, True)
 
     LookupTable = GetColorTransferFunction(field_name)
 
@@ -210,8 +366,28 @@ None, camera_rotation=None):
 
         scalarBar = GetScalarBar(LookupTable, renderView)
 
-        scalarBar.ScalarBarLength = legend_bar_length
+        scalarBar.ScalarBarLength = legend_bar_length 
 
+    # Sets the font of the legend
+
+    if legend_bar_font:
+
+        scalarBar.TitleFontFamily = legend_bar_font
+
+        scalarBar.LabelFontFamily = legend_bar_font
+
+    # Otherwise, if a font file is given
+
+    elif legend_bar_font_file:
+
+        scalarBar.TitleFontFamily = "File"
+
+        scalarBar.LabelFontFamily = "File"
+
+        scalarBar.TitleFontFile = legend_bar_font_file
+
+        scalarBar.LabelFontFile = legend_bar_font_file
+        
     # Applies color map
 
     if color_map:
@@ -245,7 +421,41 @@ None, camera_rotation=None):
 
     # Sets camera position in space
 
-    if camera_position:
+    if camera_position or (zoom_factor is not None):
+
+        # Verifies if zoom was asked for, but no camera position was gi-
+        # ven
+
+        if (zoom_factor is not None) :
+        
+            if camera_position is None:
+
+                raise ValueError("'camera_position' in 'frozen_snapsho"+
+                "ts' is None but 'zoom_factor' is not None. One must p"+
+                "rovide acamera position to ask for zoom. Currently, '"+
+                "camera_position' is: "+str(camera_position)+"; and 'z"+
+                "oom_factor' is: "+str(type(zoom_factor)))
+            
+            # Tries to convert zoom factor to float
+
+            try:
+
+                zoom_factor = float(zoom_factor)
+
+            except:
+
+                raise ValueError("Could not convert 'zoom_factor' to f"+
+                "loat in 'frozen_snapshots'. The current value is: "+str(
+                zoom_factor))
+            
+        # Otherwise, transform zoom factor to 1 to enable the multipli-
+        # cation by the camera position
+
+        else:
+
+            zoom_factor = 1.0
+
+        # Verifies if camera position is a list
 
         if (camera_position[0]!="[" or camera_position[-1]!="]"):
 
@@ -256,7 +466,8 @@ None, camera_rotation=None):
         
         # Converts the argument to a list
 
-        camera_position = string_toList(camera_position)
+        camera_position = (np.array(string_toList(camera_position))*
+        zoom_factor).tolist()
 
         renderView.CameraPosition = camera_position
 
@@ -329,34 +540,117 @@ None, camera_rotation=None):
 
         renderView.CameraParallelScale = camera_parallel_scale
 
-    # Verifies if image resolution has been provided
+    # Verifies if the size of the image in pixels has been provided
 
-    if image_resolution:
+    if size_in_pixels:
 
-        if (image_resolution[0]!="[" or image_resolution[-1]!="]"):
+        # Verifies if size of the image in pixels is a list
 
-            raise TypeError("'image_resolution' in 'frozen_snapshots' "+
-            "must be a list of 2 components. Currently, it is: "+str(
-            image_resolution)+"; whose type is: "+str(type(
-            image_resolution)))
+        if size_in_pixels[0]=="[" and size_in_pixels[-1]=="]":
+
+            size_in_pixels = string_toList(size_in_pixels)
+
+        # Verifies if size of the image in pixels is a dictionary
+
+        elif size_in_pixels[0]=="{" and size_in_pixels[-1]=="}":
+
+            image_dict = string_toDict(size_in_pixels)
+
+            # Verifies the keys
+            
+            if not ('aspect ratio' in image_dict):
+
+                raise KeyError("'size_in_pixels' is a dictionary in "+
+                "'frozen_snapshots', but the key 'aspect ratio', is no"+
+                "t present. This key tells the ratio of the height of "+
+                "the screenshot to its width")
+            
+            elif not ('pixels in width' in image_dict):
+
+                raise KeyError("'size_in_pixels' is a dictionary in "+
+                "'frozen_snapshots', but the key 'pixels in width', "+
+                "is not present. This key tells the number of pixels"+
+                " in the width direction")
+
+            # Transforms the size of the image in pixels information in-
+            # to a list
+            
+            size_in_pixels = [int(round(image_dict["pixels in width"])), 
+            int(round(image_dict["pixels in width"]*image_dict["aspect"+
+            " ratio"]))] 
+
+        else:
+
+            raise TypeError("'size_in_pixels' in 'frozen_snapshots' "+
+            "must be a list of 2 components or a dictionary with the k"+
+            "eys 'aspect ratio' (the ratio of the height by the width "+
+            "of the screenshot) and 'pixels in width' the number of pi"+
+            "xels for the width direction. Currently, it is: "+str(
+            size_in_pixels)+"; whose type is: "+str(type(
+            size_in_pixels)))
         
-        # Converts the argument to a list
+        # Sets the size
 
-        renderView.ViewSize = string_toList(image_resolution)
+        renderView.ViewSize = size_in_pixels
+
+    # Verifies if a resolution ratio has been provided
+
+    if resolution_ratio:
+
+        try:
+
+            resolution_ratio = float(resolution_ratio)
+
+        except:
+
+            raise ValueError("Could not convert 'resolution_ratio' to "+
+            "float in 'frozen_snapshots'. The current value is: "+str(
+            resolution_ratio))
+        
+    # Otherwise sets to 1
 
     else:
 
-        # Otherwise, uses the default
+        resolution_ratio = 1.0
 
-        image_resolution = renderView.ViewSize
+    # Computes the image resolution in pixels by multiplying the number
+    # of pixels of the image by the resolution ratio
 
-    # Renders and saves
+    image_resolution = [int(round(resolution_ratio*renderView.ViewSize[0
+    ])), int(round(resolution_ratio*renderView.ViewSize[1]))]
+
+    # Renders again
 
     Render()
 
-    SaveScreenshot(output_imageFileName, renderView)
+    # Verifies if the output file is meant to be a pdf
 
-    if get_attributes_render:
+    output_imageFileName, termination = path_tools.take_outFileNameTermination(
+    output_imageFileName, get_termination=True)
+
+    print(output_imageFileName, termination)
+
+    # If termination is pdf, saves as a png first
+
+    if termination=="pdf":
+
+        SaveScreenshot(output_imageFileName+".png", renderView, 
+        ImageResolution=image_resolution)
+
+        # Converts to pdf
+
+        png_image = Image.open(output_imageFileName+".png")
+
+        png_image.save(output_imageFileName+".pdf")
+
+    else:
+
+        # Saves normally with the original termination
+
+        SaveScreenshot(output_imageFileName+"."+termination, renderView, 
+        ImageResolution=image_resolution)
+
+    if get_attributes_render=="True":
 
         print("\nThe attributes of the RenderView are:\n"+str(
         renderView.ListProperties()))

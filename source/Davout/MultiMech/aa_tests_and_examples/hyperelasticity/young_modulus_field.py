@@ -8,6 +8,8 @@ from .....Davout.MultiMech.tool_box.read_write_tools import write_field_to_xdmf
 
 from .....Davout.PythonicUtilities.path_tools import get_parent_path_of_file
 
+from .....Davout.MultiMech.tool_box.paraview_tools import frozen_snapshots
+
 # Creates a mesh for the field
 
 H = 1.0
@@ -47,3 +49,13 @@ write_field_to_xdmf({"monolithic solution": E_field, "mesh file":
 mesh_data_class.mesh_file}, visualization_copy=True, explicit_file_name=
 get_parent_path_of_file()+"//E_from_dict", field_type="scalar", 
 interpolation_function="CG", polynomial_degree=1)
+
+frozen_snapshots("E_from_dict_visualization_copy.xdmf", "E", input_path=
+get_parent_path_of_file(), camera_focal_point=[0.0, 0.0, 0.5], 
+camera_position=[1.0, 1.0, 0.5],
+camera_up_direction=[0.0, 0.0, 1.0], camera_parallel_scale=0.5,
+representation_type="Surface With Edges", legend_bar_position=[0.75, 0.2], 
+legend_bar_length=0.5, axes_color=[0.0, 0.0, 0.0], size_in_pixels={
+"aspect ratio": 0.8, "pixels in width": 700}, legend_bar_font="Times", 
+zoom_factor=1.7, get_attributes_render=False, output_imageFileName=
+"plot_young.pdf", resolution_ratio=5)

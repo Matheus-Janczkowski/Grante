@@ -59,4 +59,5 @@ camera_parallel_scale=0.5, representation_type="Surface With Edges",
 legend_bar_position=[0.75, 0.2], legend_bar_length=0.5, axes_color=[0.0, 
 0.0, 0.0], size_in_pixels={"aspect ratio": 0.8, "pixels in width": 700}, 
 legend_bar_font="Times", zoom_factor=1.7, get_attributes_render=False, 
-output_imageFileName="plot_young.pdf", resolution_ratio=5)
+output_imageFileName="plot_young.pdf", resolution_ratio=5,
+LIBGL_ALWAYS_SOFTWARE=True)

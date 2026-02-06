@@ -23,7 +23,8 @@ None, axes_color=None, size_in_pixels=None, get_attributes_render=None,
 camera_parallel_scale=None, camera_rotation=None, legend_bar_font=None,
 legend_bar_font_file=None, zoom_factor=None, plot_x_axis=None, 
 plot_y_axis=None, plot_z_axis=None, no_axes=None, component_to_plot=None,
-resolution_ratio=None, transparent_background=None):
+resolution_ratio=None, transparent_background=None, 
+LIBGL_ALWAYS_SOFTWARE=False):
     
     # Gets the path to the module where function LOCAL_frozenSnapshots is
 
@@ -49,4 +50,5 @@ resolution_ratio=None, transparent_background=None):
     "plot_y_axis": plot_y_axis, "plot_z_axis": plot_z_axis, "no_axes":
     no_axes, "component_to_plot": component_to_plot, "resolution_ratio":
     resolution_ratio, "transparent_background": transparent_background},
-    execution_rootPath=execution_rootPath, run_as_module=False)
+    execution_rootPath=execution_rootPath, run_as_module=False,
+    LIBGL_ALWAYS_SOFTWARE=LIBGL_ALWAYS_SOFTWARE)

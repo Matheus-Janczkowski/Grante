@@ -50,7 +50,7 @@ specifications.loader.exec_module(dictionary_tools)
 def script_executioner(file_name, python_interpreter="python3",
 function_name=None, arguments_list=None, keyword_argumentsDict=None,
 parent_path=None, execution_rootPath=None, verbose=True, run_as_module=
-False):
+False, LIBGL_ALWAYS_SOFTWARE=False):
     
     # Verifies the existence of the parent path
 
@@ -219,26 +219,27 @@ False):
 
             print(str(argument_name)+": "+str(argument_value)+"\n")
 
+    # Retrieves the environment
+
+    env = os.environ.copy()
+
+    # Verifies if the flag LIBGL_ALWAYS_SOFTWARE is to be set
+
+    if LIBGL_ALWAYS_SOFTWARE:
+
+        env["LIBGL_ALWAYS_SOFTWARE"] = "1"
+
     # If the root path is passed 
 
     if not (execution_rootPath is None):
 
-        env = os.environ.copy()
-
         env["PYTHONPATH"] = execution_rootPath+(":"+env.get("PYTHONPAT"+
         "H", ""))
     
-        # Executes the file
+    # Executes the file
 
-        execution = subprocess.run(exe_arguments, capture_output=True,
-        text=True, env=env)
-
-    else:
-    
-        # Executes the file
-
-        execution = subprocess.run(exe_arguments, capture_output=True, 
-        text=True)
+    execution = subprocess.run(exe_arguments, capture_output=True, text=
+    True, env=env)
 
     # Verifies if there was an error 
 

@@ -29,20 +29,21 @@ None, axes_color=None, size_in_pixels=None, get_attributes_render=None,
 camera_parallel_scale=None, camera_rotation=None, legend_bar_font=None,
 legend_bar_font_file=None, zoom_factor=None, plot_x_axis=None, 
 plot_y_axis=None, plot_z_axis=None, no_axes=None, component_to_plot=None,
-resolution_ratio=None):
+resolution_ratio=None, module_path="source.Davout.MultiMech.tool_box.p"+
+"araview_tools"):
     
-    programming_tools.script_executioner("source.Davout.MultiMech.tool"+
-    "_box.paraview_tools", python_interpreter="pvpython", function_name=
-    "LOCAL_frozenSnapshots", arguments_list=[input_fileName, field_name], 
-    keyword_argumentsDict={"input_path": input_path, "output_path": 
-    output_path, "camera_position": camera_position, "color_map": 
-    color_map, "output_imageFileName": output_imageFileName, "time_ste"+
-    "p_index": time_step_index, "time": time, "camera_focal_point":
-    camera_focal_point, "camera_up_direction": camera_up_direction,
-    "representation_type": representation_type, "legend_bar_position":
-    legend_bar_position, "legend_bar_length": legend_bar_length, "axes"+
-    "_color": axes_color, "size_in_pixels": size_in_pixels, "get_a"+
-    "ttributes_render": get_attributes_render, "camera_parallel_scale":
+    programming_tools.script_executioner(module_path, python_interpreter=
+    "pvpython", function_name="LOCAL_frozenSnapshots", arguments_list=[
+    input_fileName, field_name], keyword_argumentsDict={"input_path": 
+    input_path, "output_path": output_path, "camera_position": 
+    camera_position, "color_map": color_map, "output_imageFileName": 
+    output_imageFileName, "time_step_index": time_step_index, "time": 
+    time, "camera_focal_point": camera_focal_point, "camera_up_directi"+
+    "on": camera_up_direction, "representation_type": 
+    representation_type, "legend_bar_position": legend_bar_position, 
+    "legend_bar_length": legend_bar_length, "axes_color": axes_color, 
+    "size_in_pixels": size_in_pixels, "get_attributes_render": 
+    get_attributes_render, "camera_parallel_scale":
     camera_parallel_scale, "camera_rotation": camera_rotation, "legend"+
     "_bar_font": legend_bar_font, "zoom_factor": zoom_factor, "legend_"+
     "bar_font_file": legend_bar_font_file, "plot_x_axis": plot_x_axis,
@@ -628,7 +629,8 @@ None, no_axes=None, component_to_plot=None, resolution_ratio=None):
     output_imageFileName, termination = path_tools.take_outFileNameTermination(
     output_imageFileName, get_termination=True)
 
-    print(output_imageFileName, termination)
+    print("Saves the screenshot at: '"+str(output_imageFileName)+"."+str(
+    termination))
 
     # If termination is pdf, saves as a png first
 

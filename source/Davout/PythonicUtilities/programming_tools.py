@@ -50,7 +50,7 @@ specifications.loader.exec_module(dictionary_tools)
 def script_executioner(file_name, python_interpreter="python3",
 function_name=None, arguments_list=None, keyword_argumentsDict=None,
 parent_path=None, execution_rootPath=None, verbose=True, run_as_module=
-False, LIBGL_ALWAYS_SOFTWARE=False):
+False, LIBGL_ALWAYS_SOFTWARE=False, extra_execution_arguments=None):
     
     # Verifies the existence of the parent path
 
@@ -137,6 +137,13 @@ False, LIBGL_ALWAYS_SOFTWARE=False):
     else:
 
         exe_arguments = [python_interpreter, file_name]
+
+    # Verifies if extra arguments are given
+
+    if extra_execution_arguments is not None:
+
+        exe_arguments = [exe_arguments[0], *extra_execution_arguments, 
+        *exe_arguments[1:len(exe_arguments)]]
 
     # Initializes a copy of the arguments to print on screen
 

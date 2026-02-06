@@ -30,7 +30,7 @@ camera_parallel_scale=None, camera_rotation=None, legend_bar_font=None,
 legend_bar_font_file=None, zoom_factor=None, plot_x_axis=None, 
 plot_y_axis=None, plot_z_axis=None, no_axes=None, component_to_plot=None,
 resolution_ratio=None, module_path="source.Davout.MultiMech.tool_box.p"+
-"araview_tools"):
+"araview_tools", transparent_background=None):
     
     programming_tools.script_executioner(module_path, python_interpreter=
     "pvpython", function_name="LOCAL_frozenSnapshots", arguments_list=[
@@ -49,7 +49,7 @@ resolution_ratio=None, module_path="source.Davout.MultiMech.tool_box.p"+
     "bar_font_file": legend_bar_font_file, "plot_x_axis": plot_x_axis,
     "plot_y_axis": plot_y_axis, "plot_z_axis": plot_z_axis, "no_axes":
     no_axes, "component_to_plot": component_to_plot, "resolution_ratio":
-    resolution_ratio},
+    resolution_ratio, "transparent_background": transparent_background},
     execution_rootPath=execution_rootPath, run_as_module=True)
 
 # Defines a function to control paraview to take a single or a set of
@@ -63,7 +63,8 @@ None, legend_bar_position=None, legend_bar_length=None, axes_color=None,
 size_in_pixels=None, get_attributes_render=None, camera_parallel_scale=
 None, camera_rotation=None, legend_bar_font=None, legend_bar_font_file=
 None, zoom_factor=None, plot_x_axis=None, plot_y_axis=None, plot_z_axis=
-None, no_axes=None, component_to_plot=None, resolution_ratio=None):
+None, no_axes=None, component_to_plot=None, resolution_ratio=None,
+transparent_background=None):
     
     # Verifies the input and output paths
 
@@ -614,6 +615,16 @@ None, no_axes=None, component_to_plot=None, resolution_ratio=None):
 
         resolution_ratio = 1.0
 
+    # Verifies if transparent background is asked for
+
+    if transparent_background=="True":
+
+        transparent_background = 1
+
+    else:
+
+        transparent_background = 0
+
     # Computes the image resolution in pixels by multiplying the number
     # of pixels of the image by the resolution ratio
 
@@ -637,7 +648,8 @@ None, no_axes=None, component_to_plot=None, resolution_ratio=None):
     if termination=="pdf":
 
         SaveScreenshot(output_imageFileName+".png", renderView, 
-        ImageResolution=image_resolution)
+        ImageResolution=image_resolution, TransparentBackground=
+        transparent_background)
 
         # Converts to pdf
 
@@ -650,7 +662,8 @@ None, no_axes=None, component_to_plot=None, resolution_ratio=None):
         # Saves normally with the original termination
 
         SaveScreenshot(output_imageFileName+"."+termination, renderView, 
-        ImageResolution=image_resolution)
+        ImageResolution=image_resolution, TransparentBackground=
+        transparent_background)
 
     if get_attributes_render=="True":
 
